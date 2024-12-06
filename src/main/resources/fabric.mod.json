@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "essential-scripting",
+  "version": "${version}",
+  "name": "EssentialScripting",
+  "description": "",
+  "authors": [
+    "Sensei"
+  ],
+  "contact": {
+
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.EssentialScripting"
+      }
+    ],
+    "modmenu": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.compat.ModMenuEssentialClientImpl"
+      }
+    ]
+  },
+  "mixins": [
+    "essential-scripting.mixins.json"
+  ],
+  "depends": {
+    "fabric": "*",
+    "fabricloader": ">=${fabric_loader_dependency}",
+    "yet_another_config_lib_v3": ">=${yacl_dependency}",
+    "minecraft": "${minecraft_dependency}"
+  }
+}
