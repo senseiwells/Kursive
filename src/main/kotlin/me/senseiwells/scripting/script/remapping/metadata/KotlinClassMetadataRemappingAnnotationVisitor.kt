@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package net.fabricmc.loom.kotlin.remapping
+package me.senseiwells.scripting.script.remapping.metadata
 
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Opcodes

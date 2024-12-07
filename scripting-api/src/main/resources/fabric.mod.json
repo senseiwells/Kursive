@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "essential-scripting-api",
+  "version": "${version}",
+  "name": "EssentialScriptingApi",
+  "description": "",
+  "authors": [
+    "Sensei"
+  ],
+  "contact": {
+
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.EssentialScripting"
+      }
+    ]
+  },
+  "mixins": [
+
+  ],
+  "depends": {
+    "fabric": "*",
+    "fabricloader": ">=${fabric_loader_dependency}",
+    "minecraft": "${minecraft_dependency}"
+  }
+}

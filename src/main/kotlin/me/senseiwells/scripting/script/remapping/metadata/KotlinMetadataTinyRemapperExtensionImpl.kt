@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package net.fabricmc.loom.kotlin.remapping
+package me.senseiwells.scripting.script.remapping.metadata
 
 import net.fabricmc.tinyremapper.TinyRemapper
 import net.fabricmc.tinyremapper.api.TrClass

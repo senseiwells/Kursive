@@ -1,11 +1,10 @@
-package me.senseiwells.scripting.scripting
+package me.senseiwells.scripting.script.remapping
 
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
-import net.fabricmc.loom.kotlin.remapping.KotlinMetadataTinyRemapperExtensionImpl
+import me.senseiwells.scripting.script.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import net.fabricmc.tinyremapper.NonClassCopyMode
 import net.fabricmc.tinyremapper.OutputConsumerPath
 import net.fabricmc.tinyremapper.TinyRemapper
-import org.objectweb.asm.MethodVisitor
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
@@ -37,7 +36,7 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
     }
 
     private fun remapAndSaveScript(script: KJvmCompiledScript) {
-        if (!shouldRemap()) {
+        if (!ScriptRemappingUtils.shouldRemap()) {
             script.saveToJar(this.outputJar.toFile())
             return
         }
@@ -64,12 +63,6 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
         } finally {
             remapper.finish()
             temp.deleteIfExists()
-        }
-    }
-
-    companion object {
-        private fun shouldRemap(): Boolean {
-            return true
         }
     }
 }

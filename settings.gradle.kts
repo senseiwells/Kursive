@@ -1,5 +1,7 @@
 rootProject.name = "EssentialScripting"
 
+include(":scripting-api")
+
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {

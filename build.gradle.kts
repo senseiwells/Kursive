@@ -12,38 +12,72 @@ plugins {
     java
 }
 
-repositories {
-    mavenCentral()
-    maven("https://maven.parchmentmc.org/")
-    maven("https://maven.terraformersmc.com/")
-    maven("https://maven.isxander.dev/releases")
-    maven("https://maven.supersanta.me/snapshots")
-    maven("https://jitpack.io")
-}
-
-val modVersion = "0.1.0-alpha.10"
-val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
-version = releaseVersion
-group = "me.senseiwells"
-
 val shade: Configuration by configurations.creating
 
+allprojects {
+    apply(plugin = "fabric-loom")
+    apply(plugin = "maven-publish")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "org.jetbrains.kotlin.plugin.serialization")
+
+    repositories {
+        mavenCentral()
+        maven("https://maven.parchmentmc.org/")
+        maven("https://maven.terraformersmc.com/")
+        maven("https://maven.isxander.dev/releases")
+        maven("https://maven.supersanta.me/snapshots")
+        maven("https://jitpack.io")
+    }
+
+    val libs = rootProject.libs
+
+    val modVersion = "0.1.0-alpha.10"
+    val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
+    version = releaseVersion
+    group = "me.senseiwells"
+
+    dependencies {
+        minecraft(libs.minecraft)
+        @Suppress("UnstableApiUsage")
+        mappings(loom.layered {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${libs.versions.parchment.get()}@zip")
+        })
+
+        modImplementation(libs.fabric.loader)
+        modImplementation(libs.fabric.api)
+        modImplementation(libs.fabric.kotlin)
+    }
+
+    java {
+        withSourcesJar()
+    }
+
+    tasks {
+        processResources {
+            inputs.property("version", project.version)
+            filesMatching("fabric.mod.json") {
+                expand(
+                    mutableMapOf(
+                        "version" to project.version,
+                        "minecraft_dependency" to libs.versions.minecraft.get().replaceAfterLast('.', "x"),
+                        "yacl_dependency" to libs.versions.yacl.get(),
+                        "fabric_loader_dependency" to libs.versions.fabric.loader.get(),
+                        "fabric_api_dependency" to libs.versions.fabric.api.get(),
+                        "fabric_kotlin_dependency" to libs.versions.fabric.kotlin.get()
+                    )
+                )
+            }
+        }
+    }
+}
+
 dependencies {
-    minecraft(libs.minecraft)
-    @Suppress("UnstableApiUsage")
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${libs.versions.parchment.get()}@zip")
-    })
-
-    modImplementation(libs.fabric.loader)
-    modImplementation(libs.fabric.api)
-    modImplementation(libs.fabric.kotlin)
-
     modImplementation(libs.mod.menu)
     modImplementation(libs.yacl)
 
     include(modImplementation(libs.keybinds.get())!!)
+    include(implementation(project(path = ":scripting-api", configuration = "namedElements"))!!)
 
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-common")!!) // fine
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")!!) // fine
@@ -55,23 +89,7 @@ dependencies {
     include(implementation(libs.kotlin.metadata.get())!!)
 }
 
-java {
-    withSourcesJar()
-}
-
 tasks {
-    processResources {
-        inputs.property("version", project.version)
-        filesMatching("fabric.mod.json") {
-            expand(mutableMapOf(
-                "version" to project.version,
-                "minecraft_dependency" to libs.versions.minecraft.get().replaceAfterLast('.', "x"),
-                "yacl_dependency" to libs.versions.yacl.get(),
-                "fabric_loader_dependency" to libs.versions.fabric.loader.get(),
-            ))
-        }
-    }
-
     remapJar {
         inputFile.set(shadowJar.get().archiveFile)
     }
@@ -79,7 +97,7 @@ tasks {
     shadowJar {
         destinationDirectory.set(File("./build/devlibs"))
 
-        from("LICENSE")
+        // from("LICENSE")
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"

@@ -3,11 +3,12 @@ package me.senseiwells.scripting.utils
 import com.google.gson.JsonObject
 import me.senseiwells.scripting.EssentialScripting
 import me.senseiwells.scripting.EssentialScriptingConfig
-import net.fabricmc.loom.util.TinyRemapperHelper
+import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.MappingWriter
 import net.fabricmc.mappingio.adapter.MappingNsRenamer
 import net.fabricmc.mappingio.format.MappingFormat
+import net.fabricmc.mappingio.tree.MappingTree
 import net.fabricmc.mappingio.tree.MemoryMappingTree
 import net.fabricmc.tinyremapper.IMappingProvider
 import net.fabricmc.tinyremapper.NonClassCopyMode
@@ -30,15 +31,15 @@ object ScriptRemappingUtils {
     private var mojangJar: Path? = null
 
     fun getMojang2IntermediaryMappings(): IMappingProvider {
-        return TinyRemapperHelper.create(this.mappings, "mojang", "intermediary", false)
-    }
-
-    fun getIntermediary2MojangMappings(): IMappingProvider {
-        return TinyRemapperHelper.create(this.mappings, "intermediary", "mojang", false)
+        return this.mappings.provider("mojang", "intermediary", false)
     }
 
     fun getMojangClientJar(): Path? {
         return this.mojangJar
+    }
+
+    fun shouldRemap(): Boolean {
+        return !FabricLoader.getInstance().isDevelopmentEnvironment
     }
 
     internal fun load() {
@@ -56,7 +57,7 @@ object ScriptRemappingUtils {
             return
         }
         val remapper = TinyRemapper.newRemapper()
-            .withMappings(this.getIntermediary2MojangMappings())
+            .withMappings(this.mappings.provider("intermediary", "mojang", true))
             .build()
         try {
             OutputConsumerPath.Builder(mojangJar).build().use { consumer ->
@@ -182,5 +183,53 @@ object ScriptRemappingUtils {
             .resolve("official2intermediary")
             .resolve("$version.tiny")
             .createParentDirectories()
+    }
+
+    private fun MappingTree.provider(from: String, to: String, remapLocals: Boolean): IMappingProvider {
+        return IMappingProvider { acceptor ->
+            val fromId = this.getNamespaceId(from)
+            val toId = this.getNamespaceId(to)
+            for (classDef in this.classes) {
+                val className = classDef.getName(fromId) ?: continue
+
+                val dstClassName = classDef.getName(toId) ?: className
+                acceptor.acceptClass(className, dstClassName)
+
+                for (field in classDef.fields) {
+                    val fieldName = field.getName(fromId) ?: continue
+
+                    val dstFieldName = field.getName(toId) ?: fieldName
+                    acceptor.acceptField(
+                        IMappingProvider.Member(className, fieldName, field.getDesc(fromId)), dstFieldName
+                    )
+                }
+
+                for (method in classDef.methods) {
+                    val methodName = method.getName(fromId) ?: continue
+
+                    val dstMethodName = method.getName(toId) ?: methodName
+                    val methodIdentifier = IMappingProvider.Member(className, methodName, method.getDesc(fromId))
+                    acceptor.acceptMethod(methodIdentifier, dstMethodName)
+
+                    if (!remapLocals) {
+                        continue
+                    }
+
+                    for (parameter in method.args) {
+                        val name = parameter.getName(toId) ?: continue
+
+                        acceptor.acceptMethodArg(methodIdentifier, parameter.lvIndex, name)
+                    }
+
+                    for (localVariable in method.vars) {
+                        acceptor.acceptMethodVar(
+                            methodIdentifier, localVariable.lvIndex,
+                            localVariable.startOpIdx, localVariable.lvtRowIndex,
+                            localVariable.getName(toId)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
