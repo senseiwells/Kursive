@@ -1,25 +1,22 @@
 package me.senseiwells.scripting.script.configuration
 
-import me.senseiwells.scripting.EssentialScripting
 import me.senseiwells.scripting.script.Script
 import me.senseiwells.scripting.script.annotation.Environment
 import me.senseiwells.scripting.script.annotation.Mappings
-
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
+import me.senseiwells.scripting.utils.asWarningDiagnostics
 import net.fabricmc.loader.api.FabricLoader
-import net.fabricmc.loader.impl.util.version.VersionParser
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.updateClasspath
+import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.util.filterByAnnotationType
 
 class ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
     defaultImports(Mappings::class, Environment::class)
     jvm {
         dependenciesFromCurrentContext(wholeClasspath = true)
-        updateClasspath(listOf(ScriptRemappingUtils.getMojangClientJar()!!.toFile()))
-
     }
     refineConfiguration {
         onAnnotations(Mappings::class, handler = ::configureMappings)
@@ -36,17 +33,17 @@ private fun configureMappings(
         ?.filterByAnnotationType<Mappings>()
         ?.firstOrNull()
         ?: return context.compilationConfiguration.asSuccess()
-    val mappedJar = when (annotation.type.lowercase()) {
-        else -> ScriptRemappingUtils.getMojangClientJar()
+    val type = MappingType.parse(annotation.type)
+    val mappedJar = ScriptRemappingUtils.getMappedJar(type)
+    if (mappedJar != null) {
+        return context.compilationConfiguration.with {
+            mappings(type)
+            updateClasspath(listOf(mappedJar.toFile()))
+        }.asSuccess()
     }
-    if (mappedJar == null) {
-        return ResultWithDiagnostics.Failure(
-            "Failed to load mapped jar (${annotation.type}) for script".asErrorDiagnostics()
-        )
-    }
-    return context.compilationConfiguration.with {
-        updateClasspath(listOf(mappedJar.toFile()))
-    }.asSuccess()
+    return ResultWithDiagnostics.Failure(
+        "Failed to load mapped jar (${annotation.type}) for script".asErrorDiagnostics()
+    )
 }
 
 private fun configureEnvironment(
@@ -56,16 +53,19 @@ private fun configureEnvironment(
         it.annotation is Environment
     } ?: return context.compilationConfiguration.asSuccess()
     annotation as Environment
-    val version = VersionParser.parse(annotation.version, true)
-    val container = FabricLoader.getInstance().getModContainer("minecraft").get()
-    val result = version.compareTo(container.metadata.version)
-    when {
-        result > 0 -> EssentialScripting.logger.warn(
-            "Script was made for newer version of Minecraft: ${annotation.version}"
-        )
-        result < 0 -> EssentialScripting.logger.warn(
-            "Script was made for an older version of Minecraft: ${annotation.version}"
-        )
+    val result = EnvironmentWithVersion.parse(annotation)
+    if (result.isError()) {
+        return ResultWithDiagnostics.Failure(result.reports)
     }
-    return context.compilationConfiguration.asSuccess()
+    val env = result.valueOrThrow()
+    val container = FabricLoader.getInstance().getModContainer("minecraft").get()
+    val comparison = env.version.compareTo(container.metadata.version)
+    val diagnostics = when {
+        comparison > 0 -> listOf("Script was made for a newer version of Minecraft".asWarningDiagnostics())
+        comparison < 0 -> listOf("Script was made for an older version of Minecraft".asWarningDiagnostics())
+        else -> emptyList()
+    }
+    return context.compilationConfiguration.with {
+        environment(result.valueOrThrow())
+    }.asSuccess(diagnostics)
 }

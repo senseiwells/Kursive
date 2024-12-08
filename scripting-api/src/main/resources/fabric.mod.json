@@ -14,10 +14,7 @@
   "environment": "client",
   "entrypoints": {
     "main": [
-      {
-        "adapter": "kotlin",
-        "value": "me.senseiwells.scripting.EssentialScripting"
-      }
+
     ]
   },
   "mixins": [

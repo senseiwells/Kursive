@@ -1,5 +1,7 @@
 package me.senseiwells.scripting.script.remapping
 
+import me.senseiwells.scripting.script.configuration.MappingType
+import me.senseiwells.scripting.script.configuration.mappings
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.script.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import net.fabricmc.tinyremapper.NonClassCopyMode
@@ -36,10 +38,14 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
     }
 
     private fun remapAndSaveScript(script: KJvmCompiledScript) {
-        if (!ScriptRemappingUtils.shouldRemap()) {
+        val type = script.compilationConfiguration[ScriptCompilationConfiguration.mappings]
+            ?: MappingType.Mojang
+
+        if (!ScriptRemappingUtils.shouldRemap(type)) {
             script.saveToJar(this.outputJar.toFile())
             return
         }
+
         val temp = Files.createTempFile(
             this.outputJar.parent,
             this.outputJar.nameWithoutExtension,
@@ -48,7 +54,7 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
 
         script.saveToJar(temp.toFile())
 
-        val mappings = ScriptRemappingUtils.getMojang2IntermediaryMappings()
+        val mappings = ScriptRemappingUtils.getMappings(type)
         val remapper = TinyRemapper.newRemapper()
             .withMappings(mappings)
             .extension(KotlinMetadataTinyRemapperExtensionImpl)
@@ -56,7 +62,7 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
         try {
             OutputConsumerPath.Builder(this.outputJar).build().use { consumer ->
                 consumer.addNonClassFiles(temp, NonClassCopyMode.UNCHANGED, remapper)
-                remapper.readClassPath(ScriptRemappingUtils.getMojangClientJar())
+                remapper.readClassPath(ScriptRemappingUtils.getMappedJar(type))
                 remapper.readInputs(temp)
                 remapper.apply(consumer)
             }

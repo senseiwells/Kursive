@@ -3,7 +3,9 @@ package me.senseiwells.scripting
 import me.senseiwells.scripting.script.execution.ScriptExecutor
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
 import me.senseiwells.keybinds.api.KeybindListener
+import me.senseiwells.scripting.script.execution.ClientContext
 import net.fabricmc.api.ModInitializer
+import net.minecraft.client.Minecraft
 import net.minecraft.resources.ResourceLocation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,7 +32,7 @@ object EssentialScripting: ModInitializer {
         EssentialScriptingConfig.scriptKeybind.addListener(KeybindListener.onPress {
             val script = EssentialScriptingConfig.resolve("scripts").resolve("test.kts")
             if (script.exists()) {
-                ScriptExecutor.runScript(script.readText(), "test")
+                ScriptExecutor.runScript(ClientContext(Minecraft.getInstance()), script.readText(), "test")
             }
         })
     }

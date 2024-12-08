@@ -1,20 +1,22 @@
 package me.senseiwells.scripting.utils
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import me.senseiwells.scripting.EssentialScripting
+import java.io.InputStream
 import java.io.Reader
 import java.net.HttpURLConnection
 import java.net.URI
 
 object NetworkingUtils {
-    fun <T: Any> fetch(url: String, consumer: (Reader) -> T): T? {
+    inline fun <T: Any> fetchAsStream(url: String, consumer: (InputStream) -> T): T? {
         try {
             val connection = URI(url).toURL().openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
 
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                return connection.inputStream.bufferedReader().use(consumer)
+                return connection.inputStream.use(consumer)
             }
         } catch (e: Exception) {
             EssentialScripting.logger.error("Failed to fetch url $url")
@@ -22,11 +24,17 @@ object NetworkingUtils {
         return null
     }
 
-    fun fetchAsString(url: String): String? {
-        return this.fetch(url, Reader::readText)
+    inline fun <T: Any> fetchAsReader(url: String, consumer: (Reader) -> T): T? {
+        return this.fetchAsStream(url) { stream ->
+            stream.bufferedReader().use(consumer)
+        }
     }
 
     fun fetchAsJsonObject(url: String): JsonObject? {
-        return this.fetch(url, JsonParser::parseReader)?.asJsonObject
+        return this.fetchAsReader(url, JsonParser::parseReader)?.asJsonObject
+    }
+
+    fun fetchAsJsonArray(url: String): JsonArray? {
+        return this.fetchAsReader(url, JsonParser::parseReader)?.asJsonArray
     }
 }

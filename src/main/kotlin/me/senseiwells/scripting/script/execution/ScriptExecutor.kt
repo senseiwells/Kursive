@@ -1,30 +1,33 @@
 package me.senseiwells.scripting.script.execution
 
+import kotlinx.coroutines.runBlocking
 import me.senseiwells.scripting.EssentialScripting
 import me.senseiwells.scripting.EssentialScriptingConfig
+import me.senseiwells.scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
 import me.senseiwells.scripting.script.configuration.ScriptWithClasspathCompilationConfiguration
-import me.senseiwells.scripting.script.execution.ScriptExecutor.Entrypoint
 import me.senseiwells.scripting.script.remapping.RemappedJvmScriptJarGenerator
 import net.minecraft.Util
 import net.minecraft.client.Minecraft
 import java.lang.reflect.Modifier
-import java.net.URLClassLoader
 import java.util.concurrent.CompletableFuture
 import kotlin.io.path.createParentDirectories
+import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
+import kotlin.script.experimental.api.valueOrThrow
 import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
+import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 object ScriptExecutor {
-    fun runScript(code: String, name: String) {
+    fun <M> runScript(context: EnvironmentContext<M>, code: String, name: String) {
         CompletableFuture.supplyAsync({
-            this.compileAndLoad(code, name)
+            this.compileAndLoad(context, code, name)
         }, Util.ioPool()).handleAsync({ entrypoint, throwable ->
             // TODO: Clean this up
             if (entrypoint != null) {
                 try {
-                    entrypoint.invoke(arrayOf())
+                    entrypoint.invoke(context.minecraft, arrayOf())
                 } catch (e: Throwable) {
                     EssentialScripting.logger.error("Exception during execution", e)
                 }
@@ -34,57 +37,81 @@ object ScriptExecutor {
         }, Minecraft.getInstance())
     }
 
-    private fun compileAndLoad(code: String, name: String): Entrypoint? {
+    private fun <M> compileAndLoad(
+        context: EnvironmentContext<M>,
+        code: String,
+        name: String
+    ): ScriptEntrypoint<M>? {
         val output = EssentialScriptingConfig.resolve("compiled")
             .resolve("${name}.jar").createParentDirectories()
 
         val host = BasicJvmScriptingHost(evaluator = RemappedJvmScriptJarGenerator(output))
 
         val report = host.eval(
-            code.toScriptSource("__EssentialScript"),
+            code.toScriptSource("__Script_${name}"),
             ScriptWithClasspathCompilationConfiguration(),
             ScriptEvaluationConfiguration()
         )
         // TODO: propagate errors properly
         if (report.isError()) {
             for (diag in report.reports) {
+                if (diag.severity > ScriptDiagnostic.Severity.INFO) {
+                    EssentialScripting.logger.error(diag.render())
+                }
+            }
+            return null
+        }
+        for (diag in report.reports) {
+            if (diag.severity > ScriptDiagnostic.Severity.INFO) {
+                EssentialScripting.logger.warn(diag.render())
+            }
+        }
+
+        // TODO: Split
+        val script = output.toFile().loadScriptFromJar(false)
+            ?: throw IllegalStateException()
+        val result = runBlocking {
+            script.getClass(ScriptWithClassloaderEvaluationConfiguration())
+        }
+        if (result.isError()) {
+            for (diag in report.reports) {
                 EssentialScripting.logger.info(diag.render())
             }
             return null
         }
 
-        val loader = URLClassLoader(arrayOf(output.toUri().toURL()), this::class.java.classLoader)
-        val clazz = loader.loadClass("__EssentialScript")
-        val entrypoint = findEntrypoint(clazz)
+        val clazz = result.valueOrThrow().java
+        // Check the annotation that env and version match!
+        val entrypoint = findEntrypoint(context, clazz)
         return entrypoint
     }
 
-    private fun findEntrypoint(clazz: Class<*>): Entrypoint? {
-        try {
-            val main = clazz.getDeclaredMethod("main", Array<String>::class.java)
-            if (Modifier.isStatic(main.modifiers)) {
-                return Entrypoint { args -> main.invoke(null, args) }
-            }
-            val instance = clazz.getDeclaredConstructor().newInstance()
-            return Entrypoint { args -> main.invoke(instance, args) }
-        } catch (_: NoSuchMethodException) {
+    private fun <M> findEntrypoint(context: EnvironmentContext<M>, clazz: Class<*>): ScriptEntrypoint<M>? {
+        val argsType = Array<String>::class.java
+        val mcType = context.minecraft::class.java
 
-        }
-        try {
-            val main = clazz.getDeclaredMethod("main")
-            // This should never be static, but let's account for it anyway
-            if (Modifier.isStatic(main.modifiers)) {
-                return Entrypoint { _ -> main.invoke(null) }
-            }
-            val instance = clazz.getDeclaredConstructor().newInstance()
-            return Entrypoint { _ -> main.invoke(instance) }
-        } catch (_: NoSuchMethodException) {
+        findEntrypoint<M>(clazz) { _, _ -> emptyArray() }?.let { return it }
+        findEntrypoint<M>(clazz, argsType) { _, args -> arrayOf(args) }?.let { return it }
+        findEntrypoint<M>(clazz, mcType) { mc, _ -> arrayOf(mc) }?.let { return it }
+        findEntrypoint<M>(clazz, mcType, argsType) { mc, args -> arrayOf(mc, args) }?.let { return it }
 
-        }
         return null
     }
 
-    private fun interface Entrypoint {
-        fun invoke(args: Array<String>)
+    private inline fun <M> findEntrypoint(
+        clazz: Class<*>,
+        vararg params: Class<*>,
+        crossinline remap: (M, Array<String>) -> Array<Any?>
+    ): ScriptEntrypoint<M>? {
+        try {
+            val main = clazz.getDeclaredMethod("main", *params)
+            if (Modifier.isStatic(main.modifiers)) {
+                return ScriptEntrypoint { mc, args -> main.invoke(null, *remap(mc, args)) }
+            }
+            val instance = clazz.getDeclaredConstructor().newInstance()
+            return ScriptEntrypoint { mc, args -> main.invoke(instance, *remap(mc, args)) }
+        } catch (_: NoSuchMethodException) {
+            return null
+        }
     }
 }
