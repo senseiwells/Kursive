@@ -1,14 +1,18 @@
 package me.senseiwells.scripting
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import net.minecraft.client.Minecraft
 import net.minecraft.server.MinecraftServer
+import java.util.ArrayDeque
+import java.util.Queue
 import kotlin.coroutines.CoroutineContext
 
 private val scopes = Reference2ObjectOpenHashMap<Any, CoroutineScope>()
-private val channels = Reference2ObjectOpenHashMap<Any, Channel<Unit>>()
+private val delays = Reference2ObjectOpenHashMap<Any, Int2ObjectOpenHashMap<Queue<CompletableDeferred<Unit>>>>()
+private val ticks = Reference2IntOpenHashMap<Any>()
 
 fun launch(client: Minecraft, block: suspend () -> Unit) {
     val scope = scopes.getOrPut(client) {
@@ -24,23 +28,37 @@ fun launch(server: MinecraftServer, block: suspend () -> Unit) {
     scope.launch { block.invoke() }
 }
 
-suspend fun tickDelay(ticks: Int) = coroutineScope {
+suspend fun tickDelay(duration: Int) = coroutineScope {
     val context = coroutineContext[MinecraftContext]
         ?: throw IllegalStateException("Cannot run tickDelay on non-minecraft coroutine")
-    if (ticks > 0) {
-        val channel = channels.getOrPut(context.minecraft, ::Channel)
-        repeat(ticks) { channel.receive() }
+    if (duration > 0) {
+        val minecraft = context.minecraft
+        val delays = delays.getOrPut(minecraft, ::Int2ObjectOpenHashMap)
+        val queue = delays.getOrPut(ticks.getInt(minecraft) + duration) { ArrayDeque(1) }
+        val deferred = CompletableDeferred<Unit>()
+        queue.add(deferred)
+        deferred.await()
     }
 }
 
-internal fun tick(client: Minecraft) {
-    val channel = channels.getOrPut(client, ::Channel)
-    launch(client) { channel.send(Unit) }
-}
+internal object ScriptingCoroutines {
+    fun tick(client: Minecraft) {
+        this.tick(client as Any)
+    }
 
-internal fun tick(server: MinecraftServer) {
-    val channel = channels.getOrPut(server, ::Channel)
-    launch(server) { channel.send(Unit) }
+    fun tick(server: MinecraftServer) {
+        this.tick(server as Any)
+    }
+
+    private fun tick(any: Any) {
+        val delays = delays[any] ?: return
+        val tick = ticks.getInt(any)
+        ticks.put(any, tick + 1)
+        val queue = delays.remove(tick) ?: return
+        for (deferred in queue) {
+            deferred.complete(Unit)
+        }
+    }
 }
 
 private class MinecraftContext(val minecraft: Any): CoroutineContext.Element {

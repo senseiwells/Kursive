@@ -14,7 +14,16 @@
   "environment": "client",
   "entrypoints": {
     "main": [
-
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.impl.CommonScriptingApi"
+      }
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.impl.ClientScriptingApi"
+      }
     ]
   },
   "mixins": [

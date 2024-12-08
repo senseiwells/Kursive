@@ -11,6 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.io.path.exists
 import kotlin.io.path.readText
+import kotlin.script.experimental.host.toScriptSource
 
 object EssentialScripting: ModInitializer {
     const val MOD_ID = "essential-scripting"
@@ -32,7 +33,7 @@ object EssentialScripting: ModInitializer {
         EssentialScriptingConfig.scriptKeybind.addListener(KeybindListener.onPress {
             val script = EssentialScriptingConfig.resolve("scripts").resolve("test.kts")
             if (script.exists()) {
-                ScriptExecutor.runScript(ClientContext(Minecraft.getInstance()), script.readText(), "test")
+                ScriptExecutor.runScript(ClientContext(Minecraft.getInstance()), script.toFile().toScriptSource())
             }
         })
     }

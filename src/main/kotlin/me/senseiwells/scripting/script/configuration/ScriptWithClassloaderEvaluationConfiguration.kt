@@ -5,8 +5,10 @@ import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.jvm.baseClassLoader
 import kotlin.script.experimental.jvm.jvm
 
-class ScriptWithClassloaderEvaluationConfiguration: ScriptEvaluationConfiguration({
+object ScriptWithClassloaderEvaluationConfiguration: ScriptEvaluationConfiguration({
     jvm {
         baseClassLoader(Script::class.java.classLoader)
     }
-})
+}) {
+    private fun readResolve(): Any = ScriptWithClassloaderEvaluationConfiguration
+}

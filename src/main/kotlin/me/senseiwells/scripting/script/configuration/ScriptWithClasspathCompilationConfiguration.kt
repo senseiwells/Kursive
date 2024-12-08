@@ -13,7 +13,7 @@ import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.util.filterByAnnotationType
 
-class ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
+object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
     defaultImports(Mappings::class, Environment::class)
     jvm {
         dependenciesFromCurrentContext(wholeClasspath = true)
@@ -24,7 +24,9 @@ class ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguratio
     }
     // We need this so that everything is loaded with the KnotClassLoader
     baseClass(Script::class)
-})
+}) {
+    private fun readResolve(): Any = ScriptWithClasspathCompilationConfiguration
+}
 
 private fun configureMappings(
     context: ScriptConfigurationRefinementContext

@@ -5,24 +5,26 @@ import me.senseiwells.scripting.EssentialScripting
 import me.senseiwells.scripting.EssentialScriptingConfig
 import me.senseiwells.scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
 import me.senseiwells.scripting.script.configuration.ScriptWithClasspathCompilationConfiguration
+import me.senseiwells.scripting.script.configuration.environment
 import me.senseiwells.scripting.script.remapping.RemappedJvmScriptJarGenerator
 import net.minecraft.Util
 import net.minecraft.client.Minecraft
 import java.lang.reflect.Modifier
 import java.util.concurrent.CompletableFuture
 import kotlin.io.path.createParentDirectories
+import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
-import kotlin.script.experimental.api.ScriptEvaluationConfiguration
+import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.valueOrThrow
-import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.host.FileBasedScriptSource
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 object ScriptExecutor {
-    fun <M> runScript(context: EnvironmentContext<M>, code: String, name: String) {
+    fun <M> runScript(context: EnvironmentContext<M>, source: SourceCode) {
         CompletableFuture.supplyAsync({
-            this.compileAndLoad(context, code, name)
+            this.compileAndLoad(context, source)
         }, Util.ioPool()).handleAsync({ entrypoint, throwable ->
             // TODO: Clean this up
             if (entrypoint != null) {
@@ -39,18 +41,25 @@ object ScriptExecutor {
 
     private fun <M> compileAndLoad(
         context: EnvironmentContext<M>,
-        code: String,
-        name: String
+        source: SourceCode
     ): ScriptEntrypoint<M>? {
-        val output = EssentialScriptingConfig.resolve("compiled")
-            .resolve("${name}.jar").createParentDirectories()
+        // TODO:
+        val output = if (source is FileBasedScriptSource) {
+            EssentialScriptingConfig.resolve("compiled")
+                .resolve("${source.file.nameWithoutExtension}.jar").createParentDirectories()
+        } else {
+            EssentialScriptingConfig.resolve("compiled-tmp")
+                .resolve("${source.name}.jar").createParentDirectories()
+        }
+
 
         val host = BasicJvmScriptingHost(evaluator = RemappedJvmScriptJarGenerator(output))
 
+
         val report = host.eval(
-            code.toScriptSource("__Script_${name}"),
-            ScriptWithClasspathCompilationConfiguration(),
-            ScriptEvaluationConfiguration()
+            source,
+            ScriptWithClasspathCompilationConfiguration,
+            ScriptWithClassloaderEvaluationConfiguration
         )
         // TODO: propagate errors properly
         if (report.isError()) {
@@ -71,7 +80,7 @@ object ScriptExecutor {
         val script = output.toFile().loadScriptFromJar(false)
             ?: throw IllegalStateException()
         val result = runBlocking {
-            script.getClass(ScriptWithClassloaderEvaluationConfiguration())
+            script.getClass(ScriptWithClassloaderEvaluationConfiguration)
         }
         if (result.isError()) {
             for (diag in report.reports) {
@@ -79,6 +88,8 @@ object ScriptExecutor {
             }
             return null
         }
+        val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
+        println(env)
 
         val clazz = result.valueOrThrow().java
         // Check the annotation that env and version match!

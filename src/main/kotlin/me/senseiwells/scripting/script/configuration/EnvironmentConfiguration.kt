@@ -17,6 +17,14 @@ class EnvironmentWithVersion private constructor(
     @Transient
     val version: Version = VersionParser.parse(this.rawVersion, true)
 
+    override fun toString(): String {
+        return "EnvironmentWithVersion(type=${this.type}, version=${this.version})"
+    }
+
+    private fun readResolve(): Any {
+        return EnvironmentWithVersion(this.type, this.rawVersion)
+    }
+
     companion object {
         fun parse(environment: Environment): ResultWithDiagnostics<EnvironmentWithVersion> {
             val env = when (environment.env.lowercase()) {
