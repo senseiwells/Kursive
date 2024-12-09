@@ -31,11 +31,13 @@ class EssentialScriptingConfig {
         val instance: EssentialScriptingConfig
             get() = this.handler.instance()
 
-        val scriptKeybind: Keybind
+        val scriptStartKeybind: Keybind
+        val scriptStopKeybind: Keybind
 
         init {
             this.handler.load()
-            this.scriptKeybind = register("script", this.instance.runScriptKeys)
+            this.scriptStartKeybind = register("script-start", this.instance.runScriptKeys)
+            this.scriptStopKeybind = register("script-stop", InputKeys.of(InputConstants.KEY_F7))
         }
 
         fun screen(parent: Screen? = null): Screen {

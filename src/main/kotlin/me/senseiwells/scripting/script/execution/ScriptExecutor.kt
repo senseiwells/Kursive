@@ -1,6 +1,6 @@
 package me.senseiwells.scripting.script.execution
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import me.senseiwells.scripting.EssentialScripting
 import me.senseiwells.scripting.EssentialScriptingConfig
 import me.senseiwells.scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
@@ -9,9 +9,11 @@ import me.senseiwells.scripting.script.configuration.environment
 import me.senseiwells.scripting.script.remapping.RemappedJvmScriptJarGenerator
 import net.minecraft.Util
 import net.minecraft.client.Minecraft
-import java.lang.reflect.Modifier
 import java.util.concurrent.CompletableFuture
 import kotlin.io.path.createParentDirectories
+import kotlin.reflect.KClass
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.SourceCode
@@ -22,17 +24,20 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 object ScriptExecutor {
+    private val scripts = ArrayList<Job>()
+
+    fun cancelAllScripts() {
+        scripts.forEach { it.cancel() }
+    }
+
     fun <M> runScript(context: EnvironmentContext<M>, source: SourceCode) {
         CompletableFuture.supplyAsync({
             this.compileAndLoad(context, source)
         }, Util.ioPool()).handleAsync({ entrypoint, throwable ->
             // TODO: Clean this up
             if (entrypoint != null) {
-                try {
-                    entrypoint.invoke(context.minecraft, arrayOf())
-                } catch (e: Throwable) {
-                    EssentialScripting.logger.error("Exception during execution", e)
-                }
+                val job = context.invoke(entrypoint)
+                scripts.add(job)
             } else {
                 EssentialScripting.logger.error("Failed to run script", throwable)
             }
@@ -89,40 +94,34 @@ object ScriptExecutor {
             return null
         }
         val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
+        // Check the annotation that env and version match!
         println(env)
 
-        val clazz = result.valueOrThrow().java
-        // Check the annotation that env and version match!
-        val entrypoint = findEntrypoint(context, clazz)
+        val entrypoint = findEntrypoint(context, result.valueOrThrow())
         return entrypoint
     }
 
-    private fun <M> findEntrypoint(context: EnvironmentContext<M>, clazz: Class<*>): ScriptEntrypoint<M>? {
-        val argsType = Array<String>::class.java
-        val mcType = context.minecraft::class.java
+    private fun <M> findEntrypoint(context: EnvironmentContext<M>, klass: KClass<*>): ScriptEntrypoint<M>? {
+        val argsType = Array<String>::class
+        val mcType = context.minecraft::class
 
-        findEntrypoint<M>(clazz) { _, _ -> emptyArray() }?.let { return it }
-        findEntrypoint<M>(clazz, argsType) { _, args -> arrayOf(args) }?.let { return it }
-        findEntrypoint<M>(clazz, mcType) { mc, _ -> arrayOf(mc) }?.let { return it }
-        findEntrypoint<M>(clazz, mcType, argsType) { mc, args -> arrayOf(mc, args) }?.let { return it }
+        findEntrypoint<M>(klass) { _, _ -> emptyArray() }?.let { return it }
+        findEntrypoint<M>(klass, argsType) { _, args -> arrayOf(args) }?.let { return it }
+        findEntrypoint<M>(klass, mcType) { mc, _ -> arrayOf(mc) }?.let { return it }
+        findEntrypoint<M>(klass, mcType, argsType) { mc, args -> arrayOf(mc, args) }?.let { return it }
 
         return null
     }
 
     private inline fun <M> findEntrypoint(
-        clazz: Class<*>,
-        vararg params: Class<*>,
+        klass: KClass<*>,
+        vararg params: KClass<*>,
         crossinline remap: (M, Array<String>) -> Array<Any?>
     ): ScriptEntrypoint<M>? {
-        try {
-            val main = clazz.getDeclaredMethod("main", *params)
-            if (Modifier.isStatic(main.modifiers)) {
-                return ScriptEntrypoint { mc, args -> main.invoke(null, *remap(mc, args)) }
-            }
-            val instance = clazz.getDeclaredConstructor().newInstance()
-            return ScriptEntrypoint { mc, args -> main.invoke(instance, *remap(mc, args)) }
-        } catch (_: NoSuchMethodException) {
-            return null
-        }
+        val function = klass.declaredMemberFunctions.find { func ->
+            func.name == "main" && func.parameters.drop(1).map { it.type.classifier } == params.toList()
+        } ?: return null
+        val instance = klass.java.getDeclaredConstructor().newInstance()
+        return ScriptEntrypoint { mc, args -> function.callSuspend(instance, *remap(mc, args)) }
     }
 }

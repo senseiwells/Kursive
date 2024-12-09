@@ -10,22 +10,22 @@ import java.util.ArrayDeque
 import java.util.Queue
 import kotlin.coroutines.CoroutineContext
 
-private val scopes = Reference2ObjectOpenHashMap<Any, CoroutineScope>()
 private val delays = Reference2ObjectOpenHashMap<Any, Int2ObjectOpenHashMap<Queue<CompletableDeferred<Unit>>>>()
 private val ticks = Reference2IntOpenHashMap<Any>()
+private val scopes = Reference2ObjectOpenHashMap<Any, CoroutineScope>()
 
-fun launch(client: Minecraft, block: suspend () -> Unit) {
+fun launch(client: Minecraft, block: suspend () -> Unit): Job {
     val scope = scopes.getOrPut(client) {
-        CoroutineScope(client.asCoroutineDispatcher()) + MinecraftContext(client)
+        CoroutineScope(client.asCoroutineDispatcher() + MinecraftContext(client) + SupervisorJob())
     }
-    scope.launch { block.invoke() }
+    return scope.launch { block.invoke() }
 }
 
-fun launch(server: MinecraftServer, block: suspend () -> Unit) {
+fun launch(server: MinecraftServer, block: suspend () -> Unit): Job {
     val scope = scopes.getOrPut(server) {
         CoroutineScope(server.asCoroutineDispatcher() + MinecraftContext(server))
     }
-    scope.launch { block.invoke() }
+    return scope.launch { block.invoke() }
 }
 
 suspend fun tickDelay(duration: Int) = coroutineScope {
