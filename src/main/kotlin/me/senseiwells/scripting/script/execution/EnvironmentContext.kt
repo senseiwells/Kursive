@@ -1,7 +1,8 @@
 package me.senseiwells.scripting.script.execution
 
 import kotlinx.coroutines.Job
-import me.senseiwells.scripting.launch
+import me.senseiwells.scripting.impl.ClientScriptingApi
+import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.minecraft.client.Minecraft
 import net.minecraft.server.MinecraftServer
 
@@ -33,7 +34,7 @@ private class ClientContext(client: Minecraft, args: Array<String>): Environment
         get() = true
 
     override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>): Job {
-        return launch(this.minecraft) {
+        return ClientScriptingApi.launch(this.minecraft) {
             entrypoint.invoke(this.minecraft, this.args)
         }
     }
@@ -44,7 +45,7 @@ private class ServerContext(server: MinecraftServer, args: Array<String>): Envir
         get() = false
 
     override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>): Job {
-        return launch(this.minecraft) {
+        return CommonScriptingApi.launch(this.minecraft) {
             entrypoint.invoke(this.minecraft, this.args)
         }
     }

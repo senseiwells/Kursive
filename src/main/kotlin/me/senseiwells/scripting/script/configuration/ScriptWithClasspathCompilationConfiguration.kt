@@ -1,6 +1,5 @@
 package me.senseiwells.scripting.script.configuration
 
-import me.senseiwells.scripting.script.Script
 import me.senseiwells.scripting.script.annotation.Environment
 import me.senseiwells.scripting.script.annotation.Mappings
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
@@ -12,6 +11,8 @@ import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.util.filterByAnnotationType
+
+open class Script
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
     defaultImports(Mappings::class, Environment::class)
