@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     val jvmVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]
@@ -101,6 +103,13 @@ tasks {
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"
+    }
+
+    register<ShadowJar>("fatJar") {
+        isZip64 = true
+
+        configurations = listOf(project.configurations.runtimeClasspath.get())
+        archiveClassifier = "fat"
     }
 }
 

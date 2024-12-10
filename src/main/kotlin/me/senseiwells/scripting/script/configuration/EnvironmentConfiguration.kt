@@ -1,6 +1,6 @@
 package me.senseiwells.scripting.script.configuration
 
-import me.senseiwells.scripting.script.annotation.Environment
+import me.senseiwells.scripting.annotation.Environment
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.impl.util.version.VersionParser

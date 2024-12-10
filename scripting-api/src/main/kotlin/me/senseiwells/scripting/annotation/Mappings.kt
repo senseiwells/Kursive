@@ -1,4 +1,4 @@
-package me.senseiwells.scripting.script.annotation
+package me.senseiwells.scripting.annotation
 
 @Target(AnnotationTarget.FILE)
 @Retention(AnnotationRetention.SOURCE)

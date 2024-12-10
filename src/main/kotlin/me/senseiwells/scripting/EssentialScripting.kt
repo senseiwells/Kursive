@@ -1,28 +1,25 @@
 package me.senseiwells.scripting
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import me.senseiwells.keybinds.api.KeybindListener
+import me.senseiwells.scripting.script.FileScriptInstance
 import me.senseiwells.scripting.script.execution.EnvironmentContext
-import me.senseiwells.scripting.script.execution.ScriptExecutor
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
 import net.fabricmc.api.ModInitializer
 import net.minecraft.client.Minecraft
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.io.path.exists
-import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.api.ResultWithDiagnostics
+import kotlin.script.experimental.api.ScriptDiagnostic
 
 object EssentialScripting: ModInitializer {
     const val MOD_ID = "essential-scripting"
 
     val logger: Logger = LoggerFactory.getLogger("EssentialScripting")
+
+    private val script = FileScriptInstance<Minecraft>(
+        EssentialScriptingConfig.resolve("scripts").resolve("test.kts")
+    )
 
     override fun onInitialize() {
         ScriptRemappingUtils.load()
@@ -37,24 +34,23 @@ object EssentialScripting: ModInitializer {
 
     private fun loadKeybinds() {
         EssentialScriptingConfig.scriptStartKeybind.addListener(KeybindListener.onPress {
-            val script = EssentialScriptingConfig.resolve("scripts").resolve("test.kts")
-            if (script.exists()) {
-                ScriptExecutor.runScript(EnvironmentContext(Minecraft.getInstance()), script.toFile().toScriptSource())
+            if (this.script.shouldRecompile()) {
+                this.logReports(this.script.compile())
             }
+            this.logReports(this.script.execute(EnvironmentContext(Minecraft.getInstance())))
         })
         EssentialScriptingConfig.scriptStopKeybind.addListener(KeybindListener.onPress {
-            ScriptExecutor.cancelAllScripts()
+            this.script.cancel()
         })
     }
 
-    private suspend fun main(client: Minecraft) = coroutineScope {
-        val deferred = async {
-            println("Starting async task")
-            delay(3000)
-            println("Finished async task")
+    private fun logReports(result: ResultWithDiagnostics<*>) {
+        for (report in result.reports) {
+            when (report.severity) {
+                ScriptDiagnostic.Severity.WARNING -> logger.warn(report.render(withSeverity = false))
+                ScriptDiagnostic.Severity.ERROR -> logger.error(report.render(withSeverity = false))
+                else -> { }
+            }
         }
-        println("Waiting for async task")
-        deferred.await()
-        println("Finished waiting for async task")
     }
 }

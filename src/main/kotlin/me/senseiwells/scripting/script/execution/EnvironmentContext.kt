@@ -3,6 +3,7 @@ package me.senseiwells.scripting.script.execution
 import kotlinx.coroutines.Job
 import me.senseiwells.scripting.impl.ClientScriptingApi
 import me.senseiwells.scripting.impl.CommonScriptingApi
+import net.fabricmc.api.EnvType
 import net.minecraft.client.Minecraft
 import net.minecraft.server.MinecraftServer
 
@@ -24,14 +25,14 @@ sealed class EnvironmentContext<M>(
     val minecraft: M & Any,
     val args: Array<String>
 ) {
-    abstract val isClient: Boolean
+    abstract val type: EnvType
 
     abstract fun invoke(entrypoint: ScriptEntrypoint<M>): Job
 }
 
 private class ClientContext(client: Minecraft, args: Array<String>): EnvironmentContext<Minecraft>(client, args) {
-    override val isClient: Boolean
-        get() = true
+    override val type: EnvType
+        get() = EnvType.CLIENT
 
     override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>): Job {
         return ClientScriptingApi.launch(this.minecraft) {
@@ -41,8 +42,8 @@ private class ClientContext(client: Minecraft, args: Array<String>): Environment
 }
 
 private class ServerContext(server: MinecraftServer, args: Array<String>): EnvironmentContext<MinecraftServer>(server, args) {
-    override val isClient: Boolean
-        get() = false
+    override val type: EnvType
+        get() = EnvType.SERVER
 
     override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>): Job {
         return CommonScriptingApi.launch(this.minecraft) {

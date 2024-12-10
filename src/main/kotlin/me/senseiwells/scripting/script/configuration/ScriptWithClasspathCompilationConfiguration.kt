@@ -1,7 +1,8 @@
 package me.senseiwells.scripting.script.configuration
 
-import me.senseiwells.scripting.script.annotation.Environment
-import me.senseiwells.scripting.script.annotation.Mappings
+import me.senseiwells.scripting.annotation.Environment
+import me.senseiwells.scripting.annotation.Mappings
+import me.senseiwells.scripting.utils.EnvironmentUtils
 import me.senseiwells.scripting.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.utils.asWarningDiagnostics
 import net.fabricmc.loader.api.FabricLoader
@@ -12,7 +13,7 @@ import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.util.filterByAnnotationType
 
-open class Script
+open class BaseScript
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
     defaultImports(Mappings::class, Environment::class)
@@ -24,7 +25,7 @@ object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfigurati
         onAnnotations(Environment::class, handler = ::configureEnvironment)
     }
     // We need this so that everything is loaded with the KnotClassLoader
-    baseClass(Script::class)
+    baseClass(BaseScript::class)
 }) {
     private fun readResolve(): Any = ScriptWithClasspathCompilationConfiguration
 }
@@ -61,14 +62,7 @@ private fun configureEnvironment(
         return ResultWithDiagnostics.Failure(result.reports)
     }
     val env = result.valueOrThrow()
-    val container = FabricLoader.getInstance().getModContainer("minecraft").get()
-    val comparison = env.version.compareTo(container.metadata.version)
-    val diagnostics = when {
-        comparison > 0 -> listOf("Script was made for a newer version of Minecraft".asWarningDiagnostics())
-        comparison < 0 -> listOf("Script was made for an older version of Minecraft".asWarningDiagnostics())
-        else -> emptyList()
-    }
     return context.compilationConfiguration.with {
         environment(result.valueOrThrow())
-    }.asSuccess(diagnostics)
+    }.asSuccess(EnvironmentUtils.getDiagnosticsForTarget(env.version))
 }

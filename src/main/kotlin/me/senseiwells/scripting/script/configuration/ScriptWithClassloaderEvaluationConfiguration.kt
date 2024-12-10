@@ -6,7 +6,7 @@ import kotlin.script.experimental.jvm.jvm
 
 object ScriptWithClassloaderEvaluationConfiguration: ScriptEvaluationConfiguration({
     jvm {
-        baseClassLoader(Script::class.java.classLoader)
+        baseClassLoader(BaseScript::class.java.classLoader)
     }
 }) {
     private fun readResolve(): Any = ScriptWithClassloaderEvaluationConfiguration
