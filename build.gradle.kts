@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
     val jvmVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]
@@ -16,6 +14,9 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
+val modVersion = "0.1.0-alpha.14"
+val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
+
 allprojects {
     apply(plugin = "fabric-loom")
     apply(plugin = "maven-publish")
@@ -23,6 +24,7 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.plugin.serialization")
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven("https://maven.parchmentmc.org/")
         maven("https://maven.terraformersmc.com/")
@@ -33,8 +35,6 @@ allprojects {
 
     val libs = rootProject.libs
 
-    val modVersion = "0.1.0-alpha.10"
-    val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
     version = releaseVersion
     group = "me.senseiwells"
 
@@ -103,13 +103,6 @@ tasks {
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"
-    }
-
-    register<ShadowJar>("fatJar") {
-        isZip64 = true
-
-        configurations = listOf(project.configurations.runtimeClasspath.get())
-        archiveClassifier = "fat"
     }
 }
 

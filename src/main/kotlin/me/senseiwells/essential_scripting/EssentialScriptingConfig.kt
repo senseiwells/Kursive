@@ -1,11 +1,11 @@
-package me.senseiwells.scripting
+package me.senseiwells.essential_scripting
 
 import com.mojang.blaze3d.platform.InputConstants
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler
 import dev.isxander.yacl3.config.v2.api.SerialEntry
-import dev.isxander.yacl3.config.v2.api.autogen.*
+import dev.isxander.yacl3.config.v2.api.autogen.AutoGen
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder
-import me.senseiwells.scripting.EssentialScripting.id
+import me.senseiwells.essential_scripting.EssentialScripting.id
 import me.senseiwells.keybinds.api.InputKeys
 import me.senseiwells.keybinds.api.Keybind
 import me.senseiwells.keybinds.api.KeybindManager
@@ -13,7 +13,7 @@ import me.senseiwells.keybinds.api.yacl.Keybinding
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.screens.Screen
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.createDirectories
 
 class EssentialScriptingConfig {
     @Keybinding(id = RUN_SCRIPT)
@@ -29,27 +29,27 @@ class EssentialScriptingConfig {
 
         @JvmStatic
         val instance: EssentialScriptingConfig
-            get() = this.handler.instance()
+            get() = handler.instance()
 
         val scriptStartKeybind: Keybind
         val scriptStopKeybind: Keybind
 
         init {
-            this.handler.load()
-            this.scriptStartKeybind = register("script-start", this.instance.runScriptKeys)
-            this.scriptStopKeybind = register("script-stop", InputKeys.of(InputConstants.KEY_F7))
+            handler.load()
+            scriptStartKeybind = register("script-start", instance.runScriptKeys)
+            scriptStopKeybind = register("script-stop", InputKeys.of(InputConstants.KEY_F7))
         }
 
         fun screen(parent: Screen? = null): Screen {
-            return this.handler.generateGui().generateScreen(parent)
+            return handler.generateGui().generateScreen(parent)
         }
 
         fun resolve(path: String): Path {
-            return this.directory.resolve(path)
+            return directory.resolve(path)
         }
 
         internal fun load() {
-            this.directory.createDirectories()
+            directory.createDirectories()
         }
 
         private fun register(id: String, keys: InputKeys): Keybind {
@@ -63,7 +63,7 @@ class EssentialScriptingConfig {
                 .id(id("config"))
                 .serializer { config ->
                     GsonConfigSerializerBuilder.create(config)
-                        .setPath(this.directory.resolve("config.json"))
+                        .setPath(directory.resolve("config.json"))
                         .appendGsonBuilder { obj ->
                             obj.setPrettyPrinting()
                             obj.registerTypeAdapter(InputKeys::class.java, InputKeys.Serializer.INSTANCE)

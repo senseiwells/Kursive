@@ -16,13 +16,13 @@
     "main": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.scripting.EssentialScripting"
+        "value": "me.senseiwells.essential_scripting.EssentialScripting"
       }
     ],
     "modmenu": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.scripting.compat.ModMenuEssentialClientImpl"
+        "value": "me.senseiwells.essential_scripting.compat.ModMenuEssentialClientImpl"
       }
     ]
   },

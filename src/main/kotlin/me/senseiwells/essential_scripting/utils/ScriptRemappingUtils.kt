@@ -1,10 +1,10 @@
-package me.senseiwells.scripting.utils
+package me.senseiwells.essential_scripting.utils
 
 import com.google.gson.JsonObject
 import kotlinx.io.IOException
-import me.senseiwells.scripting.EssentialScripting
-import me.senseiwells.scripting.EssentialScriptingConfig
-import me.senseiwells.scripting.script.configuration.MappingType
+import me.senseiwells.essential_scripting.EssentialScripting
+import me.senseiwells.essential_scripting.EssentialScriptingConfig
+import me.senseiwells.essential_scripting.script.configuration.MappingType
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.MappingWriter
@@ -38,23 +38,23 @@ object ScriptRemappingUtils {
 
     private var mappedJars = EnumMap<_, Path>(MappingType::class.java)
 
-    fun getMappings(from: MappingType, to: MappingType = this.getCurrentMappings()): IMappingProvider {
-        return this.mappings.provider(from.id, to.id, false)
+    fun getMappings(from: MappingType, to: MappingType = getCurrentMappings()): IMappingProvider {
+        return mappings.provider(from.id, to.id, false)
     }
 
     fun getMappedJar(type: MappingType): Path? {
-        return this.mappedJars[type]
+        return mappedJars[type]
     }
 
     fun shouldRemap(type: MappingType): Boolean {
-        return this.getCurrentMappings() != type
+        return getCurrentMappings() != type
     }
 
     internal fun load() {
         Util.ioPool().execute {
-            this.writeIntermediary2Mojang2YarnMappings()
-            this.createMappedJar(MappingType.Yarn)
-            this.createMappedJar(MappingType.Mojang)
+            writeIntermediary2Mojang2YarnMappings()
+            createMappedJar(MappingType.Yarn)
+            createMappedJar(MappingType.Mojang)
         }
     }
 
@@ -63,26 +63,26 @@ object ScriptRemappingUtils {
     }
 
     private fun getCurrentMappings(): MappingType {
-        return if (this.isCurrentIntermediary()) MappingType.Intermediary else MappingType.Mojang
+        return if (isCurrentIntermediary()) MappingType.Intermediary else MappingType.Mojang
     }
 
     private fun createMappedJar(to: MappingType) {
-        val from = this.getCurrentMappings()
+        val from = getCurrentMappings()
 
         val originalJar = Path.of(MinecraftServer::class.java.protectionDomain.codeSource.location.toURI())
         if (from.id == to.id) {
-            this.mappedJars[to] = originalJar
+            mappedJars[to] = originalJar
             return
         }
 
         val intermediaryJarName = originalJar.nameWithoutExtension
         val mappedJar = originalJar.resolveSibling("${intermediaryJarName}-mapped-${to.id}.jar")
         if (mappedJar.exists()) {
-            this.mappedJars[to] = mappedJar
+            mappedJars[to] = mappedJar
             return
         }
         val remapper = TinyRemapper.newRemapper()
-            .withMappings(this.mappings.provider(from.id, to.id, true))
+            .withMappings(mappings.provider(from.id, to.id, true))
             .build()
         try {
             OutputConsumerPath.Builder(mappedJar).build().use { consumer ->
@@ -90,7 +90,7 @@ object ScriptRemappingUtils {
                 remapper.readInputs(originalJar)
                 remapper.apply(consumer)
             }
-            this.mappedJars[to] = mappedJar
+            mappedJars[to] = mappedJar
         } finally {
             remapper.finish()
         }
@@ -202,12 +202,12 @@ object ScriptRemappingUtils {
     }
 
     private fun getYarnMappingsUrl(): String? {
-        val meta = NetworkingUtils.fetchAsJsonArray("${YARN_META_URL}/$version") ?: return null
+        val meta = NetworkingUtils.fetchAsJsonArray("$YARN_META_URL/$version") ?: return null
         val entry = meta.maxByOrNull { entry ->
             entry.asJsonObject.get("build").asInt
         } ?: return null
         val version = entry.asJsonObject.get("version").asString
-        return "${YARN_MAVEN_URL}/$version/yarn-$version-tiny.gz"
+        return "$YARN_MAVEN_URL/$version/yarn-$version-tiny.gz"
     }
 
     private fun getIntermediary2Mojang2Yarn(): Path {

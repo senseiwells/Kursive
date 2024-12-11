@@ -1,14 +1,13 @@
-package me.senseiwells.scripting.script.configuration
+package me.senseiwells.essential_scripting.script.configuration
 
+import me.senseiwells.essential_scripting.utils.EnvironmentUtils
+import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.annotation.Environment
 import me.senseiwells.scripting.annotation.Mappings
-import me.senseiwells.scripting.utils.EnvironmentUtils
-import me.senseiwells.scripting.utils.ScriptRemappingUtils
-import me.senseiwells.scripting.utils.asWarningDiagnostics
-import net.fabricmc.loader.api.FabricLoader
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvm.jvmTarget
 import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.util.filterByAnnotationType
@@ -19,6 +18,7 @@ object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfigurati
     defaultImports(Mappings::class, Environment::class)
     jvm {
         dependenciesFromCurrentContext(wholeClasspath = true)
+        jvmTarget("21")
     }
     refineConfiguration {
         onAnnotations(Mappings::class, handler = ::configureMappings)

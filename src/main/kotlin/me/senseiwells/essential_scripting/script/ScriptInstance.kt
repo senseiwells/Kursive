@@ -1,19 +1,22 @@
-package me.senseiwells.scripting.script
+package me.senseiwells.essential_scripting.script
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
-import me.senseiwells.scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
-import me.senseiwells.scripting.script.configuration.ScriptWithClasspathCompilationConfiguration
-import me.senseiwells.scripting.script.configuration.environment
-import me.senseiwells.scripting.script.execution.EnvironmentContext
-import me.senseiwells.scripting.script.execution.ScriptEntrypoint
-import me.senseiwells.scripting.script.remapping.RemappedJvmScriptJarGenerator
-import me.senseiwells.scripting.utils.EnvironmentUtils
+import me.senseiwells.essential_scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
+import me.senseiwells.essential_scripting.script.configuration.ScriptWithClasspathCompilationConfiguration
+import me.senseiwells.essential_scripting.script.configuration.environment
+import me.senseiwells.essential_scripting.script.execution.EnvironmentContext
+import me.senseiwells.essential_scripting.script.execution.ScriptEntrypoint
+import me.senseiwells.essential_scripting.script.remapping.RemappedJvmScriptJarGenerator
+import me.senseiwells.essential_scripting.utils.EnvironmentUtils
+import me.senseiwells.scripting.ScriptingContext
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
-import kotlin.io.path.*
+import kotlin.io.path.isReadable
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.readAttributes
 import kotlin.reflect.KClass
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredMemberFunctions
@@ -131,7 +134,7 @@ abstract class ScriptInstance<M> {
         context: EnvironmentContext<M>,
         klass: KClass<*>
     ): ResultWithDiagnostics<ScriptEntrypoint<M>> {
-        val argsType = Array<String>::class
+        val argsType = ScriptingContext::class
         val mcType = context.minecraft::class
 
         findEntrypoint(klass) { _, _ -> emptyArray() }?.let { return it.asSuccess() }
@@ -145,13 +148,15 @@ abstract class ScriptInstance<M> {
     private inline fun findEntrypoint(
         klass: KClass<*>,
         vararg params: KClass<*>,
-        crossinline remap: (M, Array<String>) -> Array<Any?>
+        crossinline remap: (M, ScriptingContext) -> Array<Any?>
     ): ScriptEntrypoint<M>? {
         val function = klass.declaredMemberFunctions.find { func ->
             func.name == "main" && func.parameters.drop(1).map { it.type.classifier } == params.toList()
         } ?: return null
         val instance = klass.java.getDeclaredConstructor().newInstance()
-        return ScriptEntrypoint { mc, args -> function.callSuspend(instance, *remap(mc, args)) }
+        return ScriptEntrypoint { mc, args ->
+            function.callSuspend(instance, *remap(mc, args))
+        }
     }
 }
 

@@ -1,6 +1,6 @@
-package me.senseiwells.scripting.script
+package me.senseiwells.essential_scripting.script
 
-import me.senseiwells.scripting.EssentialScriptingConfig
+import me.senseiwells.essential_scripting.EssentialScriptingConfig
 import java.nio.file.Path
 import java.time.Instant
 import kotlin.io.path.createDirectories

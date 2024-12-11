@@ -12,6 +12,8 @@ yacl          = "3.6.2+1.21.4-fabric"
 mappingio     = "0.6.1"
 tiny-remapper = "0.10.4"
 
+arcade        = "0.4.0-alpha.4+1.21.4"
+
 # Plugins
 fabric-loom   = "1.9-SNAPSHOT"
 mod-publish   = "0.8.1"
@@ -30,6 +32,11 @@ yacl          = { module = "dev.isxander:yet-another-config-lib"     , version.r
 mappingio            = { module = "net.fabricmc:mapping-io"                 , version.ref = "mappingio" }
 fabric-tiny-remapper = { module = "net.fabricmc:tiny-remapper"              , version.ref = "tiny-remapper" }
 kotlin-metadata      = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm" }
+
+arcade-event-registry = { module = "net.casual-championships:arcade-event-registry", version.ref = "arcade" }
+arcade-events-client  = { module = "net.casual-championships:arcade-events-client" , version.ref = "arcade" }
+arcade-events-server  = { module = "net.casual-championships:arcade-events-server" , version.ref = "arcade" }
+arcade-utils          = { module = "net.casual-championships:arcade-utils"         , version.ref = "arcade" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom"                    , version.ref = "fabric-loom" }

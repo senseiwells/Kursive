@@ -1,4 +1,4 @@
-package me.senseiwells.scripting.script.configuration
+package me.senseiwells.essential_scripting.script.configuration
 
 import kotlin.script.experimental.api.ScriptCompilationConfigurationKeys
 import kotlin.script.experimental.util.PropertiesCollection

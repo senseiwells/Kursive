@@ -1,4 +1,4 @@
-package me.senseiwells.scripting.utils
+package me.senseiwells.essential_scripting.utils
 
 import kotlin.script.experimental.api.ScriptDiagnostic
 

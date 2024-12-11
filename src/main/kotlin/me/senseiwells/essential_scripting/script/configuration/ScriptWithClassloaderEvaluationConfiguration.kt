@@ -1,4 +1,4 @@
-package me.senseiwells.scripting.script.configuration
+package me.senseiwells.essential_scripting.script.configuration
 
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.jvm.baseClassLoader

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package me.senseiwells.scripting.script.remapping.metadata
+package me.senseiwells.essential_scripting.script.remapping.metadata
 
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Opcodes

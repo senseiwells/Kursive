@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "me.senseiwells.scripting.mixins",
+  "package": "me.senseiwells.essential_scripting.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
   ],

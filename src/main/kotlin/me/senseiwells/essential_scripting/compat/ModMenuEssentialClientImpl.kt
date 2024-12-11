@@ -1,8 +1,8 @@
-package me.senseiwells.scripting.compat
+package me.senseiwells.essential_scripting.compat
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory
 import com.terraformersmc.modmenu.api.ModMenuApi
-import me.senseiwells.scripting.EssentialScriptingConfig
+import me.senseiwells.essential_scripting.EssentialScriptingConfig
 
 object ModMenuEssentialClientImpl: ModMenuApi {
     override fun getModConfigScreenFactory(): ConfigScreenFactory<*> {

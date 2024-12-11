@@ -1,9 +1,9 @@
-package me.senseiwells.scripting.script.remapping
+package me.senseiwells.essential_scripting.script.remapping
 
-import me.senseiwells.scripting.script.configuration.MappingType
-import me.senseiwells.scripting.script.configuration.mappings
-import me.senseiwells.scripting.utils.ScriptRemappingUtils
-import me.senseiwells.scripting.script.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
+import me.senseiwells.essential_scripting.script.configuration.MappingType
+import me.senseiwells.essential_scripting.script.configuration.mappings
+import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
+import me.senseiwells.essential_scripting.script.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import net.fabricmc.tinyremapper.NonClassCopyMode
 import net.fabricmc.tinyremapper.OutputConsumerPath
 import net.fabricmc.tinyremapper.TinyRemapper

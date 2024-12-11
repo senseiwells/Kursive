@@ -1,9 +1,9 @@
-package me.senseiwells.scripting
+package me.senseiwells.essential_scripting
 
+import me.senseiwells.essential_scripting.script.FileScriptInstance
+import me.senseiwells.essential_scripting.script.execution.EnvironmentContext
+import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
 import me.senseiwells.keybinds.api.KeybindListener
-import me.senseiwells.scripting.script.FileScriptInstance
-import me.senseiwells.scripting.script.execution.EnvironmentContext
-import me.senseiwells.scripting.utils.ScriptRemappingUtils
 import net.fabricmc.api.ModInitializer
 import net.minecraft.client.Minecraft
 import net.minecraft.resources.ResourceLocation
@@ -25,22 +25,22 @@ object EssentialScripting: ModInitializer {
         ScriptRemappingUtils.load()
         EssentialScriptingConfig.load()
 
-        this.loadKeybinds()
+        loadKeybinds()
     }
 
     fun id(path: String): ResourceLocation {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path.removePrefix("${MOD_ID}:"))
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path.removePrefix("$MOD_ID:"))
     }
 
     private fun loadKeybinds() {
         EssentialScriptingConfig.scriptStartKeybind.addListener(KeybindListener.onPress {
-            if (this.script.shouldRecompile()) {
-                this.logReports(this.script.compile())
+            if (script.shouldRecompile()) {
+                logReports(script.compile())
             }
-            this.logReports(this.script.execute(EnvironmentContext(Minecraft.getInstance())))
+            logReports(script.execute(EnvironmentContext(Minecraft.getInstance())))
         })
         EssentialScriptingConfig.scriptStopKeybind.addListener(KeybindListener.onPress {
-            this.script.cancel()
+            script.cancel()
         })
     }
 

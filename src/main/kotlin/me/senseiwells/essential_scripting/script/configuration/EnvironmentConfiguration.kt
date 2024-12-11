@@ -1,4 +1,4 @@
-package me.senseiwells.scripting.script.configuration
+package me.senseiwells.essential_scripting.script.configuration
 
 import me.senseiwells.scripting.annotation.Environment
 import net.fabricmc.api.EnvType

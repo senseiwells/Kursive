@@ -1,9 +1,9 @@
-package me.senseiwells.scripting.utils
+package me.senseiwells.essential_scripting.utils
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import me.senseiwells.scripting.EssentialScripting
+import me.senseiwells.essential_scripting.EssentialScripting
 import java.io.InputStream
 import java.io.Reader
 import java.net.HttpURLConnection
@@ -25,16 +25,16 @@ object NetworkingUtils {
     }
 
     inline fun <T: Any> fetchAsReader(url: String, consumer: (Reader) -> T): T? {
-        return this.fetchAsStream(url) { stream ->
+        return fetchAsStream(url) { stream ->
             stream.bufferedReader().use(consumer)
         }
     }
 
     fun fetchAsJsonObject(url: String): JsonObject? {
-        return this.fetchAsReader(url, JsonParser::parseReader)?.asJsonObject
+        return fetchAsReader(url, JsonParser::parseReader)?.asJsonObject
     }
 
     fun fetchAsJsonArray(url: String): JsonArray? {
-        return this.fetchAsReader(url, JsonParser::parseReader)?.asJsonArray
+        return fetchAsReader(url, JsonParser::parseReader)?.asJsonArray
     }
 }
