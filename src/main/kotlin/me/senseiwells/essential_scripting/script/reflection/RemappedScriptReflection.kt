@@ -46,8 +46,12 @@ class RemappedScriptReflection(
     }
 
     private fun getClassMapping(clazz: Class<*>): MappingTree.ClassMapping {
-        return this.mappings.getClass(clazz.name.replace('.', '/'), this.toIndex)
+        return this.getNullableClassMapping(clazz)
             ?: throw IllegalArgumentException("No such ${this.to.id} mapped class with name '${clazz.name}'")
+    }
+
+    private fun getNullableClassMapping(clazz: Class<*>): MappingTree.ClassMapping? {
+        return this.mappings.getClass(clazz.name.replace('.', '/'), this.toIndex)
     }
 
     private fun getRemappedMethodName(
@@ -79,30 +83,20 @@ class RemappedScriptReflection(
         val builder = StringBuilder()
         builder.append('(')
         for (type in types) {
-            builder.append(type.encodedName())
+            builder.append(type.descriptorStringMapped())
         }
         builder.append(')')
         return builder.toString()
     }
 
-    private fun Class<*>.encodedName(): String {
-        if (this.isPrimitive) {
-            return when (this) {
-                Boolean::class.javaPrimitiveType -> "Z"
-                Byte::class.javaPrimitiveType -> "B"
-                Char::class.javaPrimitiveType -> "C"
-                Double::class.javaPrimitiveType -> "D"
-                Float::class.javaPrimitiveType -> "F"
-                Int::class.javaPrimitiveType -> "I"
-                Long::class.javaPrimitiveType -> "J"
-                Short::class.javaPrimitiveType -> "S"
-                Void::class.javaPrimitiveType -> "V"
-                else -> throw MatchException("Primitive class ${this.simpleName} not matched!", null)
-            }
+    private fun Class<*>.descriptorStringMapped(): String {
+        val mapping = getNullableClassMapping(this)?.getName(fromIndex)
+        if (mapping != null) {
+            return "L${mapping};"
         }
         if (this.isArray) {
-            return this.name.replace('.', '/')
+            return "[${this.componentType.descriptorStringMapped()}"
         }
-        return "L${this.name.replace('.', '/')};"
+        return this.descriptorString()
     }
 }

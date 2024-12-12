@@ -125,7 +125,7 @@ abstract class ScriptInstance<M> {
                     entrypoint.asSuccess()
                 }
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             return makeFailureResult(e.asDiagnostics(customMessage = "Failed to load script jar"))
         }
     }

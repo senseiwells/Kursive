@@ -39,7 +39,7 @@ object JarRemapper: ModInitializer {
             ?: inputJar.resolveSibling("${inputJar.nameWithoutExtension}-mapped-${to.id}.jar")
 
         ScriptRemappingUtils.remapJar(inputJar, outputJar, from, to)
-        exitProcess(0);
+        exitProcess(0)
     }
 
     private object MappingTypeConverter: EnumConverter<MappingType>(MappingType::class.java)

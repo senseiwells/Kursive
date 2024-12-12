@@ -4,7 +4,6 @@ import me.senseiwells.essential_scripting.utils.EnvironmentUtils
 import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.annotation.Environment
 import me.senseiwells.scripting.annotation.Mappings
-import net.fabricmc.loader.api.FabricLoader
 import java.io.File
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.jvm.jvm
@@ -33,31 +32,10 @@ object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfigurati
 }
 
 private fun getClasspath(): List<File>? {
-    // We want to keep the kotlin stdlib, it's not really a mod
-    val kotlin = FabricLoader.getInstance()
-        .getModContainer("fabric-language-kotlin")
-        .orElseThrow { IllegalStateException("Expected fabric-language-kotlin to be present!") }
-        .origin.paths
-    if (!ScriptRemappingUtils.isCurrentIntermediary()) {
-        // For dev environment
-        val ignored = FabricLoader.getInstance().allMods.flatMap { it.origin.paths }.toHashSet()
-        ignored.removeAll(kotlin.toSet())
-        return classpathFromClassloader(BaseScript::class.java.classLoader)?.filter { file ->
-            !ignored.contains(file.toPath())
-        }
-    }
-
-    val root = FabricLoader.getInstance().gameDir
-    // We don't include mods, they need remapping
-    val mods = root.resolve("mods")
-    // Theses are nested mods, they may also need remapping
-    val includes = root.resolve(".fabric").resolve("processedMods")
-    // The unmapped jar, intermediary outside dev
-    val unmapped = ScriptRemappingUtils.getUnmappedMinecraftJar()
+    val unmapped = mutableSetOf(ScriptRemappingUtils.getUnmappedMinecraftJar())
+    unmapped.addAll(ScriptRemappingUtils.getUnmappedModJars())
     return classpathFromClassloader(BaseScript::class.java.classLoader)?.filter { file ->
-        val path = file.toPath()
-        val parent = path.parent
-        kotlin.contains(path) || (parent != mods && parent != includes && path != unmapped)
+        !unmapped.contains(file.toPath())
     }
 }
 
