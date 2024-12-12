@@ -1,7 +1,7 @@
 package me.senseiwells.scripting.impl
 
 import kotlinx.coroutines.Job
-import me.senseiwells.scripting.ScriptingCoroutines
+import me.senseiwells.scripting.api.ScriptingCoroutines
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.client.ClientTickEvent

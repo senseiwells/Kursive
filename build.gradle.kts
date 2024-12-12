@@ -20,7 +20,7 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
-val modVersion = "0.1.0-alpha.14"
+val modVersion = "0.1.0-alpha.15"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
 
 allprojects {
@@ -114,8 +114,7 @@ tasks {
     register("yarnFatJar") {
         group = "scripting"
         val scriptingApi = project(":scripting-api")
-        dependsOn(scriptingApi.tasks.getByName("mojangFatJar"))
-        dependsOn(runClient)
+        val mojangFatJar: Task = scriptingApi.tasks.getByName("mojangFatJar")
         val libs = scriptingApi.layout.buildDirectory.get().asFile.toPath().resolve("libs")
         runClient.get().args(
             "--remap-input-jar", libs.resolve("scripting-api-${version}-fat-mojang.jar").pathString,
@@ -123,6 +122,8 @@ tasks {
             "--remap-from", "mojang",
             "--remap-to", "yarn"
         )
+        doFirst { mojangFatJar.actions.forEach { it.execute(mojangFatJar) } }
+        doLast { runClient.get().exec() }
     }
 
     register("generateFatJars") {
@@ -136,8 +137,8 @@ tasks {
             .resolve("scripting-jars")
             .createDirectories()
         doLast {
-            mojang.copyTo(build.resolve(mojang.name))
-            yarn.copyTo(build.resolve(yarn.name))
+            mojang.copyTo(build.resolve(mojang.name), overwrite = true)
+            yarn.copyTo(build.resolve(yarn.name), overwrite = true)
         }
     }
 }

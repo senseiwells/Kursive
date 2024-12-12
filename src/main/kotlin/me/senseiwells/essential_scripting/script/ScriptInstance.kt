@@ -3,14 +3,12 @@ package me.senseiwells.essential_scripting.script
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
-import me.senseiwells.essential_scripting.script.configuration.ScriptWithClassloaderEvaluationConfiguration
-import me.senseiwells.essential_scripting.script.configuration.ScriptWithClasspathCompilationConfiguration
-import me.senseiwells.essential_scripting.script.configuration.environment
+import me.senseiwells.essential_scripting.script.configuration.*
+import me.senseiwells.essential_scripting.script.evaluation.RemappedJvmScriptJarGenerator
 import me.senseiwells.essential_scripting.script.execution.EnvironmentContext
 import me.senseiwells.essential_scripting.script.execution.ScriptEntrypoint
-import me.senseiwells.essential_scripting.script.evaluation.RemappedJvmScriptJarGenerator
 import me.senseiwells.essential_scripting.utils.EnvironmentUtils
-import me.senseiwells.scripting.ScriptingContext
+import me.senseiwells.scripting.api.ScriptContext
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
@@ -26,6 +24,7 @@ import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 abstract class ScriptInstance<M> {
     private var entrypoint: ScriptEntrypoint<M>? = null
+    private var mappings: MappingType? = null
     private var job: Job? = null
 
     abstract val name: String
@@ -60,7 +59,7 @@ abstract class ScriptInstance<M> {
             return false.asSuccess()
         }
         return this.getOrFindEntrypoint(context).onSuccess { entrypoint ->
-            val job = context.invoke(entrypoint)
+            val job = context.invoke(entrypoint, this.mappings!!)
             this.job = job
             true.asSuccess()
         }
@@ -110,6 +109,7 @@ abstract class ScriptInstance<M> {
                 script.getClass(ScriptWithClassloaderEvaluationConfiguration)
             }
             val diagnostics = ArrayList<ScriptDiagnostic>()
+            this.mappings = script.compilationConfiguration[ScriptCompilationConfiguration.mappings]
             val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
             if (env != null) {
                 if (context.type != env.type) {
@@ -134,7 +134,7 @@ abstract class ScriptInstance<M> {
         context: EnvironmentContext<M>,
         klass: KClass<*>
     ): ResultWithDiagnostics<ScriptEntrypoint<M>> {
-        val argsType = ScriptingContext::class
+        val argsType = ScriptContext::class
         val mcType = context.minecraft::class
 
         findEntrypoint(klass) { _, _ -> emptyArray() }?.let { return it.asSuccess() }
@@ -148,7 +148,7 @@ abstract class ScriptInstance<M> {
     private inline fun findEntrypoint(
         klass: KClass<*>,
         vararg params: KClass<*>,
-        crossinline remap: (M, ScriptingContext) -> Array<Any?>
+        crossinline remap: (M, ScriptContext) -> Array<Any?>
     ): ScriptEntrypoint<M>? {
         val function = klass.declaredMemberFunctions.find { func ->
             func.name == "main" && func.parameters.drop(1).map { it.type.classifier } == params.toList()

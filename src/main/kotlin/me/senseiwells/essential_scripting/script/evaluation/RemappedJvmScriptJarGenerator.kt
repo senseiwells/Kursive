@@ -1,8 +1,8 @@
 package me.senseiwells.essential_scripting.script.evaluation
 
+import me.senseiwells.essential_scripting.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.essential_scripting.script.configuration.MappingType
 import me.senseiwells.essential_scripting.script.configuration.mappings
-import me.senseiwells.essential_scripting.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
 import net.fabricmc.tinyremapper.NonClassCopyMode
 import net.fabricmc.tinyremapper.OutputConsumerPath

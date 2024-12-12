@@ -6,6 +6,8 @@ import me.senseiwells.essential_scripting.EssentialScripting
 import me.senseiwells.essential_scripting.EssentialScriptingConfig
 import me.senseiwells.essential_scripting.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.essential_scripting.script.configuration.MappingType
+import me.senseiwells.essential_scripting.script.reflection.RemappedScriptReflection
+import me.senseiwells.scripting.api.ScriptReflection
 import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.ModContainer
@@ -45,11 +47,11 @@ object ScriptRemappingUtils {
     private var mappedModJars = HashMultimap.create<MappingType, Path>()
 
     fun getMappings(from: MappingType, to: MappingType = getCurrentMappings()): IMappingProvider {
-        return mappings.provider(from.id, to.id, false)
+        return this.mappings.provider(from.id, to.id, false)
     }
 
     fun getMappedMinecraftJar(type: MappingType): Path? {
-        return mappedMinecraftJars[type]
+        return this.mappedMinecraftJars[type]
     }
 
     fun getUnmappedMinecraftJar(): Path {
@@ -68,8 +70,12 @@ object ScriptRemappingUtils {
         return !FabricLoader.getInstance().isDevelopmentEnvironment
     }
 
-    private fun getCurrentMappings(): MappingType {
+    fun getCurrentMappings(): MappingType {
         return if (isCurrentIntermediary()) MappingType.Intermediary else MappingType.Mojang
+    }
+
+    fun createScriptReflection(from: MappingType): ScriptReflection {
+        return RemappedScriptReflection(this.mappings, from)
     }
 
     internal fun load() {
@@ -79,6 +85,12 @@ object ScriptRemappingUtils {
                 this.createRemappedMinecraftJar(named)
             }
             this.mapScriptingApi()
+            this.mappings.getField(
+                "net.minecraft.client.MinecraftClient",
+                "inGameHud",
+                null,
+                this.mappings.dstNamespaces.indexOf("yarn")
+            )
         }
     }
 
@@ -201,7 +213,7 @@ object ScriptRemappingUtils {
 
     private fun createMappingTree(): MemoryMappingTree {
         val tree = MemoryMappingTree()
-        val path = getIntermediary2Mojang2Yarn()
+        val path = getIntermediary2Mojang2YarnPath()
         if (path.notExists()) {
             writeIntermediary2Mojang2YarnMappings()
         }
@@ -223,7 +235,7 @@ object ScriptRemappingUtils {
         MappingReader.read(yarn, renamer)
         MappingReader.read(mojang, MappingSourceNsSwitch(renamer, "target"))
         val writer = MappingWriter.create(
-            getIntermediary2Mojang2Yarn(),
+            getIntermediary2Mojang2YarnPath(),
             MappingFormat.TINY_2_FILE
         )
         val reorder = MappingDstNsReorder(writer, listOf("mojang", "yarn"))
@@ -313,7 +325,7 @@ object ScriptRemappingUtils {
         return "$YARN_MAVEN_URL/$version/yarn-$version-tiny.gz"
     }
 
-    private fun getIntermediary2Mojang2Yarn(): Path {
+    private fun getIntermediary2Mojang2YarnPath(): Path {
         return EssentialScriptingConfig.resolve("mappings")
             .resolve("intermediary2mojang2yarn")
             .resolve("$version.tiny")

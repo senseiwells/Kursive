@@ -1,7 +1,9 @@
 package me.senseiwells.essential_scripting.script.execution
 
 import kotlinx.coroutines.Job
-import me.senseiwells.scripting.ScriptingContext
+import me.senseiwells.essential_scripting.script.configuration.MappingType
+import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
+import me.senseiwells.scripting.api.ScriptContext
 import me.senseiwells.scripting.impl.ClientScriptingApi
 import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.casual.arcade.events.GlobalEventHandler
@@ -30,15 +32,20 @@ sealed class EnvironmentContext<M>(
 ) {
     abstract val type: EnvType
 
-    abstract fun invoke(entrypoint: ScriptEntrypoint<M>): Job
+    abstract fun invoke(entrypoint: ScriptEntrypoint<M>, mappings: MappingType): Job
 }
 
 private class ClientContext(client: Minecraft, args: List<String>): EnvironmentContext<Minecraft>(client, args) {
     override val type: EnvType
         get() = EnvType.CLIENT
 
-    override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>): Job {
-        val context = ScriptingContext(this.args, SimpleListenerRegistry())
+    override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>, mappings: MappingType): Job {
+        val context = ScriptContext(
+            this.args,
+            SimpleListenerRegistry(),
+            null,
+            ScriptRemappingUtils.createScriptReflection(mappings),
+        )
         GlobalEventHandler.Client.addProvider(context.events)
         val job = ClientScriptingApi.launch(this.minecraft) { entrypoint.invoke(this.minecraft, context) }
         job.invokeOnCompletion { GlobalEventHandler.Client.removeProvider(context.events) }
@@ -50,8 +57,13 @@ private class ServerContext(server: MinecraftServer, args: List<String>): Enviro
     override val type: EnvType
         get() = EnvType.SERVER
 
-    override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>): Job {
-        val context = ScriptingContext(this.args, SimpleListenerRegistry())
+    override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>, mappings: MappingType): Job {
+        val context = ScriptContext(
+            this.args,
+            SimpleListenerRegistry(),
+            null,
+            ScriptRemappingUtils.createScriptReflection(mappings)
+        )
         GlobalEventHandler.Server.addProvider(context.events)
         val job = CommonScriptingApi.launch(this.minecraft) { entrypoint.invoke(this.minecraft, context) }
         job.invokeOnCompletion { GlobalEventHandler.Server.removeProvider(context.events) }
