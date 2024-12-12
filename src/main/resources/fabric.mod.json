@@ -17,6 +17,10 @@
       {
         "adapter": "kotlin",
         "value": "me.senseiwells.essential_scripting.EssentialScripting"
+      },
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.essential_scripting.remapping.JarRemapper"
       }
     ],
     "modmenu": [

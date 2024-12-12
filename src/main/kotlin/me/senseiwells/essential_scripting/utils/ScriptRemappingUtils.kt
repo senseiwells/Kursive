@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import kotlinx.io.IOException
 import me.senseiwells.essential_scripting.EssentialScripting
 import me.senseiwells.essential_scripting.EssentialScriptingConfig
+import me.senseiwells.essential_scripting.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.essential_scripting.script.configuration.MappingType
 import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.fabricmc.loader.api.FabricLoader
@@ -167,6 +168,7 @@ object ScriptRemappingUtils {
     ) {
         val remapper = TinyRemapper.newRemapper()
             .withMappings(this.mappings.provider(from.id, to.id, true))
+            .extension(KotlinMetadataTinyRemapperExtensionImpl)
             .build()
         try {
             OutputConsumerPath.Builder(output).build().use { consumer ->

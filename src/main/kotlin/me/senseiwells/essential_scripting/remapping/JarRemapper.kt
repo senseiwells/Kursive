@@ -22,7 +22,7 @@ object JarRemapper: ModInitializer {
         val toSpec = parser.accepts("remap-to").withRequiredArg()
             .withValuesConvertedBy(MappingTypeConverter)
         val outputSpec = parser.accepts("remap-output-jar").withRequiredArg()
-            .withValuesConvertedBy(PathConverter(PathProperties.FILE_EXISTING))
+            .withValuesConvertedBy(PathConverter())
         parser.allowsUnrecognizedOptions()
 
         val options = parser.parse(*args);
