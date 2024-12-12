@@ -9,6 +9,10 @@ enum class MappingType(val id: String) {
     Yarn("yarn");
 
     companion object {
+        fun named(): List<MappingType> {
+            return listOf(Mojang, Yarn)
+        }
+
         fun parse(string: String): MappingType {
             return when (string.lowercase()) {
                 "yarn" -> Yarn

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package me.senseiwells.essential_scripting.script.remapping.metadata
+package me.senseiwells.essential_scripting.remapping.metadata
 
 import org.jetbrains.annotations.VisibleForTesting
 import org.objectweb.asm.AnnotationVisitor

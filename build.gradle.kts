@@ -47,7 +47,6 @@ allprojects {
         })
 
         modImplementation(libs.fabric.loader)
-        modImplementation(libs.fabric.api)
         modImplementation(libs.fabric.kotlin)
     }
 
@@ -75,6 +74,7 @@ allprojects {
 }
 
 dependencies {
+    modImplementation(libs.fabric.api)
     modImplementation(libs.mod.menu)
     modImplementation(libs.yacl)
 
@@ -103,6 +103,18 @@ tasks {
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"
+    }
+
+    register("yarnFatJar") {
+        group = "scripting"
+        dependsOn(project(":scripting-api").tasks.getByName("mojangFatJar"))
+        dependsOn(runClient)
+        runClient.get().args(
+            "--remap-input-jar", "../scripting-api/build/libs/scripting-api-${version}-fat-mojang.jar",
+            "--remap-output-jar", "../scripting-api/build/libs/scripting-api-${version}-fat-yarn.jar",
+            "--remap-from", "mojang",
+            "--remap-to", "yarn"
+        )
     }
 }
 

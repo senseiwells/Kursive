@@ -5,7 +5,9 @@ import kotlinx.io.IOException
 import me.senseiwells.essential_scripting.EssentialScripting
 import me.senseiwells.essential_scripting.EssentialScriptingConfig
 import me.senseiwells.essential_scripting.script.configuration.MappingType
+import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.fabricmc.loader.api.FabricLoader
+import net.fabricmc.loader.api.ModContainer
 import net.fabricmc.mappingio.MappingReader
 import net.fabricmc.mappingio.MappingWriter
 import net.fabricmc.mappingio.adapter.MappingDstNsReorder
@@ -22,8 +24,10 @@ import net.minecraft.SharedConstants
 import net.minecraft.Util
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.GsonHelper
+import org.spongepowered.include.com.google.common.collect.HashMultimap
 import java.nio.file.Path
-import java.util.EnumMap
+import java.util.*
+import java.util.jar.JarFile
 import java.util.zip.GZIPInputStream
 import kotlin.io.path.*
 
@@ -36,29 +40,30 @@ object ScriptRemappingUtils {
     private val version = SharedConstants.getCurrentVersion().name
     private val mappings by lazy(ScriptRemappingUtils::createMappingTree)
 
-    private var mappedJars = EnumMap<_, Path>(MappingType::class.java)
+    private var mappedMinecraftJars = EnumMap<_, Path>(MappingType::class.java)
+    private var mappedModJars = HashMultimap.create<MappingType, Path>()
 
     fun getMappings(from: MappingType, to: MappingType = getCurrentMappings()): IMappingProvider {
         return mappings.provider(from.id, to.id, false)
     }
 
-    fun getMappedJar(type: MappingType): Path? {
-        return mappedJars[type]
+    fun getMappedMinecraftJar(type: MappingType): Path? {
+        return mappedMinecraftJars[type]
+    }
+
+    fun getUnmappedMinecraftJar(): Path {
+        return Path.of(MinecraftServer::class.java.protectionDomain.codeSource.location.toURI())
+    }
+
+    fun getMappedModJars(type: MappingType): Collection<Path> {
+        return this.mappedModJars[type]
     }
 
     fun shouldRemap(type: MappingType): Boolean {
         return getCurrentMappings() != type
     }
 
-    internal fun load() {
-        Util.ioPool().execute {
-            writeIntermediary2Mojang2YarnMappings()
-            createMappedJar(MappingType.Yarn)
-            createMappedJar(MappingType.Mojang)
-        }
-    }
-
-    private fun isCurrentIntermediary(): Boolean {
+    fun isCurrentIntermediary(): Boolean {
         return !FabricLoader.getInstance().isDevelopmentEnvironment
     }
 
@@ -66,34 +71,130 @@ object ScriptRemappingUtils {
         return if (isCurrentIntermediary()) MappingType.Intermediary else MappingType.Mojang
     }
 
-    private fun createMappedJar(to: MappingType) {
-        val from = getCurrentMappings()
+    internal fun load() {
+        Util.ioPool().execute {
+            this.writeIntermediary2Mojang2YarnMappings()
+            for (named in MappingType.named()) {
+                this.createRemappedMinecraftJar(named)
+            }
+            this.mapScriptingApi()
+        }
+    }
 
-        val originalJar = Path.of(MinecraftServer::class.java.protectionDomain.codeSource.location.toURI())
+    private fun mapScriptingApi() {
+        val scriptingApiJar = Path.of(
+            CommonScriptingApi::class.java.protectionDomain.codeSource.location.toURI()
+        )
+        for (named in MappingType.named()) {
+            this.createRemappedModJar(CommonScriptingApi.MOD_ID, scriptingApiJar, named)
+        }
+
+        val includes = this.getScriptingApiIncludes(scriptingApiJar)
+        for ((id, include) in includes) {
+            for (name in MappingType.named()) {
+                this.createRemappedModJar(id, include, name)
+            }
+        }
+    }
+
+    private fun getScriptingApiIncludes(scriptingApiJar: Path): List<Pair<String, Path>> {
+        if (!this.isCurrentIntermediary()) {
+            return FabricLoader.getInstance().allMods.filter { container ->
+                container.metadata.id.contains("arcade")
+            }.map { it.metadata.id to it.origin.paths.first() }
+        }
+        val scriptingApi = FabricLoader.getInstance()
+            .getModContainer(CommonScriptingApi.MOD_ID)
+            .orElseThrow { IllegalStateException("Expected scripting-api to be present!") }
+        val includes = ArrayList<Pair<String, Path>>()
+        JarFile(scriptingApiJar.toFile()).use { jar ->
+            for (container in scriptingApi.containedMods) {
+                val id = container.metadata.id
+                try {
+                    includes.add(id to this.copyIncludedJar(jar, container))
+                } catch (e: IOException) {
+                    EssentialScripting.logger.error("Failed to copy mod '$id'")
+                }
+            }
+        }
+        return includes
+    }
+
+    private fun createRemappedMinecraftJar(to: MappingType) {
+        val from = this.getCurrentMappings()
+
+        val input = this.getUnmappedMinecraftJar()
         if (from.id == to.id) {
-            mappedJars[to] = originalJar
+            this.mappedMinecraftJars[to] = input
             return
         }
 
-        val intermediaryJarName = originalJar.nameWithoutExtension
-        val mappedJar = originalJar.resolveSibling("${intermediaryJarName}-mapped-${to.id}.jar")
-        if (mappedJar.exists()) {
-            mappedJars[to] = mappedJar
+        val output = input.resolveSibling("${input.nameWithoutExtension}-mapped-${to.id}.jar")
+        if (!output.exists()) {
+            this.remapJar(input, output, from, to)
+        }
+        this.mappedMinecraftJars[to] = output
+    }
+
+    private fun createRemappedModJar(
+        id: String,
+        input: Path,
+        to: MappingType
+    ) {
+        val from = this.getCurrentMappings()
+
+        if (from.id == to.id) {
+            this.mappedModJars.put(to, input)
             return
         }
+
+        val output = FabricLoader.getInstance().gameDir
+            .resolve(".fabric")
+            .resolve("remappedJars")
+            .resolve(id)
+            .resolve("${input.nameWithoutExtension}-mapped-${to.id}.jar")
+        if (!output.exists()) {
+            this.remapJar(input, output, from, to)
+        }
+        this.mappedModJars.put(to, output)
+    }
+
+    internal fun remapJar(
+        input: Path,
+        output: Path,
+        from: MappingType,
+        to: MappingType,
+    ) {
         val remapper = TinyRemapper.newRemapper()
-            .withMappings(mappings.provider(from.id, to.id, true))
+            .withMappings(this.mappings.provider(from.id, to.id, true))
             .build()
         try {
-            OutputConsumerPath.Builder(mappedJar).build().use { consumer ->
-                consumer.addNonClassFiles(originalJar, NonClassCopyMode.FIX_META_INF, remapper)
-                remapper.readInputs(originalJar)
+            OutputConsumerPath.Builder(output).build().use { consumer ->
+                consumer.addNonClassFiles(input, NonClassCopyMode.FIX_META_INF, remapper)
+                remapper.readInputs(input)
                 remapper.apply(consumer)
             }
-            mappedJars[to] = mappedJar
         } finally {
             remapper.finish()
         }
+    }
+
+    private fun copyIncludedJar(jar: JarFile, container: ModContainer): Path {
+        val location = container.origin.parentSubLocation
+        val entry = jar.getJarEntry(location)
+        val path = FabricLoader.getInstance().gameDir
+            .resolve(".fabric")
+            .resolve("remappedJars")
+            .resolve(container.metadata.id)
+            .resolve(location.substringAfterLast('/'))
+        if (!path.exists()) {
+            path.outputStream().use { output ->
+                jar.getInputStream(entry).use { input ->
+                    input.transferTo(output)
+                }
+            }
+        }
+        return path
     }
 
     private fun createMappingTree(): MemoryMappingTree {

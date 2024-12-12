@@ -1,9 +1,9 @@
-package me.senseiwells.essential_scripting.script.remapping
+package me.senseiwells.essential_scripting.script.evaluation
 
 import me.senseiwells.essential_scripting.script.configuration.MappingType
 import me.senseiwells.essential_scripting.script.configuration.mappings
+import me.senseiwells.essential_scripting.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.essential_scripting.utils.ScriptRemappingUtils
-import me.senseiwells.essential_scripting.script.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import net.fabricmc.tinyremapper.NonClassCopyMode
 import net.fabricmc.tinyremapper.OutputConsumerPath
 import net.fabricmc.tinyremapper.TinyRemapper
@@ -62,7 +62,7 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
         try {
             OutputConsumerPath.Builder(this.outputJar).build().use { consumer ->
                 consumer.addNonClassFiles(temp, NonClassCopyMode.UNCHANGED, remapper)
-                remapper.readClassPath(ScriptRemappingUtils.getMappedJar(type))
+                remapper.readClassPath(ScriptRemappingUtils.getMappedMinecraftJar(type))
                 remapper.readInputs(temp)
                 remapper.apply(consumer)
             }

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package me.senseiwells.essential_scripting.script.remapping.metadata
+package me.senseiwells.essential_scripting.remapping.metadata
 
 import net.fabricmc.tinyremapper.TinyRemapper
 import net.fabricmc.tinyremapper.api.TrClass

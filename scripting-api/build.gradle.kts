@@ -1,13 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 dependencies {
-    modApi(libs.arcade.event.registry)
-    modApi(libs.arcade.events.client)
-    modApi(libs.arcade.events.server)
-    modImplementation(libs.arcade.utils)
+    include(modApi(libs.arcade.event.registry.get())!!)
+    include(modApi(libs.arcade.events.client.get())!!)
+    include(modApi(libs.arcade.events.server.get())!!)
+    include(modImplementation(libs.arcade.utils.get())!!)
 }
 
-tasks.register<ShadowJar>("fatJar") {
+tasks.register<ShadowJar>("mojangFatJar") {
+    group = "scripting"
     isZip64 = true
 
     exclude("_COROUTINE/*")
@@ -33,5 +34,5 @@ tasks.register<ShadowJar>("fatJar") {
         project.configurations.minecraftClientRuntimeLibraries.get()
     )
 
-    archiveClassifier = "fat"
+    archiveClassifier = "fat-mojang"
 }

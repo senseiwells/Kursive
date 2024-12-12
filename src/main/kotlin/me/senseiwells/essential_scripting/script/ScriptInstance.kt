@@ -8,7 +8,7 @@ import me.senseiwells.essential_scripting.script.configuration.ScriptWithClasspa
 import me.senseiwells.essential_scripting.script.configuration.environment
 import me.senseiwells.essential_scripting.script.execution.EnvironmentContext
 import me.senseiwells.essential_scripting.script.execution.ScriptEntrypoint
-import me.senseiwells.essential_scripting.script.remapping.RemappedJvmScriptJarGenerator
+import me.senseiwells.essential_scripting.script.evaluation.RemappedJvmScriptJarGenerator
 import me.senseiwells.essential_scripting.utils.EnvironmentUtils
 import me.senseiwells.scripting.ScriptingContext
 import java.nio.file.Path
