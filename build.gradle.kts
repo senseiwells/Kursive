@@ -1,3 +1,9 @@
+
+import kotlin.io.path.copyTo
+import kotlin.io.path.createDirectories
+import kotlin.io.path.name
+import kotlin.io.path.pathString
+
 plugins {
     val jvmVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]
@@ -107,14 +113,32 @@ tasks {
 
     register("yarnFatJar") {
         group = "scripting"
-        dependsOn(project(":scripting-api").tasks.getByName("mojangFatJar"))
+        val scriptingApi = project(":scripting-api")
+        dependsOn(scriptingApi.tasks.getByName("mojangFatJar"))
         dependsOn(runClient)
+        val libs = scriptingApi.layout.buildDirectory.get().asFile.toPath().resolve("libs")
         runClient.get().args(
-            "--remap-input-jar", "../scripting-api/build/libs/scripting-api-${version}-fat-mojang.jar",
-            "--remap-output-jar", "../scripting-api/build/libs/scripting-api-${version}-fat-yarn.jar",
+            "--remap-input-jar", libs.resolve("scripting-api-${version}-fat-mojang.jar").pathString,
+            "--remap-output-jar", libs.resolve("scripting-api-${version}-fat-yarn.jar").pathString,
             "--remap-from", "mojang",
             "--remap-to", "yarn"
         )
+    }
+
+    register("generateFatJars") {
+        group = "scripting"
+        dependsOn("yarnFatJar")
+        val scriptingApi = project(":scripting-api")
+        val libs = scriptingApi.layout.buildDirectory.get().asFile.toPath().resolve("libs")
+        val mojang = libs.resolve("scripting-api-${version}-fat-mojang.jar")
+        val yarn = libs.resolve("scripting-api-${version}-fat-yarn.jar")
+        val build = layout.buildDirectory.get().asFile.toPath()
+            .resolve("scripting-jars")
+            .createDirectories()
+        doLast {
+            mojang.copyTo(build.resolve(mojang.name))
+            yarn.copyTo(build.resolve(yarn.name))
+        }
     }
 }
 
