@@ -13,20 +13,24 @@
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.scripting.client.EssentialScriptingClient"
+      }
+    ],
     "main": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.essential_scripting.EssentialScripting"
+        "value": "me.senseiwells.scripting.common.EssentialScripting"
       },
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.essential_scripting.remapping.JarRemapper"
-      }
-    ],
-    "modmenu": [
+        "value": "me.senseiwells.scripting.server.EssentialScriptingServer"
+      },
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.essential_scripting.compat.ModMenuEssentialClientImpl"
+        "value": "me.senseiwells.scripting.common.remapping.JarRemapper"
       }
     ]
   },

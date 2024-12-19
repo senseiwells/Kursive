@@ -30,12 +30,11 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.plugin.serialization")
 
     repositories {
-        mavenLocal()
         mavenCentral()
+        maven("https://maven.supersanta.me/snapshots")
         maven("https://maven.parchmentmc.org/")
         maven("https://maven.terraformersmc.com/")
         maven("https://maven.isxander.dev/releases")
-        maven("https://maven.supersanta.me/snapshots")
         maven("https://jitpack.io")
     }
 
@@ -84,6 +83,11 @@ dependencies {
     modImplementation(libs.mod.menu)
     modImplementation(libs.yacl)
 
+    include(modImplementation(libs.arcade.commands.get())!!)
+    include(modImplementation(libs.arcade.events.server.get())!!)
+    include(modImplementation(libs.arcade.events.client.get())!!)
+    include(modImplementation(libs.arcade.event.registry.get())!!)
+    include(modImplementation(libs.arcade.utils.get())!!)
     include(modImplementation(libs.keybinds.get())!!)
     include(implementation(project(path = ":scripting-api", configuration = "namedElements"))!!)
 

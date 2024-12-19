@@ -1,10 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 dependencies {
-    include(modApi(libs.arcade.event.registry.get())!!)
-    include(modApi(libs.arcade.events.client.get())!!)
-    include(modApi(libs.arcade.events.server.get())!!)
-    include(modImplementation(libs.arcade.utils.get())!!)
+    modImplementation(libs.arcade.event.registry.get())
+    modImplementation(libs.arcade.events.client.get())
+    modImplementation(libs.arcade.events.server.get())
 }
 
 tasks.register<ShadowJar>("mojangFatJar") {

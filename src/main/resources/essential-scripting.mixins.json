@@ -1,10 +1,13 @@
 {
   "required": true,
-  "package": "me.senseiwells.essential_scripting.mixins",
+  "package": "me.senseiwells.scripting.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+
+  ]
 }
