@@ -89,7 +89,8 @@ dependencies {
     include(modImplementation(libs.arcade.event.registry.get())!!)
     include(modImplementation(libs.arcade.utils.get())!!)
     include(modImplementation(libs.keybinds.get())!!)
-    include(implementation(project(path = ":scripting-api", configuration = "namedElements"))!!)
+    implementation(project(path = ":scripting-api", configuration = "namedElements"))
+    include(project(path = ":scripting-api"))
 
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-common")!!) // fine
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")!!) // fine

@@ -9,8 +9,8 @@ keybinds      = "0.1.11+1.21.4"
 yacl          = "3.6.2+1.21.4-fabric"
 
 # Scripting
-mappingio     = "0.6.1"
-tiny-remapper = "0.10.4"
+mappingio     = "0.7.1"
+tiny-remapper = "0.11.0"
 
 arcade        = "0.4.0-beta.1+1.21.4"
 

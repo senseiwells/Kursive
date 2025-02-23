@@ -184,6 +184,7 @@ object ScriptRemappingUtils {
         try {
             OutputConsumerPath.Builder(output).build().use { consumer ->
                 consumer.addNonClassFiles(input, NonClassCopyMode.FIX_META_INF, remapper)
+                remapper.readClassPath(getMappedMinecraftJar(from))
                 remapper.readInputs(input)
                 remapper.apply(consumer)
             }
