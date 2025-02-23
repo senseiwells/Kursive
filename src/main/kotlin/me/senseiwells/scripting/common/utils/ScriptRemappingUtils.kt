@@ -31,6 +31,7 @@ import org.spongepowered.include.com.google.common.collect.HashMultimap
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.jar.JarFile
 import kotlin.io.path.*
 
@@ -46,6 +47,8 @@ object ScriptRemappingUtils {
     private var mappedMinecraftJars = EnumMap<_, Path>(MappingType::class.java)
     private var mappedModJars = HashMultimap.create<MappingType, Path>()
     private var unmappedModJars = ArrayList<Path>()
+
+    private var loaded: Boolean = false
 
     fun getMappings(from: MappingType, to: MappingType = getCurrentMappings()): IMappingProvider {
         return mappings.provider(from.id, to.id, false)
@@ -83,14 +86,14 @@ object ScriptRemappingUtils {
         return !FabricLoader.getInstance().isDevelopmentEnvironment
     }
 
-    internal fun load() {
-        Util.ioPool().execute {
+    internal fun load(): CompletableFuture<Unit> {
+        return CompletableFuture.supplyAsync({
             writeIntermediary2Mojang2YarnMappings()
             for (named in MappingType.named()) {
                 createRemappedMinecraftJar(named)
             }
             mapScriptingApi()
-        }
+        }, Util.ioPool())
     }
 
     private fun mapScriptingApi() {

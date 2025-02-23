@@ -38,8 +38,10 @@ object JarRemapper: ModInitializer {
         val outputJar = options.valueOf(outputSpec)
             ?: inputJar.resolveSibling("${inputJar.nameWithoutExtension}-mapped-${to.id}.jar")
 
-        ScriptRemappingUtils.remapJar(inputJar, outputJar, from, to)
-        exitProcess(0)
+        ScriptRemappingUtils.load().thenApply {
+            ScriptRemappingUtils.remapJar(inputJar, outputJar, from, to)
+            exitProcess(0)
+        }.join()
     }
 
     private object MappingTypeConverter: EnumConverter<MappingType>(MappingType::class.java)
