@@ -2,7 +2,7 @@
 
 ## Todo
 
-- Don't recompile scripts unless they're modified
+- Fix weird remapping issue with MinecraftServer#playerList??
 
 ```kotlin
 fun main() {

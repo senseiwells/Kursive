@@ -1,5 +1,6 @@
 package me.senseiwells.scripting.common.script.evaluation
 
+import me.senseiwells.scripting.common.EssentialScripting
 import me.senseiwells.scripting.common.remapping.metadata.KotlinMetadataTinyRemapperExtensionImpl
 import me.senseiwells.scripting.common.script.configuration.MappingType
 import me.senseiwells.scripting.common.script.configuration.mappings
@@ -21,6 +22,7 @@ class RemappedJvmScriptJarGenerator(private val outputJar: Path): ScriptEvaluato
         compiledScript: CompiledScript,
         scriptEvaluationConfiguration: ScriptEvaluationConfiguration
     ): ResultWithDiagnostics<EvaluationResult> {
+        EssentialScripting.logger.info("Remapping jar")
         if (compiledScript !is KJvmCompiledScript) {
             val message = "Cannot generate jar: unsupported compiled script type $compiledScript"
             return ResultWithDiagnostics.Failure(message.asErrorDiagnostics())

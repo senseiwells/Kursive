@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.plus
 import kotlin.script.experimental.jvm.util.isError
+import kotlin.script.experimental.jvm.util.isIncomplete
 
 fun <M: Any> ScriptInstance<M>.compileAsyncThenExecute(
     context: EnvironmentContext<M>
@@ -15,7 +16,7 @@ fun <M: Any> ScriptInstance<M>.compileAsyncThenExecute(
         return CompletableFuture.supplyAsync({
             this.compile().reports + this.prepare(context)
         }, Util.ioPool()).thenApplyAsync({ result ->
-            if (!result.isError()) result.reports + this.execute(context) else result
+            if (!result.isError() && !result.isIncomplete()) result.reports + this.execute(context) else result
         }, context.executor())
     }
     return CompletableFuture.completedFuture(this.execute(context))

@@ -20,7 +20,7 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
-val modVersion = "0.1.0-alpha.16"
+val modVersion = "0.1.0-alpha.19"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
 
 allprojects {
@@ -83,11 +83,12 @@ dependencies {
     modImplementation(libs.mod.menu)
     modImplementation(libs.yacl)
 
+
+    modImplementation(libs.arcade.events.server.get())
+    modImplementation(libs.arcade.events.client.get())
+    modImplementation(libs.arcade.event.registry.get())
+    modImplementation(libs.arcade.utils.get())
     include(modImplementation(libs.arcade.commands.get())!!)
-    include(modImplementation(libs.arcade.events.server.get())!!)
-    include(modImplementation(libs.arcade.events.client.get())!!)
-    include(modImplementation(libs.arcade.event.registry.get())!!)
-    include(modImplementation(libs.arcade.utils.get())!!)
     include(modImplementation(libs.keybinds.get())!!)
     implementation(project(path = ":scripting-api", configuration = "namedElements"))
     include(project(path = ":scripting-api"))

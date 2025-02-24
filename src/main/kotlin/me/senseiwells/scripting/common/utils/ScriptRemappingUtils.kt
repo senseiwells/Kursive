@@ -29,6 +29,7 @@ import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.jar.JarFile
+import java.util.zip.GZIPInputStream
 import kotlin.io.path.*
 
 object ScriptRemappingUtils {
@@ -82,7 +83,7 @@ object ScriptRemappingUtils {
 
     internal fun load(): CompletableFuture<Unit> {
         return CompletableFuture.supplyAsync({
-            if (getIntermediary2Mojang2YarnPath().notExists()) {
+            if (getCompleteMappingsPath().notExists()) {
                 writeIntermediary2Mojang2YarnMappings()
             }
             createRemappedMinecraftJar(getCurrentMappings())
@@ -92,7 +93,9 @@ object ScriptRemappingUtils {
                 }
             }
             mapScriptingApi()
-        }, Util.ioPool())
+        }, Util.ioPool()).exceptionally {
+            EssentialScripting.logger.error("Uncaught exception when loading mappings", it)
+        }
     }
 
     private fun mapScriptingApi() {
@@ -191,7 +194,7 @@ object ScriptRemappingUtils {
                 remapper.apply(consumer)
             }
         } catch (e: Exception) {
-            EssentialScripting.logger.error("Exception occurred", e)
+            EssentialScripting.logger.error("Failed to remap jar", e)
         } finally {
             remapper.finish()
         }
@@ -199,7 +202,7 @@ object ScriptRemappingUtils {
 
     private fun createMappingTree(): MemoryMappingTree {
         val tree = MemoryMappingTree()
-        val path = getIntermediary2Mojang2YarnPath()
+        val path = getCompleteMappingsPath()
         if (path.notExists()) {
             writeIntermediary2Mojang2YarnMappings()
         }
@@ -211,15 +214,15 @@ object ScriptRemappingUtils {
 
     private fun writeIntermediary2Mojang2YarnMappings() {
         val tree = MemoryMappingTree()
-        val yarn = getOrDownloadMappings(getIntermediary2YarnMappingsPath(), this::downloadYarnMappings)
-        val mojang = getOrDownloadMappings(getIntermediary2MojangMappingsPath(), this::downloadMojangMappings)
+        val yarn = getOrDownloadMappings(getYarnMappingsPath(), this::downloadYarnMappings)
+        val mojang = getOrDownloadMappings(getMojangMappingsPath(), this::downloadMojangMappings)
         if (mojang == null || yarn == null) {
             return
         }
         MappingReader.read(mojang, tree)
         MappingReader.read(yarn, tree)
         val writer = MappingWriter.create(
-            getIntermediary2Mojang2YarnPath(),
+            getCompleteMappingsPath(),
             MappingFormat.TINY_2_FILE
         )
         val completer = MappingNsCompleter(writer, mapOf("yarn" to "intermediary"))
@@ -242,24 +245,17 @@ object ScriptRemappingUtils {
 
     private fun downloadMojangMappings() {
         val mojang = getMojangMappingsUrl() ?: return
-        val intermediary = "https://github.com/FabricMC/intermediary/raw/master/mappings/$version.tiny"
 
         val renames = mapOf("source" to "mojang", "target" to "official")
         val tree = MemoryMappingTree()
         val renamer = MappingNsRenamer(tree, renames)
         try {
-            NetworkingUtils.fetchAsReader(intermediary) { reader ->
-                MappingReader.read(reader, renamer)
-            }
             NetworkingUtils.fetchAsReader(mojang) { reader ->
                 MappingReader.read(reader, MappingSourceNsSwitch(renamer, "target"))
             }
-
-            val path = getIntermediary2MojangMappingsPath()
+            val path = getMojangMappingsPath()
             val writer = MappingWriter.create(path, MappingFormat.TINY_2_FILE)
-            val reorder = MappingDstNsReorder(writer, listOf("mojang"))
-            val switcher = MappingSourceNsSwitch(reorder, "intermediary", true)
-            tree.accept(switcher)
+            tree.accept(writer)
         } catch (e: IOException) {
             EssentialScripting.logger.error("Failed to download mojang mappings", e)
         }
@@ -287,14 +283,23 @@ object ScriptRemappingUtils {
     }
 
     private fun downloadYarnMappings() {
-        val url = getYarnJarUrl() ?: return
+        val jarUrl = getYarnJarUrl() ?: return
+        val mappingsUrl = getYarnMappingsUrl() ?: return
 
         val renames = mapOf("named" to "yarn")
         val tree = MemoryMappingTree()
         val renamer = MappingNsRenamer(tree, renames)
         try {
-            val path = getIntermediary2YarnMappingsPath()
-            NetworkingUtils.fetchAsStream(url) { stream ->
+            // I have no idea why I need to merge these two mappings
+            // files, but if I don't do it, then it doesn't work
+            val path = getYarnMappingsPath()
+            NetworkingUtils.fetchAsStream(mappingsUrl) { stream ->
+                GZIPInputStream(stream).reader().use { reader ->
+                    MappingReader.read(reader, renamer)
+                }
+            }
+
+            NetworkingUtils.fetchAsStream(jarUrl) { stream ->
                 val tmp = Files.createTempFile(path.parent, path.nameWithoutExtension, null)
                 try {
                     tmp.outputStream().use { output ->
@@ -327,24 +332,32 @@ object ScriptRemappingUtils {
         return "$YARN_MAVEN_URL/$version/yarn-$version-v2.jar"
     }
 
+    private fun getYarnMappingsUrl(): String? {
+        val meta = NetworkingUtils.fetchAsJsonArray("$YARN_META_URL/$version") ?: return null
+        val entry = meta.maxByOrNull { entry ->
+            entry.asJsonObject.get("build").asInt
+        } ?: return null
+        val version = entry.asJsonObject.get("version").asString
+        return "$YARN_MAVEN_URL/$version/yarn-$version-tiny.gz"
+    }
 
-    private fun getIntermediary2Mojang2YarnPath(): Path {
+    private fun getCompleteMappingsPath(): Path {
         return EssentialScripting.configDirectory().resolve("mappings")
-            .resolve("intermediary2mojang2yarn")
+            .resolve("complete")
             .resolve("$version.tiny")
             .createParentDirectories()
     }
 
-    private fun getIntermediary2MojangMappingsPath(): Path {
+    private fun getMojangMappingsPath(): Path {
         return EssentialScripting.configDirectory().resolve("mappings")
-            .resolve("intermediary2mojang")
+            .resolve("mojang")
             .resolve("$version.tiny")
             .createParentDirectories()
     }
 
-    private fun getIntermediary2YarnMappingsPath(): Path {
+    private fun getYarnMappingsPath(): Path {
         return EssentialScripting.configDirectory().resolve("mappings")
-            .resolve("intermediary2yarn")
+            .resolve("yarn")
             .resolve("$version.tiny")
             .createParentDirectories()
     }
