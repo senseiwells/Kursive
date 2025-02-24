@@ -17,12 +17,8 @@ import net.fabricmc.mappingio.MappingVisitor
 import net.fabricmc.mappingio.MappingWriter
 import net.fabricmc.mappingio.adapter.*
 import net.fabricmc.mappingio.format.MappingFormat
-import net.fabricmc.mappingio.tree.MappingTree
 import net.fabricmc.mappingio.tree.MemoryMappingTree
-import net.fabricmc.tinyremapper.IMappingProvider
-import net.fabricmc.tinyremapper.NonClassCopyMode
-import net.fabricmc.tinyremapper.OutputConsumerPath
-import net.fabricmc.tinyremapper.TinyRemapper
+import net.fabricmc.tinyremapper.*
 import net.minecraft.SharedConstants
 import net.minecraft.Util
 import net.minecraft.server.MinecraftServer
@@ -48,10 +44,8 @@ object ScriptRemappingUtils {
     private var mappedModJars = HashMultimap.create<MappingType, Path>()
     private var unmappedModJars = ArrayList<Path>()
 
-    private var loaded: Boolean = false
-
     fun getMappings(from: MappingType, to: MappingType = getCurrentMappings()): IMappingProvider {
-        return mappings.provider(from.id, to.id, false)
+        return TinyUtils.createMappingProvider(mappings, from.id, to.id)
     }
 
     fun getMappedMinecraftJar(type: MappingType): Path? {
@@ -88,9 +82,14 @@ object ScriptRemappingUtils {
 
     internal fun load(): CompletableFuture<Unit> {
         return CompletableFuture.supplyAsync({
-            writeIntermediary2Mojang2YarnMappings()
-            for (named in MappingType.named()) {
-                createRemappedMinecraftJar(named)
+            if (getIntermediary2Mojang2YarnPath().notExists()) {
+                writeIntermediary2Mojang2YarnMappings()
+            }
+            createRemappedMinecraftJar(getCurrentMappings())
+            for (entry in MappingType.named()) {
+                if (entry != getCurrentMappings()) {
+                    createRemappedMinecraftJar(entry)
+                }
             }
             mapScriptingApi()
         }, Util.ioPool())
@@ -181,16 +180,18 @@ object ScriptRemappingUtils {
         to: MappingType,
     ) {
         val remapper = TinyRemapper.newRemapper()
-            .withMappings(mappings.provider(from.id, to.id, true))
+            .withMappings(TinyUtils.createMappingProvider(mappings, from.id, to.id))
             .extension(KotlinMetadataTinyRemapperExtensionImpl)
             .build()
         try {
+            remapper.readClassPath(getMappedMinecraftJar(from))
             OutputConsumerPath.Builder(output).build().use { consumer ->
                 consumer.addNonClassFiles(input, NonClassCopyMode.FIX_META_INF, remapper)
-                remapper.readClassPath(getMappedMinecraftJar(from))
                 remapper.readInputs(input)
                 remapper.apply(consumer)
             }
+        } catch (e: Exception) {
+            EssentialScripting.logger.error("Exception occurred", e)
         } finally {
             remapper.finish()
         }
@@ -209,29 +210,20 @@ object ScriptRemappingUtils {
     }
 
     private fun writeIntermediary2Mojang2YarnMappings() {
-        val renames = mapOf("source" to "mojang", "target" to "official", "named" to "yarn")
         val tree = MemoryMappingTree()
-        val renamer = MappingNsRenamer(tree, renames)
-        val intermediary = getOrDownloadMappings(getOfficial2IntermediaryMappingsPath(), this::downloadIntermediaryMappings)
         val yarn = getOrDownloadMappings(getIntermediary2YarnMappingsPath(), this::downloadYarnMappings)
-        val mojang = getOrDownloadMappings(getMojang2OfficialMappingsPath(), this::downloadMojangMappings)
-        if (intermediary == null || mojang == null || yarn == null) {
+        val mojang = getOrDownloadMappings(getIntermediary2MojangMappingsPath(), this::downloadMojangMappings)
+        if (mojang == null || yarn == null) {
             return
         }
-        // I'm sure there's a better way of doing this
-        MappingReader.read(mojang, renamer)
-        MappingReader.read(intermediary, renamer)
-        val copy = MemoryMappingTree()
-        val switcher = MappingSourceNsSwitch(MappingNsRenamer(copy, renames), "intermediary", true)
-        tree.accept(switcher)
-        MappingReader.read(yarn, MappingCommentIgnorer(copy))
+        MappingReader.read(mojang, tree)
+        MappingReader.read(yarn, tree)
         val writer = MappingWriter.create(
             getIntermediary2Mojang2YarnPath(),
             MappingFormat.TINY_2_FILE
         )
         val completer = MappingNsCompleter(writer, mapOf("yarn" to "intermediary"))
-        val reorder = MappingNsRenamer(MappingDstNsReorder(completer, listOf("mojang", "yarn")), renames)
-        copy.accept(reorder)
+        tree.accept(completer)
     }
 
     private fun getOrDownloadMappings(
@@ -249,13 +241,25 @@ object ScriptRemappingUtils {
     }
 
     private fun downloadMojangMappings() {
-        val url = getMojangMappingsUrl() ?: return
+        val mojang = getMojangMappingsUrl() ?: return
+        val intermediary = "https://github.com/FabricMC/intermediary/raw/master/mappings/$version.tiny"
+
+        val renames = mapOf("source" to "mojang", "target" to "official")
+        val tree = MemoryMappingTree()
+        val renamer = MappingNsRenamer(tree, renames)
         try {
-            NetworkingUtils.fetchAsReader(url) { reader ->
-                val path = getMojang2OfficialMappingsPath()
-                val writer = MappingWriter.create(path, MappingFormat.TINY_2_FILE)
-                MappingReader.read(reader, writer)
+            NetworkingUtils.fetchAsReader(intermediary) { reader ->
+                MappingReader.read(reader, renamer)
             }
+            NetworkingUtils.fetchAsReader(mojang) { reader ->
+                MappingReader.read(reader, MappingSourceNsSwitch(renamer, "target"))
+            }
+
+            val path = getIntermediary2MojangMappingsPath()
+            val writer = MappingWriter.create(path, MappingFormat.TINY_2_FILE)
+            val reorder = MappingDstNsReorder(writer, listOf("mojang"))
+            val switcher = MappingSourceNsSwitch(reorder, "intermediary", true)
+            tree.accept(switcher)
         } catch (e: IOException) {
             EssentialScripting.logger.error("Failed to download mojang mappings", e)
         }
@@ -284,9 +288,13 @@ object ScriptRemappingUtils {
 
     private fun downloadYarnMappings() {
         val url = getYarnJarUrl() ?: return
+
+        val renames = mapOf("named" to "yarn")
+        val tree = MemoryMappingTree()
+        val renamer = MappingNsRenamer(tree, renames)
         try {
+            val path = getIntermediary2YarnMappingsPath()
             NetworkingUtils.fetchAsStream(url) { stream ->
-                val path = getIntermediary2YarnMappingsPath()
                 val tmp = Files.createTempFile(path.parent, path.nameWithoutExtension, null)
                 try {
                     tmp.outputStream().use { output ->
@@ -295,15 +303,16 @@ object ScriptRemappingUtils {
                     val jar = JarFile(tmp.toFile())
                     val entry = jar.getJarEntry("mappings/mappings.tiny")
                         ?: throw IllegalStateException("Failed to find mappings in yarn jar")
-                    jar.getInputStream(entry).use { input ->
-                        path.outputStream().use { output ->
-                            input.transferTo(output)
-                        }
+                    jar.getInputStream(entry).reader().use { reader ->
+                        MappingReader.read(reader, renamer)
                     }
                 } finally {
                     tmp.deleteIfExists()
                 }
             }
+
+            val writer = MappingWriter.create(path, MappingFormat.TINY_2_FILE)
+            tree.accept(MappingCommentIgnorer(writer))
         } catch (e: IOException) {
             EssentialScripting.logger.error("Failed to download yarn mappings", e)
         }
@@ -318,19 +327,6 @@ object ScriptRemappingUtils {
         return "$YARN_MAVEN_URL/$version/yarn-$version-v2.jar"
     }
 
-    private fun downloadIntermediaryMappings() {
-        val url = "https://github.com/FabricMC/intermediary/raw/master/mappings/$version.tiny"
-        try {
-            NetworkingUtils.fetchAsStream(url) { input ->
-                val path = getOfficial2IntermediaryMappingsPath()
-                path.outputStream().use { output ->
-                    input.transferTo(output)
-                }
-            }
-        } catch (e: IOException) {
-            EssentialScripting.logger.error("Failed to download intermediary mappings", e)
-        }
-    }
 
     private fun getIntermediary2Mojang2YarnPath(): Path {
         return EssentialScripting.configDirectory().resolve("mappings")
@@ -339,9 +335,9 @@ object ScriptRemappingUtils {
             .createParentDirectories()
     }
 
-    private fun getMojang2OfficialMappingsPath(): Path {
+    private fun getIntermediary2MojangMappingsPath(): Path {
         return EssentialScripting.configDirectory().resolve("mappings")
-            .resolve("mojang2official")
+            .resolve("intermediary2mojang")
             .resolve("$version.tiny")
             .createParentDirectories()
     }
@@ -351,61 +347,6 @@ object ScriptRemappingUtils {
             .resolve("intermediary2yarn")
             .resolve("$version.tiny")
             .createParentDirectories()
-    }
-
-    private fun getOfficial2IntermediaryMappingsPath(): Path {
-        return EssentialScripting.configDirectory().resolve("mappings")
-            .resolve("official2intermediary")
-            .resolve("$version.tiny")
-            .createParentDirectories()
-    }
-
-    private fun MappingTree.provider(from: String, to: String, remapLocals: Boolean): IMappingProvider {
-        return IMappingProvider { acceptor ->
-            val fromId = this.getNamespaceId(from)
-            val toId = this.getNamespaceId(to)
-            for (classDef in this.classes) {
-                val className = classDef.getName(fromId) ?: continue
-
-                val dstClassName = classDef.getName(toId) ?: className
-                acceptor.acceptClass(className, dstClassName)
-
-                for (field in classDef.fields) {
-                    val fieldName = field.getName(fromId) ?: continue
-
-                    val dstFieldName = field.getName(toId) ?: fieldName
-                    acceptor.acceptField(
-                        IMappingProvider.Member(className, fieldName, field.getDesc(fromId)), dstFieldName
-                    )
-                }
-
-                for (method in classDef.methods) {
-                    val methodName = method.getName(fromId) ?: continue
-
-                    val dstMethodName = method.getName(toId) ?: methodName
-                    val methodIdentifier = IMappingProvider.Member(className, methodName, method.getDesc(fromId))
-                    acceptor.acceptMethod(methodIdentifier, dstMethodName)
-
-                    if (!remapLocals) {
-                        continue
-                    }
-
-                    for (parameter in method.args) {
-                        val name = parameter.getName(toId) ?: continue
-
-                        acceptor.acceptMethodArg(methodIdentifier, parameter.lvIndex, name)
-                    }
-
-                    for (localVariable in method.vars) {
-                        acceptor.acceptMethodVar(
-                            methodIdentifier, localVariable.lvIndex,
-                            localVariable.startOpIdx, localVariable.lvtRowIndex,
-                            localVariable.getName(toId)
-                        )
-                    }
-                }
-            }
-        }
     }
 
     private class MappingCommentIgnorer(next: MappingVisitor?): ForwardingMappingVisitor(next) {

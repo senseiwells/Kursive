@@ -19,7 +19,7 @@ object NetworkingUtils {
                 return connection.inputStream.use(consumer)
             }
         } catch (e: Exception) {
-            EssentialScripting.logger.error("Failed to fetch url $url")
+            EssentialScripting.logger.error("Failed to fetch url $url", e)
         }
         return null
     }
