@@ -1,6 +1,6 @@
 package me.senseiwells.scripting.common.utils
 
-import me.senseiwells.scripting.common.script.execution.EnvironmentContext
+import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstance
 import net.minecraft.Util
 import java.util.concurrent.CompletableFuture
@@ -10,7 +10,7 @@ import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.jvm.util.isIncomplete
 
 fun <M: Any> ScriptInstance<M>.compileAsyncThenExecute(
-    context: EnvironmentContext<M>
+    context: ExecutionEnvironment<M>
 ): CompletableFuture<ResultWithDiagnostics<Unit>> {
     if (this.shouldRecompile()) {
         return CompletableFuture.supplyAsync({

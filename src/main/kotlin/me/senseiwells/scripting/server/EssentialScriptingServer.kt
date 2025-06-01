@@ -3,8 +3,9 @@ package me.senseiwells.scripting.server
 import me.senseiwells.scripting.common.EssentialScripting
 import me.senseiwells.scripting.common.EssentialScripting.CommonCommandHandler
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
-import me.senseiwells.scripting.common.script.execution.EnvironmentContext
+import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstances
+import me.senseiwells.scripting.server.script.ServerExecutionEnvironment
 import net.casual.arcade.commands.registerLiteral
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
@@ -24,8 +25,8 @@ object EssentialScriptingServer: ModInitializer, CommonCommandHandler<MinecraftS
         }
     }
 
-    override fun environment(source: CommandSourceStack): EnvironmentContext<MinecraftServer> {
-        return EnvironmentContext(source.server)
+    override fun environment(source: CommandSourceStack): ExecutionEnvironment<MinecraftServer> {
+        return ServerExecutionEnvironment(source.server, listOf())
     }
 
     override fun failure(source: CommandSourceStack, component: Component) {

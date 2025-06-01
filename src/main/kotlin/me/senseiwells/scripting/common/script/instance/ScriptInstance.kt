@@ -7,7 +7,7 @@ import me.senseiwells.scripting.api.ScriptContext
 import me.senseiwells.scripting.common.script.configuration.*
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
 import me.senseiwells.scripting.common.script.evaluation.RemappedJvmScriptJarGenerator
-import me.senseiwells.scripting.common.script.execution.EnvironmentContext
+import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.execution.ScriptEntrypoint
 import me.senseiwells.scripting.common.utils.EnvironmentUtils
 import java.nio.file.Path
@@ -62,11 +62,11 @@ abstract class ScriptInstance<M: Any>(
         return result.onSuccess { Unit.asSuccess() }
     }
 
-    fun prepare(context: EnvironmentContext<M>): ResultWithDiagnostics<Unit> {
+    fun prepare(context: ExecutionEnvironment<M>): ResultWithDiagnostics<Unit> {
         return this.getOrFindEntrypoint(context).onSuccess { Unit.asSuccess() }
     }
 
-    fun execute(context: EnvironmentContext<M>): ResultWithDiagnostics<Unit> {
+    fun execute(context: ExecutionEnvironment<M>): ResultWithDiagnostics<Unit> {
         if (this.isRunning()) {
             return makeFailureResult("Cannot execute script while it's already running")
         }
@@ -118,7 +118,7 @@ abstract class ScriptInstance<M: Any>(
         return this.getCompileDirectoryPath().resolve("${this.name}.jar")
     }
 
-    private fun getOrFindEntrypoint(context: EnvironmentContext<M>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
+    private fun getOrFindEntrypoint(context: ExecutionEnvironment<M>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
         val existing = this.entrypoint
         if (existing != null) {
             return existing.asSuccess()
@@ -158,16 +158,16 @@ abstract class ScriptInstance<M: Any>(
     }
 
     private fun findEntrypoint(
-        context: EnvironmentContext<M>,
+        context: ExecutionEnvironment<M>,
         klass: KClass<*>
     ): ResultWithDiagnostics<ScriptEntrypoint<M>> {
-        val argsType = ScriptContext::class
-        val mcType = context.klass()
+        val mcType = context.minecraftType()
+        val ctxType = context.contextType()
 
         findEntrypoint(klass) { _, _ -> emptyArray() }?.let { return it.asSuccess() }
-        findEntrypoint(klass, argsType) { _, args -> arrayOf(args) }?.let { return it.asSuccess() }
+        findEntrypoint(klass, ctxType) { _, args -> arrayOf(args) }?.let { return it.asSuccess() }
         findEntrypoint(klass, mcType) { mc, _ -> arrayOf(mc) }?.let { return it.asSuccess() }
-        findEntrypoint(klass, mcType, argsType) { mc, args -> arrayOf(mc, args) }?.let { return it.asSuccess() }
+        findEntrypoint(klass, mcType, ctxType) { mc, args -> arrayOf(mc, args) }?.let { return it.asSuccess() }
 
         return makeFailureResult("Failed to find script entrypoint")
     }

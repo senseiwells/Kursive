@@ -1,9 +1,10 @@
 package me.senseiwells.scripting.client
 
+import me.senseiwells.scripting.client.script.ClientExecutionEnvironment
 import me.senseiwells.scripting.common.EssentialScripting
 import me.senseiwells.scripting.common.EssentialScripting.CommonCommandHandler
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
-import me.senseiwells.scripting.common.script.execution.EnvironmentContext
+import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstances
 import net.casual.arcade.commands.registerLiteral
 import net.fabricmc.api.ClientModInitializer
@@ -24,8 +25,8 @@ object EssentialScriptingClient: ClientModInitializer, CommonCommandHandler<Mine
         }
     }
 
-    override fun environment(source: FabricClientCommandSource): EnvironmentContext<Minecraft> {
-        return EnvironmentContext(source.client)
+    override fun environment(source: FabricClientCommandSource): ExecutionEnvironment<Minecraft> {
+        return ClientExecutionEnvironment(source.client, listOf())
     }
 
     override fun failure(source: FabricClientCommandSource, component: Component) {

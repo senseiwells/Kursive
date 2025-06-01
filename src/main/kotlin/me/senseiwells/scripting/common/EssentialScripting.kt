@@ -7,7 +7,7 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import me.senseiwells.scripting.common.script.definition.FileScriptDefinition
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
-import me.senseiwells.scripting.common.script.execution.EnvironmentContext
+import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstances
 import me.senseiwells.scripting.common.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.common.utils.compileAsyncThenExecute
@@ -151,6 +151,6 @@ object EssentialScripting: ModInitializer {
 
         fun failure(source: S, component: Component)
 
-        fun environment(source: S): EnvironmentContext<M>
+        fun environment(source: S): ExecutionEnvironment<M>
     }
 }
