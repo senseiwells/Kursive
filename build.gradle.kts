@@ -20,7 +20,7 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
-val modVersion = "0.1.0-alpha.19"
+val modVersion = "0.1.0-alpha.20"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
 
 allprojects {
@@ -83,7 +83,6 @@ dependencies {
     modImplementation(libs.mod.menu)
     modImplementation(libs.yacl)
 
-
     modImplementation(libs.arcade.events.server.get())
     modImplementation(libs.arcade.events.client.get())
     modImplementation(libs.arcade.event.registry.get())
@@ -110,6 +109,12 @@ tasks {
 
     shadowJar {
         destinationDirectory.set(File("./build/devlibs"))
+
+        exclude { element ->
+            element.path.startsWith("kotlin/") && !element.path.startsWith("kotlin/script/")
+        }
+        exclude("kotlinx/coroutines/**")
+        exclude("messages/**")
 
         // from("LICENSE")
 
