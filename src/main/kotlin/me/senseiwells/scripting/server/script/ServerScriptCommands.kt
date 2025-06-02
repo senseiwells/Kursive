@@ -9,6 +9,7 @@ import net.casual.arcade.events.server.block.CommandBlockExecuteEvent
 import net.casual.arcade.events.server.player.PlayerCommandEvent
 import net.casual.arcade.events.server.player.PlayerCommandSuggestionsEvent
 import net.casual.arcade.events.server.player.PlayerSendCommandsEvent
+import net.minecraft.commands.CommandBuildContext
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.server.MinecraftServer
 
@@ -26,6 +27,14 @@ class ServerScriptCommands(
 
     fun cleanup() {
         this.resend()
+    }
+
+    override fun dispatcher(): CommandDispatcher<CommandSourceStack> {
+        return this.dispatcher
+    }
+
+    override fun context(): CommandBuildContext {
+        return CommandBuildContext.simple(this.server.registryAccess(), this.server.worldData.enabledFeatures())
     }
 
     override fun register(command: LiteralArgumentBuilder<CommandSourceStack>) {

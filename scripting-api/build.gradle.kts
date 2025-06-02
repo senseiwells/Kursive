@@ -4,6 +4,7 @@ dependencies {
     include(modImplementation(libs.arcade.event.registry.get())!!)
     include(modImplementation(libs.arcade.events.client.get())!!)
     include(modImplementation(libs.arcade.events.server.get())!!)
+    include(modImplementation(libs.arcade.commands.get())!!)
     include(modImplementation(libs.arcade.utils.get())!!)
 }
 
