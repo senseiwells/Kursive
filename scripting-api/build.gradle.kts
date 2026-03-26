@@ -1,5 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
+val apiVersion = "0.2.0-alpha.1"
+val releaseVersion = "${apiVersion}+${libs.versions.minecraft.get()}"
+version = releaseVersion
+
 dependencies {
     include(implementation(libs.arcade.event.registry.get())!!)
     include(implementation(libs.arcade.events.client.get())!!)
@@ -8,14 +12,15 @@ dependencies {
     include(implementation(libs.arcade.utils.get())!!)
 }
 
-tasks.register<ShadowJar>("mojangFatJar") {
+tasks.register<ShadowJar>("buildScriptingJar") {
     group = "scripting"
+    description = "Builds a fat jar containing Minecraft and runtime dependencies for use in Kotlin scripts"
     isZip64 = true
 
     exclude("_COROUTINE/*")
-    exclude("kotlin/**")
     exclude("com/ibm/**")
     exclude("com/sun/**")
+    exclude("com/jcraft/**")
     exclude("ui/**")
     exclude("META-INF/jars/*")
     exclude("assets/**")
@@ -23,6 +28,7 @@ tasks.register<ShadowJar>("mojangFatJar") {
     exclude("*-refmap.json")
     exclude("*.mixins.json")
     exclude("*.accesswidener")
+    exclude("*.classtweaker")
     exclude("DebugProbesKt.bin")
     exclude("fabric.mod.json")
     exclude("fabric-installer.json")
@@ -32,8 +38,22 @@ tasks.register<ShadowJar>("mojangFatJar") {
     from(loom.namedMinecraftJars)
     from(project.configurations.modCompileClasspathMapped)
     configurations = listOf(
-        project.configurations.minecraftClientRuntimeLibraries.get()
+        project.configurations.minecraftClientRuntimeLibraries.get(),
+        project.configurations.runtimeClasspath.get()
     )
 
-    archiveClassifier = "fat-mojang"
+    archiveBaseName = "mces"
+    archiveClassifier = ""
+    archiveVersion = project.version.toString()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("scriptingMaven") {
+            groupId = "me.senseiwells"
+            artifactId = "mces"
+
+            artifact(tasks.named("buildScriptingJar"))
+        }
+    }
 }

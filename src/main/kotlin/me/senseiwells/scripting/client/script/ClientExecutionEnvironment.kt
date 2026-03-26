@@ -3,10 +3,8 @@ package me.senseiwells.scripting.client.script
 import kotlinx.coroutines.Job
 import me.senseiwells.scripting.api.ClientScriptContext
 import me.senseiwells.scripting.api.ScriptContext
-import me.senseiwells.scripting.common.script.configuration.MappingType
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.execution.ScriptEntrypoint
-import me.senseiwells.scripting.common.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.impl.ClientScriptingApi
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
@@ -22,8 +20,8 @@ class ClientExecutionEnvironment(
     override val type: EnvType
         get() = EnvType.CLIENT
 
-    override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>, mappings: MappingType): Job {
-        val context = this.createContext(mappings)
+    override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>): Job {
+        val context = this.createContext()
         this.initializeContext(context)
         val job = ClientScriptingApi.launch(this.minecraft) { entrypoint.invoke(this.minecraft, context) }
         job.invokeOnCompletion { this.cleanupContext(context) }
@@ -42,10 +40,9 @@ class ClientExecutionEnvironment(
         return ClientScriptContext::class
     }
 
-    private fun createContext(mappings: MappingType): ClientScriptContext {
+    private fun createContext(): ClientScriptContext {
         val events = SimpleListenerRegistry()
-        val reflection = ScriptRemappingUtils.createScriptReflection(mappings)
-        return ClientScriptContext(this.args, events, reflection)
+        return ClientScriptContext(this.args, events)
     }
 
     private fun initializeContext(context: ClientScriptContext) {

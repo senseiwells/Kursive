@@ -4,9 +4,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
 import me.senseiwells.scripting.api.ScriptContext
-import me.senseiwells.scripting.common.script.configuration.*
+import me.senseiwells.scripting.common.script.configuration.ScriptWithClassloaderEvaluationConfiguration
+import me.senseiwells.scripting.common.script.configuration.ScriptWithClasspathCompilationConfiguration
+import me.senseiwells.scripting.common.script.configuration.environment
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
-import me.senseiwells.scripting.common.script.evaluation.RemappedJvmScriptJarGenerator
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.execution.ScriptEntrypoint
 import me.senseiwells.scripting.common.utils.EnvironmentUtils
@@ -22,6 +23,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.*
+import kotlin.script.experimental.jvmhost.BasicJvmScriptJarGenerator
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
@@ -29,7 +31,6 @@ abstract class ScriptInstance<M: Any>(
     private val definition: ScriptDefinition<M>
 ) {
     private var entrypoint: ScriptEntrypoint<M>? = null
-    private var mappings: MappingType? = null
     private var job: Job? = null
 
     abstract val name: String
@@ -52,8 +53,8 @@ abstract class ScriptInstance<M: Any>(
             return makeFailureResult("Cannot re-compile while script is running")
         }
         this.entrypoint = null
-        val jar = this.getCompileJarPath()
-        val host = BasicJvmScriptingHost(evaluator = RemappedJvmScriptJarGenerator(jar))
+        val jar = this.getCompileJarPath().toFile()
+        val host = BasicJvmScriptingHost(evaluator = BasicJvmScriptJarGenerator(jar))
         val result = host.eval(
             this.getSource(),
             ScriptWithClasspathCompilationConfiguration,
@@ -71,7 +72,7 @@ abstract class ScriptInstance<M: Any>(
             return makeFailureResult("Cannot execute script while it's already running")
         }
         return this.getOrFindEntrypoint(context).onSuccess { entrypoint ->
-            val job = context.invoke(entrypoint, this.mappings!!)
+            val job = context.invoke(entrypoint)
             this.job = job
             Unit.asSuccess()
         }
@@ -136,7 +137,6 @@ abstract class ScriptInstance<M: Any>(
                 script.getClass(ScriptWithClassloaderEvaluationConfiguration)
             }
             val diagnostics = ArrayList<ScriptDiagnostic>()
-            this.mappings = script.compilationConfiguration[ScriptCompilationConfiguration.mappings]
             val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
             if (env != null) {
                 if (context.type != env.type) {

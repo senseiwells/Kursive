@@ -14,8 +14,9 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
-val modVersion = "0.1.0-alpha.20"
+val modVersion = "0.2.0-alpha.1"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
+version = releaseVersion
 
 allprojects {
     apply(plugin = "net.fabricmc.fabric-loom")
@@ -34,7 +35,6 @@ allprojects {
 
     val libs = rootProject.libs
 
-    version = releaseVersion
     group = "me.senseiwells"
 
     dependencies {
@@ -102,13 +102,5 @@ tasks {
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-        }
     }
 }

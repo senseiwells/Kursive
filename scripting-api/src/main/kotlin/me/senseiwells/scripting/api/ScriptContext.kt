@@ -5,19 +5,16 @@ import net.minecraft.commands.CommandSourceStack
 
 sealed class ScriptContext(
     val args: List<String>,
-    val events: ListenerRegistry,
-    val reflection: ScriptReflection
+    val events: ListenerRegistry
 )
 
 class ServerScriptContext(
     args: List<String>,
     events: ListenerRegistry,
-    reflection: ScriptReflection,
     val commands: ScriptCommands<CommandSourceStack>
-): ScriptContext(args, events, reflection)
+): ScriptContext(args, events)
 
 class ClientScriptContext(
     args: List<String>,
-    events: ListenerRegistry,
-    reflection: ScriptReflection
-): ScriptContext(args, events, reflection)
+    events: ListenerRegistry
+): ScriptContext(args, events)

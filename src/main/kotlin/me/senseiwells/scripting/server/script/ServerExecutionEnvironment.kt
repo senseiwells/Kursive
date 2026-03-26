@@ -3,10 +3,8 @@ package me.senseiwells.scripting.server.script
 import kotlinx.coroutines.Job
 import me.senseiwells.scripting.api.ScriptContext
 import me.senseiwells.scripting.api.ServerScriptContext
-import me.senseiwells.scripting.common.script.configuration.MappingType
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.execution.ScriptEntrypoint
-import me.senseiwells.scripting.common.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.impl.CommonScriptingApi
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
@@ -22,8 +20,8 @@ class ServerExecutionEnvironment(
     override val type: EnvType
         get() = EnvType.SERVER
 
-    override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>, mappings: MappingType): Job {
-        val context = this.createContext(mappings)
+    override fun invoke(entrypoint: ScriptEntrypoint<MinecraftServer>): Job {
+        val context = this.createContext()
         this.initializeContext(context)
         val job = CommonScriptingApi.launch(this.minecraft) { entrypoint.invoke(this.minecraft, context) }
         job.invokeOnCompletion { this.cleanupContext(context) }
@@ -42,11 +40,10 @@ class ServerExecutionEnvironment(
         return ServerScriptContext::class
     }
 
-    private fun createContext(mappings: MappingType): ServerScriptContext {
+    private fun createContext(): ServerScriptContext {
         val events = SimpleListenerRegistry()
-        val reflection = ScriptRemappingUtils.createScriptReflection(mappings)
         val commands = ServerScriptCommands(this.minecraft)
-        return ServerScriptContext(this.args, events, reflection, commands)
+        return ServerScriptContext(this.args, events, commands)
     }
 
     private fun initializeContext(context: ServerScriptContext) {

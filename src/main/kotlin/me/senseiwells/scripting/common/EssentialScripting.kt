@@ -9,18 +9,17 @@ import me.senseiwells.scripting.common.script.definition.FileScriptDefinition
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstances
-import me.senseiwells.scripting.common.utils.ScriptRemappingUtils
 import me.senseiwells.scripting.common.utils.compileAsyncThenExecute
 import net.casual.arcade.commands.argument
 import net.casual.arcade.commands.literal
-import net.casual.arcade.utils.ComponentUtils.bold
-import net.casual.arcade.utils.ComponentUtils.crimson
-import net.casual.arcade.utils.ComponentUtils.lime
-import net.casual.arcade.utils.ComponentUtils.white
+import net.casual.arcade.utils.component.bold
+import net.casual.arcade.utils.component.crimson
+import net.casual.arcade.utils.component.lime
+import net.casual.arcade.utils.component.white
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -37,15 +36,15 @@ object EssentialScripting: ModInitializer {
     val logger: Logger = LoggerFactory.getLogger(MOD_ID)
 
     override fun onInitialize() {
-        ScriptRemappingUtils.load()
+
     }
 
     fun configDirectory(): Path {
         return FabricLoader.getInstance().configDir.resolve("essential-scripting").createDirectories()
     }
 
-    fun id(path: String): ResourceLocation {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path)
+    fun id(path: String): Identifier {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path)
     }
 
     fun logDiagnostics(result: ResultWithDiagnostics<*>) {

@@ -27,10 +27,6 @@
       {
         "adapter": "kotlin",
         "value": "me.senseiwells.scripting.server.EssentialScriptingServer"
-      },
-      {
-        "adapter": "kotlin",
-        "value": "me.senseiwells.scripting.common.remapping.JarRemapper"
       }
     ]
   },
@@ -38,7 +34,7 @@
     "essential-scripting.mixins.json"
   ],
   "depends": {
-    "fabric": "*",
+    "fabric-api": "*",
     "fabricloader": ">=${fabric_loader_dependency}",
     "yet_another_config_lib_v3": ">=${yacl_dependency}",
     "minecraft": "${minecraft_dependency}"
