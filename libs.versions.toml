@@ -1,21 +1,17 @@
 [versions]
-minecraft     = "1.21.5"
-fabric-loader = "0.16.14"
-fabric-api    = "0.125.3+1.21.5"
-parchment     = "1.21.5:2025.06.01"
-fabric-kotlin = "1.13.0+kotlin.2.1.0"
-mod-menu      = "14.0.0-rc.2"
-keybinds      = "0.1.15+1.21.5"
-yacl          = "3.6.2+1.21.4-fabric"
+minecraft     = "26.1"
+fabric-loader = "0.18.4"
+fabric-api    = "0.144.0+26.1"
+fabric-kotlin = "1.13.9+kotlin.2.3.10"
+mod-menu      = "18.0.0-alpha.6"
+keybinds      = "0.3.0+26.1"
+yacl          = "3.9.0+26.1-fabric"
 
 # Scripting
-mappingio     = "0.7.1"
-tiny-remapper = "0.11.1"
-
-arcade        = "0.4.1-beta.33+1.21.5"
+arcade        = "0.9.0-beta.10+26.1"
 
 # Plugins
-fabric-loom   = "1.10-SNAPSHOT"
+fabric-loom   = "1.15-SNAPSHOT"
 mod-publish   = "0.8.1"
 shadow        = "8.3.5"
 
@@ -29,8 +25,6 @@ keybinds      = { module = "me.senseiwells:simple-keybinding-library", version.r
 yacl          = { module = "dev.isxander:yet-another-config-lib"     , version.ref = "yacl" }
 
 # Scripting
-mappingio            = { module = "net.fabricmc:mapping-io"                 , version.ref = "mappingio" }
-fabric-tiny-remapper = { module = "net.fabricmc:tiny-remapper"              , version.ref = "tiny-remapper" }
 kotlin-metadata      = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm" }
 
 arcade-commands       = { module = "net.casualchampionships:arcade-commands"      , version.ref = "arcade" }
@@ -40,6 +34,6 @@ arcade-events-server  = { module = "net.casualchampionships:arcade-events-server
 arcade-utils          = { module = "net.casualchampionships:arcade-utils"         , version.ref = "arcade" }
 
 [plugins]
-fabric-loom = { id = "fabric-loom"                    , version.ref = "fabric-loom" }
+fabric-loom = { id = "net.fabricmc.fabric-loom"       , version.ref = "fabric-loom" }
 mod-publish = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mod-publish" }
 shadow      = { id = "com.gradleup.shadow"            , version.ref = "shadow" }

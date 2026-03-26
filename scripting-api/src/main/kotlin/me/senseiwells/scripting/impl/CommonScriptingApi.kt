@@ -16,12 +16,12 @@ object CommonScriptingApi: ModInitializer {
     const val MOD_ID = "essential-scripting-api"
 
     override fun onInitialize() {
-        GlobalEventHandler.Client.register<ServerTickEvent>(
+        GlobalEventHandler.Server.register<ServerTickEvent>(
             phase = ClientTickEvent.PHASE_POST
         ) { ScriptingCoroutines.tick(it.server) }
-        GlobalEventHandler.Client.register<ServerStoppingEvent>(
-            phase = ClientTickEvent.PHASE_POST
-        ) { ScriptingCoroutines.destroy(it.server) }
+        GlobalEventHandler.Server.register<ServerStoppingEvent> {
+            ScriptingCoroutines.destroy(it.server)
+        }
     }
 
     fun launch(server: MinecraftServer, block: suspend () -> Unit): Job {

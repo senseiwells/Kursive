@@ -1,9 +1,3 @@
-
-import kotlin.io.path.copyTo
-import kotlin.io.path.createDirectories
-import kotlin.io.path.name
-import kotlin.io.path.pathString
-
 plugins {
     val jvmVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]
@@ -24,7 +18,7 @@ val modVersion = "0.1.0-alpha.20"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
 
 allprojects {
-    apply(plugin = "fabric-loom")
+    apply(plugin = "net.fabricmc.fabric-loom")
     apply(plugin = "maven-publish")
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.kotlin.plugin.serialization")
@@ -45,14 +39,9 @@ allprojects {
 
     dependencies {
         minecraft(libs.minecraft)
-        @Suppress("UnstableApiUsage")
-        mappings(loom.layered {
-            officialMojangMappings()
-            parchment("org.parchmentmc.data:parchment-${libs.versions.parchment.get()}@zip")
-        })
 
-        modImplementation(libs.fabric.loader)
-        modImplementation(libs.fabric.kotlin)
+        implementation(libs.fabric.loader)
+        implementation(libs.fabric.kotlin)
     }
 
     java {
@@ -79,34 +68,27 @@ allprojects {
 }
 
 dependencies {
-    modImplementation(libs.fabric.api)
-    modImplementation(libs.mod.menu)
-    modImplementation(libs.yacl)
+    implementation(libs.fabric.api)
+    implementation(libs.mod.menu)
+    implementation(libs.yacl)
 
-    modImplementation(libs.arcade.events.server.get())
-    modImplementation(libs.arcade.events.client.get())
-    modImplementation(libs.arcade.event.registry.get())
-    modImplementation(libs.arcade.utils.get())
-    include(modImplementation(libs.arcade.commands.get())!!)
-    include(modImplementation(libs.keybinds.get())!!)
-    implementation(project(path = ":scripting-api", configuration = "namedElements"))
-    include(project(path = ":scripting-api"))
+    implementation(libs.arcade.events.server.get())
+    implementation(libs.arcade.events.client.get())
+    implementation(libs.arcade.event.registry.get())
+    implementation(libs.arcade.utils.get())
+    include(implementation(libs.arcade.commands.get())!!)
+    include(implementation(libs.keybinds.get())!!)
+    include(implementation(project(":scripting-api"))!!)
 
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-common")!!) // fine
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")!!) // fine
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies")!!) // fine
     shade(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")!!) // kotlinx.coroutines, org.intellij, org.jetbrains
     // shade(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies-maven")!!)
-    include(implementation(libs.mappingio.get())!!)
-    include(implementation(libs.fabric.tiny.remapper.get())!!)
     include(implementation(libs.kotlin.metadata.get())!!)
 }
 
 tasks {
-    remapJar {
-        inputFile.set(shadowJar.get().archiveFile)
-    }
-
     shadowJar {
         destinationDirectory.set(File("./build/devlibs"))
 
@@ -120,37 +102,6 @@ tasks {
 
         configurations = listOf(shade)
         archiveClassifier = "shaded"
-    }
-
-    register("yarnFatJar") {
-        group = "scripting"
-        val scriptingApi = project(":scripting-api")
-        val mojangFatJar: Task = scriptingApi.tasks.getByName("mojangFatJar")
-        val libs = scriptingApi.layout.buildDirectory.get().asFile.toPath().resolve("libs")
-        runClient.get().args(
-            "--remap-input-jar", libs.resolve("scripting-api-${version}-fat-mojang.jar").pathString,
-            "--remap-output-jar", libs.resolve("scripting-api-${version}-fat-yarn.jar").pathString,
-            "--remap-from", "mojang",
-            "--remap-to", "yarn"
-        )
-        doFirst { mojangFatJar.actions.forEach { it.execute(mojangFatJar) } }
-        doLast { runClient.get().exec() }
-    }
-
-    register("generateFatJars") {
-        group = "scripting"
-        dependsOn("yarnFatJar")
-        val scriptingApi = project(":scripting-api")
-        val libs = scriptingApi.layout.buildDirectory.get().asFile.toPath().resolve("libs")
-        val mojang = libs.resolve("scripting-api-${version}-fat-mojang.jar")
-        val yarn = libs.resolve("scripting-api-${version}-fat-yarn.jar")
-        val build = layout.buildDirectory.get().asFile.toPath()
-            .resolve("scripting-jars")
-            .createDirectories()
-        doLast {
-            mojang.copyTo(build.resolve(mojang.name), overwrite = true)
-            yarn.copyTo(build.resolve(yarn.name), overwrite = true)
-        }
     }
 }
 
