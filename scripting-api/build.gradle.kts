@@ -12,7 +12,7 @@ dependencies {
     include(implementation(libs.arcade.utils.get())!!)
 }
 
-tasks.register<ShadowJar>("buildScriptingJar") {
+tasks.register<ShadowJar>("buildMcesJar") {
     group = "scripting"
     description = "Builds a fat jar containing Minecraft and runtime dependencies for use in Kotlin scripts"
     isZip64 = true
@@ -49,11 +49,17 @@ tasks.register<ShadowJar>("buildScriptingJar") {
 
 publishing {
     publications {
-        create<MavenPublication>("scriptingMaven") {
+        create<MavenPublication>("mces") {
             groupId = "me.senseiwells"
             artifactId = "mces"
 
-            artifact(tasks.named("buildScriptingJar"))
+            artifact(tasks.named("buildMcesJar"))
         }
     }
+}
+
+tasks.register("publishMces") {
+    group = "scripting"
+    description = "Publishes the scripting jar to Maven Local"
+    dependsOn("publishMcesPublicationToMavenLocal")
 }

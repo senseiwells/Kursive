@@ -1,8 +1,21 @@
 # EssentialScripting
 
-The janky way I get sources to work:
+Getting started:
+```
+./gradlew publishMces
+```
 
-- Compile fat jar
-- Create new intellij project in the scripts directory
-- Set the source dir to be the root dir
-- Add jar dependency - link the fat jar
+This will publish the scripting dependency to your maven local
+which you can use for development.
+
+```kt
+@file:DependsOn("me.senseiwells:mces:0.2.0-alpha.1+26.1")
+
+import kotlinx.coroutines.awaitCancellation
+import me.senseiwells.scripting.api.ServerScriptContext
+import net.minecraft.server.MinecraftServer
+
+suspend fun main(server: MinecraftServer, context: ServerScriptContext) {
+    awaitCancellation()
+}
+```
