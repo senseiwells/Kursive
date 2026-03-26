@@ -1,5 +1,6 @@
 package me.senseiwells.scripting.api
 
+import net.casual.arcade.commands.manager.CommandRegistry
 import net.casual.arcade.events.ListenerRegistry
 import net.minecraft.commands.CommandSourceStack
 
@@ -11,7 +12,7 @@ sealed class ScriptContext(
 class ServerScriptContext(
     args: List<String>,
     events: ListenerRegistry,
-    val commands: ScriptCommands<CommandSourceStack>
+    val commands: CommandRegistry<CommandSourceStack>
 ): ScriptContext(args, events)
 
 class ClientScriptContext(

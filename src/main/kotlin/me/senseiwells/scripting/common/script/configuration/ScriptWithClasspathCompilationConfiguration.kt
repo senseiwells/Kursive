@@ -4,6 +4,7 @@ import me.senseiwells.scripting.annotation.Environment
 import me.senseiwells.scripting.common.utils.EnvironmentUtils
 import java.io.File
 import kotlin.script.experimental.api.*
+import kotlin.script.experimental.dependencies.DependsOn
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.jvmTarget
 import kotlin.script.experimental.jvm.updateClasspath
@@ -13,7 +14,7 @@ import kotlin.script.experimental.jvm.util.isError
 open class BaseScript
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
-    defaultImports(Environment::class)
+    defaultImports(Environment::class, DependsOn::class)
     jvm {
         updateClasspath(getClasspath())
         jvmTarget("25")

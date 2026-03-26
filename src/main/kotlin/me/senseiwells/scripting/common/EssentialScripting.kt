@@ -9,7 +9,7 @@ import me.senseiwells.scripting.common.script.definition.FileScriptDefinition
 import me.senseiwells.scripting.common.script.definition.ScriptDefinition
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.instance.ScriptInstances
-import me.senseiwells.scripting.common.utils.compileAsyncThenExecute
+import me.senseiwells.scripting.common.utils.compileAndExecute
 import net.casual.arcade.commands.argument
 import net.casual.arcade.commands.literal
 import net.casual.arcade.utils.component.bold
@@ -102,8 +102,11 @@ object EssentialScripting: ModInitializer {
             handler.failure(source, Component.translatable("essential-scripting.command.scriptAlreadyStarted"))
             return 0
         }
-        val future = instance.compileAsyncThenExecute(handler.environment(source))
-        future.thenAccept { result -> this.onScriptResult(source, handler, name, result) }
+        val environment = handler.environment(source)
+        environment.launch {
+            val result = instance.compileAndExecute(handler.environment(source))
+            onScriptResult(source, handler, name, result)
+        }
         return Command.SINGLE_SUCCESS
     }
 

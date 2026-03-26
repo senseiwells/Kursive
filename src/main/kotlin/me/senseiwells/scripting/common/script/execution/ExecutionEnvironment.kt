@@ -1,9 +1,9 @@
 package me.senseiwells.scripting.common.script.execution
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import me.senseiwells.scripting.api.ScriptContext
 import net.fabricmc.api.EnvType
-import java.util.concurrent.Executor
 import kotlin.reflect.KClass
 
 abstract class ExecutionEnvironment<M: Any>(
@@ -14,7 +14,7 @@ abstract class ExecutionEnvironment<M: Any>(
 
     abstract fun invoke(entrypoint: ScriptEntrypoint<M>): Job
 
-    abstract fun executor(): Executor
+    abstract fun launch(block: suspend CoroutineScope.() -> Unit)
 
     abstract fun minecraftType(): KClass<M>
 

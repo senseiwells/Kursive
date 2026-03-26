@@ -1,16 +1,18 @@
 package me.senseiwells.scripting.client.script
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import me.senseiwells.scripting.api.ClientScriptContext
 import me.senseiwells.scripting.api.ScriptContext
 import me.senseiwells.scripting.common.script.execution.ExecutionEnvironment
 import me.senseiwells.scripting.common.script.execution.ScriptEntrypoint
-import me.senseiwells.scripting.impl.ClientScriptingApi
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
+import net.casual.arcade.utils.coroutine.getCoroutineScope
+import net.casual.arcade.utils.coroutine.launch
 import net.fabricmc.api.EnvType
 import net.minecraft.client.Minecraft
-import java.util.concurrent.Executor
 import kotlin.reflect.KClass
 
 class ClientExecutionEnvironment(
@@ -23,13 +25,13 @@ class ClientExecutionEnvironment(
     override fun invoke(entrypoint: ScriptEntrypoint<Minecraft>): Job {
         val context = this.createContext()
         this.initializeContext(context)
-        val job = ClientScriptingApi.launch(this.minecraft) { entrypoint.invoke(this.minecraft, context) }
+        val job = this.minecraft.getCoroutineScope().launch { entrypoint.invoke(minecraft, context) }
         job.invokeOnCompletion { this.cleanupContext(context) }
         return job
     }
 
-    override fun executor(): Executor {
-        return this.minecraft
+    override fun launch(block: suspend CoroutineScope.() -> Unit) {
+        this.minecraft.launch(block)
     }
 
     override fun minecraftType(): KClass<Minecraft> {

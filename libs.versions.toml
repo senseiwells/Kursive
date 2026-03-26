@@ -8,7 +8,7 @@ keybinds      = "0.3.0+26.1"
 yacl          = "3.9.0+26.1-fabric"
 
 # Scripting
-arcade        = "0.9.0-beta.10+26.1"
+arcade        = "0.9.0-beta.14+26.1"
 
 # Plugins
 fabric-loom   = "1.15-SNAPSHOT"

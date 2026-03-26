@@ -31,6 +31,7 @@ allprojects {
         maven("https://maven.terraformersmc.com/")
         maven("https://maven.isxander.dev/releases")
         maven("https://jitpack.io")
+        mavenLocal()
     }
 
     val libs = rootProject.libs
