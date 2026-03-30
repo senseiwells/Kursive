@@ -27,7 +27,7 @@ You can build the mod from source, you will need Java 25 for this:
    ```sh
    git clone https://github.com/senseiwells/EssentialScripting.git
    ```
-2. Generate the dependency jar
+2. Compile the mod
    ```sh
    gradlew build
    ```
