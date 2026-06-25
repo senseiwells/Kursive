@@ -56,7 +56,7 @@ allprojects {
                 expand(
                     mutableMapOf(
                         "version" to project.version,
-                        "minecraft_dependency" to libs.versions.minecraft.get().replaceAfterLast('.', "x"),
+                        "minecraft_dependency" to replaceVersion(libs.versions.minecraft.get(), "x"),
                         "yacl_dependency" to libs.versions.yacl.get(),
                         "fabric_loader_dependency" to libs.versions.fabric.loader.get(),
                         "fabric_api_dependency" to libs.versions.fabric.api.get(),
@@ -73,11 +73,8 @@ dependencies {
     implementation(libs.mod.menu)
     implementation(libs.yacl)
 
-    implementation(libs.arcade.events.server.get())
-    implementation(libs.arcade.events.client.get())
-    implementation(libs.arcade.event.registry.get())
-    implementation(libs.arcade.utils.get())
-    include(implementation(libs.arcade.commands.get())!!)
+    implementation(libs.bundles.arcade)
+
     include(implementation(libs.keybinds.get())!!)
     include(implementation(project(":scripting-api"))!!)
 
@@ -104,4 +101,8 @@ tasks {
         configurations = listOf(shade)
         archiveClassifier = "shaded"
     }
+}
+
+fun replaceVersion(version: String, patch: String): String {
+    return version.replace(Regex("""^(\d+\.\d+)(\.\d+)?$"""), "$1.$patch")
 }

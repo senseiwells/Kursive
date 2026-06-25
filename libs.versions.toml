@@ -33,6 +33,9 @@ arcade-events-client  = { module = "net.casualchampionships:arcade-events-client
 arcade-events-server  = { module = "net.casualchampionships:arcade-events-server" , version.ref = "arcade" }
 arcade-utils          = { module = "net.casualchampionships:arcade-utils"         , version.ref = "arcade" }
 
+[bundles]
+arcade = ["arcade-commands", "arcade-event-registry", "arcade-events-server", "arcade-events-client", "arcade-utils"]
+
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom"       , version.ref = "fabric-loom" }
 mod-publish = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mod-publish" }

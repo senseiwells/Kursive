@@ -7,11 +7,8 @@ version = releaseVersion
 dependencies {
     implementation(libs.fabric.api)
 
-    include(implementation(libs.arcade.event.registry.get())!!)
-    include(implementation(libs.arcade.events.client.get())!!)
-    include(implementation(libs.arcade.events.server.get())!!)
-    include(implementation(libs.arcade.commands.get())!!)
-    include(implementation(libs.arcade.utils.get())!!)
+    include(libs.bundles.arcade)
+    implementation(libs.bundles.arcade)
 }
 
 tasks.register<ShadowJar>("buildMcesJar") {
