@@ -24,9 +24,6 @@ mod-menu      = { module = "com.terraformersmc:modmenu"              , version.r
 keybinds      = { module = "me.senseiwells:simple-keybinding-library", version.ref = "keybinds" }
 yacl          = { module = "dev.isxander:yet-another-config-lib"     , version.ref = "yacl" }
 
-# Scripting
-kotlin-metadata      = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm" }
-
 arcade-commands       = { module = "net.casualchampionships:arcade-commands"      , version.ref = "arcade" }
 arcade-event-registry = { module = "net.casualchampionships:arcade-event-registry", version.ref = "arcade" }
 arcade-events-client  = { module = "net.casualchampionships:arcade-events-client" , version.ref = "arcade" }

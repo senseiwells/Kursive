@@ -79,32 +79,58 @@ dependencies {
     include(implementation(libs.keybinds.get())!!)
     include(implementation(project(":kursive-api"))!!)
 
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-common")!!) // fine
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")!!) // fine
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies")!!) // fine
-    shade(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")!!) // kotlinx.coroutines, org.intellij, org.jetbrains
+    val kotlinVersion = libs.versions.fabric.kotlin.get()
+        .split("+kotlin.")[1]
+        .split("+")[0]
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlinVersion")!!) // fine
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlinVersion")!!) // fine
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:$kotlinVersion")!!) // fine
+    shade(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlinVersion")!!) // kotlinx.coroutines, org.intellij, org.jetbrains
     // shade(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies-maven")!!)
-    include(implementation(libs.kotlin.metadata.get())!!)
 }
 
 tasks {
     shadowJar {
-        destinationDirectory.set(File("./build/devlibs"))
+        dependsOn("processIncludeJars")
+
+        archiveClassifier = ""
+        isZip64 = true
 
         exclude { element ->
             element.path.startsWith("kotlin/") && !element.path.startsWith("kotlin/script/")
         }
         exclude("kotlinx/coroutines/**")
         exclude("messages/**")
+        exclude("_COROUTINE/**")
+        exclude("misc/**")
+        exclude("kotlinManifest.properties")
+        exclude("pluginsCompatibleWithK2Mode.txt")
+        exclude("custom-formatters.js")
+        exclude("DebugProbesKt.bin")
 
-        // from("LICENSE")
+
+        from("LICENSE") {
+            rename { "kursive-LICENSE" }
+        }
 
         configurations = listOf(shade)
-        archiveClassifier = "shaded"
+    }
+
+    jar {
+        archiveClassifier = "slim"
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }
 
 loom {
+    @Suppress("UnstableApiUsage")
+    nestJars(tasks.shadowJar, objects.fileCollection().from(
+        tasks.processIncludeJars.map { objects.fileTree().from(it.outputDirectory) }
+    ))
+
     decompilerOptions.named("vineflower") {
         options.put("mark-corresponding-synthetics", "1")
     }

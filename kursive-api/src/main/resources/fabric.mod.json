@@ -30,7 +30,6 @@
 
   ],
   "depends": {
-    "fabric-api": "*",
     "fabricloader": ">=${fabric_loader_dependency}",
     "minecraft": "${minecraft_dependency}"
   }
