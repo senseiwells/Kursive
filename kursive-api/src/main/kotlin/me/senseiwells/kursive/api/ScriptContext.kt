@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.api
 
+import me.senseiwells.kursive.api.keybind.KeybindRegistry
 import net.casual.arcade.commands.manager.CommandRegistry
 import net.casual.arcade.events.ListenerRegistry
 import net.minecraft.commands.CommandSourceStack
@@ -17,5 +18,6 @@ class ServerScriptContext(
 
 class ClientScriptContext(
     args: List<String>,
-    events: ListenerRegistry
+    events: ListenerRegistry,
+    val keybinds: KeybindRegistry
 ): ScriptContext(args, events)

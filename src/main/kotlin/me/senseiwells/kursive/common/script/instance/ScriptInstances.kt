@@ -2,6 +2,10 @@ package me.senseiwells.kursive.common.script.instance
 
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import net.minecraft.commands.SharedSuggestionProvider
 import java.util.concurrent.CompletableFuture
@@ -10,6 +14,7 @@ class ScriptInstances<M: Any>(
     private val resolver: (M) -> Collection<ScriptDefinition<M>>
 ) {
     private val scripts = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun add(definition: ScriptDefinition<M>): Boolean {
         return this.scripts.putIfAbsent(definition, definition.create()) == null
@@ -40,9 +45,8 @@ class ScriptInstances<M: Any>(
     private fun deleteInvalidScripts() {
         for ((definition, instance) in this.scripts.toList()) {
             if (!instance.isValid()) {
-                instance.delete().thenRun {
-                    this.scripts.remove(definition, instance)
-                }
+                this.scripts.remove(definition, instance)
+                this.scope.launch { instance.delete() }
             }
         }
     }

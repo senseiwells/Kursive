@@ -5,6 +5,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import me.senseiwells.kursive.api.ClientScriptContext
 import me.senseiwells.kursive.api.ScriptContext
+import me.senseiwells.kursive.client.script.keybinds.ScriptKeybindManager
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
 import net.casual.arcade.events.GlobalEventHandler
@@ -44,7 +45,7 @@ class ClientExecutionEnvironment(
 
     private fun createContext(): ClientScriptContext {
         val events = SimpleListenerRegistry()
-        return ClientScriptContext(this.args, events)
+        return ClientScriptContext(this.args, events, ScriptKeybindManager())
     }
 
     private fun initializeContext(context: ClientScriptContext) {
@@ -53,5 +54,6 @@ class ClientExecutionEnvironment(
 
     private fun cleanupContext(context: ClientScriptContext) {
         GlobalEventHandler.Client.removeProvider(context.events)
+        (context.keybinds as ScriptKeybindManager).unregister()
     }
 }

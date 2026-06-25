@@ -42,7 +42,7 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
     }
 
     private fun findScriptDefinitions(server: MinecraftServer): Collection<ScriptDefinition<MinecraftServer>> {
-        val origin = server.getWorldPath(LevelResource.ROOT).resolve("kursive").resolve("scripts")
+        val origin = server.getWorldPath(LevelResource.ROOT).resolve(Kursive.MOD_ID).resolve("scripts")
         return Kursive.findScriptDefinitions(origin)
     }
 }

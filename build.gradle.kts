@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.mod.menu)
     implementation(libs.yacl)
 
+    include(libs.bundles.arcade)
     implementation(libs.bundles.arcade)
 
     include(implementation(libs.keybinds.get())!!)
@@ -102,6 +103,23 @@ tasks {
         archiveClassifier = "shaded"
     }
 }
+
+loom {
+    decompilerOptions.named("vineflower") {
+        options.put("mark-corresponding-synthetics", "1")
+    }
+
+    runs {
+        getByName("server") {
+            runDirectory.set(file("run/server"))
+        }
+
+        getByName("client") {
+            runDirectory.set(file("run/client"))
+        }
+    }
+}
+
 
 fun replaceVersion(version: String, patch: String): String {
     return version.replace(Regex("""^(\d+\.\d+)(\.\d+)?$"""), "$1.$patch")

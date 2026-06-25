@@ -7,8 +7,8 @@ version = releaseVersion
 dependencies {
     implementation(libs.fabric.api)
 
-    include(libs.bundles.arcade)
     implementation(libs.bundles.arcade)
+    implementation(libs.keybinds)
 }
 
 tasks.register<ShadowJar>("buildKmcJar") {

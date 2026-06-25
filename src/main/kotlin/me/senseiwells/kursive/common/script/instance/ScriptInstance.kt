@@ -14,7 +14,6 @@ import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
@@ -82,7 +81,7 @@ abstract class ScriptInstance<M: Any>(
         if (!this.isRunning()) {
             return false
         }
-        this.job!!.cancel()
+        this.job?.cancel()
         this.job = null
         return true
     }
@@ -100,19 +99,10 @@ abstract class ScriptInstance<M: Any>(
         return true
     }
 
-    fun delete(): CompletableFuture<Void?> {
-        val future = CompletableFuture<Void?>()
-        if (this.isRunning()) {
-            this.job!!.invokeOnCompletion {
-                future.complete(null)
-            }
-        } else {
-            future.complete(null)
-        }
-        return future.thenRun {
-            this.definition.delete(this)
-            this.getCompileJarPath().deleteIfExists()
-        }
+    suspend fun delete() {
+        this.job?.join()
+        this.definition.delete(this)
+        this.getCompileJarPath().deleteIfExists()
     }
 
     private fun getCompileJarPath(): Path {
