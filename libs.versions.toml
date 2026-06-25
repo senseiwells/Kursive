@@ -1,17 +1,17 @@
 [versions]
-minecraft     = "26.1"
-fabric-loader = "0.18.4"
-fabric-api    = "0.144.0+26.1"
-fabric-kotlin = "1.13.9+kotlin.2.3.10"
-mod-menu      = "18.0.0-alpha.6"
-keybinds      = "0.3.0+26.1"
-yacl          = "3.9.0+26.1-fabric"
+minecraft     = "26.2"
+fabric-loader = "0.19.3"
+fabric-api    = "0.152.1+26.2"
+fabric-kotlin = "1.13.12+kotlin.2.4.0"
+mod-menu      = "20.0.0-beta.2"
+keybinds      = "0.5.0+26.2"
+yacl          = "3.9.4+26.2-fabric"
 
 # Scripting
-arcade        = "0.9.0-beta.14+26.1"
+arcade        = "0.10.0-beta.4+26.2"
 
 # Plugins
-fabric-loom   = "1.15-SNAPSHOT"
+fabric-loom   = "1.17-SNAPSHOT"
 mod-publish   = "0.8.1"
 shadow        = "8.3.5"
 

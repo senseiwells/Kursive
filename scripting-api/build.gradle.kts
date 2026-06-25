@@ -5,6 +5,8 @@ val releaseVersion = "${apiVersion}+${libs.versions.minecraft.get()}"
 version = releaseVersion
 
 dependencies {
+    implementation(libs.fabric.api)
+
     include(implementation(libs.arcade.event.registry.get())!!)
     include(implementation(libs.arcade.events.client.get())!!)
     include(implementation(libs.arcade.events.server.get())!!)
