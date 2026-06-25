@@ -82,55 +82,21 @@ dependencies {
     val kotlinVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]
         .split("+")[0]
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlinVersion")!!) // fine
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlinVersion")!!) // fine
-    include(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:$kotlinVersion")!!) // fine
-    shade(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlinVersion")!!) // kotlinx.coroutines, org.intellij, org.jetbrains
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlinVersion")!!)
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlinVersion")!!)
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:$kotlinVersion")!!)
+    include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlinVersion")!!)
     // shade(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies-maven")!!)
-}
 
-tasks {
-    shadowJar {
-        dependsOn("processIncludeJars")
-
-        archiveClassifier = ""
-        isZip64 = true
-
-        exclude { element ->
-            element.path.startsWith("kotlin/") && !element.path.startsWith("kotlin/script/")
-        }
-        exclude("kotlinx/coroutines/**")
-        exclude("messages/**")
-        exclude("_COROUTINE/**")
-        exclude("misc/**")
-        exclude("kotlinManifest.properties")
-        exclude("pluginsCompatibleWithK2Mode.txt")
-        exclude("custom-formatters.js")
-        exclude("DebugProbesKt.bin")
-
-
-        from("LICENSE") {
-            rename { "kursive-LICENSE" }
-        }
-
-        configurations = listOf(shade)
-    }
-
-    jar {
-        archiveClassifier = "slim"
-    }
-
-    build {
-        dependsOn(shadowJar)
-    }
+    include("org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion")
+    include("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
+    include("org.jetbrains.kotlin:kotlin-build-tools-api:$kotlinVersion")
+    include("org.jetbrains.kotlin:kotlin-daemon-embeddable:$kotlinVersion")
+    include("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlinVersion")
+    include("org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:$kotlinVersion")
 }
 
 loom {
-    @Suppress("UnstableApiUsage")
-    nestJars(tasks.shadowJar, objects.fileCollection().from(
-        tasks.processIncludeJars.map { objects.fileTree().from(it.outputDirectory) }
-    ))
-
     decompilerOptions.named("vineflower") {
         options.put("mark-corresponding-synthetics", "1")
     }
