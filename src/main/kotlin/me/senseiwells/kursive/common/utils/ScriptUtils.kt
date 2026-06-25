@@ -11,16 +11,16 @@ import kotlin.script.experimental.jvm.util.isError
 import kotlin.script.experimental.jvm.util.isIncomplete
 
 suspend fun <M: Any> ScriptInstance<M>.compileAndExecute(
-    context: ExecutionEnvironment<M>
+    environment: ExecutionEnvironment<M, *>
 ): ResultWithDiagnostics<Unit> = coroutineScope cs@ {
     if (shouldRecompile()) {
         val result = withContext(Dispatchers.Default) {
-            compile().onSuccess { prepare(context) }
+            compile().onSuccess { prepare(environment) }
         }
         if (result.isError() || result.isIncomplete()) {
             return@cs result
         }
-        return@cs result.onSuccess { execute(context) }
+        return@cs result.onSuccess { execute(environment) }
     }
-    return@cs execute(context)
+    return@cs execute(environment)
 }

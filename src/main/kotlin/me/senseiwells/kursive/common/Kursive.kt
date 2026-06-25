@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.common
 
 import com.mojang.brigadier.Command
+import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
@@ -19,7 +20,6 @@ import net.casual.arcade.utils.component.white
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -41,10 +41,6 @@ object Kursive: ModInitializer {
 
     fun configDirectory(): Path {
         return FabricLoader.getInstance().configDir.resolve(MOD_ID).createDirectories()
-    }
-
-    fun id(path: String): Identifier {
-        return Identifier.fromNamespaceAndPath(MOD_ID, path)
     }
 
     fun logDiagnostics(result: ResultWithDiagnostics<*>) {
@@ -79,7 +75,10 @@ object Kursive: ModInitializer {
         node.literal("start") {
             argument("name", StringArgumentType.string()) {
                 suggests(suggester)
-                executes { startScript(it, handler) }
+                executes { startScript(it, handler, listOf()) }
+                argument("args", StringArgumentType.greedyString()) {
+                    executes { startScript(it, handler) }
+                }
             }
         }
         node.literal("stop") {
@@ -90,10 +89,14 @@ object Kursive: ModInitializer {
         }
     }
 
-    private fun <M: Any, S> startScript(context: CommandContext<S>, handler: CommonCommandHandler<M, S>): Int {
+    private fun <M: Any, S> startScript(
+        context: CommandContext<S>,
+        handler: CommonCommandHandler<M, S>,
+        args: List<String> = this.parseArgs(StringArgumentType.getString(context, "args"))
+    ): Int {
         val name = StringArgumentType.getString(context, "name")
         val instance = handler.scripts.find(name)
-        val source = context.source as S
+        val source = context.source
         if (instance == null) {
             handler.failure(source, Component.translatable("kursive.command.noScriptWithThatName"))
             return 0
@@ -102,9 +105,9 @@ object Kursive: ModInitializer {
             handler.failure(source, Component.translatable("kursive.command.scriptAlreadyStarted"))
             return 0
         }
-        val environment = handler.environment(source)
+        val environment = handler.environment(source, args)
         environment.launch {
-            val result = instance.compileAndExecute(handler.environment(source))
+            val result = instance.compileAndExecute(environment)
             onScriptResult(source, handler, name, result)
         }
         return Command.SINGLE_SUCCESS
@@ -113,7 +116,7 @@ object Kursive: ModInitializer {
     private fun <M: Any, S> stopScript(context: CommandContext<S>, handler: CommonCommandHandler<M, S>): Int {
         val name = StringArgumentType.getString(context, "name")
         val instance = handler.scripts.find(name)
-        val source = context.source as S
+        val source = context.source
         if (instance == null) {
             handler.failure(source, Component.translatable("kursive.command.noScriptWithThatName"))
             return 0
@@ -144,6 +147,20 @@ object Kursive: ModInitializer {
         handler.success(source, message.lime())
     }
 
+    private fun parseArgs(raw: String): List<String> {
+        val reader = StringReader(raw)
+        val args = ArrayList<String>()
+
+        while (reader.canRead()) {
+            reader.skipWhitespace()
+            if (reader.canRead()) {
+                args.add(reader.readString())
+            }
+        }
+
+        return args
+    }
+
     interface CommonCommandHandler<M: Any, S> {
         val scripts: ScriptInstances<M>
 
@@ -153,6 +170,6 @@ object Kursive: ModInitializer {
 
         fun failure(source: S, component: Component)
 
-        fun environment(source: S): ExecutionEnvironment<M>
+        fun environment(source: S, args: List<String>): ExecutionEnvironment<M, *>
     }
 }

@@ -63,7 +63,7 @@ file in IntelliJ.
 
 A basic entrypoint script for a server-side script is as follows:
 ```kts
-@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.2+26.1")
+@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.3+26.2")
 
 import kotlinx.coroutines.awaitCancellation
 import me.senseiwells.kursive.api.ServerScriptContext
@@ -76,7 +76,7 @@ suspend fun main(server: MinecraftServer, context: ServerScriptContext) {
 
 And for the client-side:
 ```kts
-@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.2+26.1")
+@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.3+26.2")
 
 import kotlinx.coroutines.awaitCancellation
 import me.senseiwells.kursive.api.ClientScriptContext
@@ -98,6 +98,11 @@ More details about this will be documented later...
 
 Once in game, you have access to the `kursive-client` and/or `kursive-server`
 commands which will allow you to start and stop your scripts.
+
+## Roadmap
+
+- [ ] Implement script data storing api
+- [ ] Implement script gui for client-sided scripts
 
 ## License
 

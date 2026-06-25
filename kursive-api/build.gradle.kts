@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val apiVersion = "0.2.0-alpha.2"
+val apiVersion = "0.2.0-alpha.3"
 val releaseVersion = "${apiVersion}+${libs.versions.minecraft.get()}"
 version = releaseVersion
 
@@ -61,4 +61,16 @@ tasks.register("publishKmc") {
     group = "scripting"
     description = "Publishes the scripting jar to Maven Local"
     dependsOn("publishKmcPublicationToMavenLocal")
+}
+
+afterEvaluate {
+    updateDocumentedDependencies("../README.md")
+}
+
+private fun Project.updateDocumentedDependencies(path: String) {
+    val file = file(path)
+    if (file.exists()) {
+        val regex = Regex("""@file:DependsOn\("me\.senseiwells:kmc:.*"\)""")
+        file.writeText(file.readText().replace(regex, "@file:DependsOn(\"me.senseiwells:kmc:$releaseVersion\")"))
+    }
 }

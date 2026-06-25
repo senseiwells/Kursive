@@ -25,8 +25,8 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
         }
     }
 
-    override fun environment(source: CommandSourceStack): ExecutionEnvironment<MinecraftServer> {
-        return ServerExecutionEnvironment(source.server, listOf())
+    override fun environment(source: CommandSourceStack, args: List<String>): ExecutionEnvironment<MinecraftServer, *> {
+        return ServerExecutionEnvironment(source.server, args)
     }
 
     override fun failure(source: CommandSourceStack, component: Component) {

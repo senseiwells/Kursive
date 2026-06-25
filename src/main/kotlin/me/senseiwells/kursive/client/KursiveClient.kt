@@ -25,8 +25,8 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         }
     }
 
-    override fun environment(source: ClientCommandSource): ExecutionEnvironment<Minecraft> {
-        return ClientExecutionEnvironment(source.client, listOf())
+    override fun environment(source: ClientCommandSource, args: List<String>): ExecutionEnvironment<Minecraft, *> {
+        return ClientExecutionEnvironment(source.client, args)
     }
 
     override fun failure(source: ClientCommandSource, component: Component) {

@@ -6,17 +6,30 @@ import me.senseiwells.kursive.api.ScriptContext
 import net.fabricmc.api.EnvType
 import kotlin.reflect.KClass
 
-abstract class ExecutionEnvironment<M: Any>(
+abstract class ExecutionEnvironment<M: Any, C: ScriptContext>(
     val minecraft: M,
     val args: List<String>
 ) {
     abstract val type: EnvType
 
-    abstract fun invoke(entrypoint: ScriptEntrypoint<M>): Job
+    fun invoke(entrypoint: ScriptEntrypoint<M>): Job {
+        val context = this.createContext()
+        this.initializeContext(context)
+        return this.launch {
+            entrypoint.invoke(minecraft, context)
+            cleanupContext(context)
+        }
+    }
 
-    abstract fun launch(block: suspend CoroutineScope.() -> Unit)
+    abstract fun launch(block: suspend CoroutineScope.() -> Unit): Job
 
     abstract fun minecraftType(): KClass<M>
 
-    abstract fun contextType(): KClass<out ScriptContext>
+    abstract fun contextType(): KClass<C>
+
+    protected abstract fun createContext(): C
+
+    protected abstract fun initializeContext(context: C)
+
+    protected abstract fun cleanupContext(context: C)
 }

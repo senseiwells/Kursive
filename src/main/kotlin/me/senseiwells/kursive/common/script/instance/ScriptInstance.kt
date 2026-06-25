@@ -62,16 +62,16 @@ abstract class ScriptInstance<M: Any>(
         return result.onSuccess { Unit.asSuccess() }
     }
 
-    fun prepare(context: ExecutionEnvironment<M>): ResultWithDiagnostics<Unit> {
-        return this.getOrFindEntrypoint(context).onSuccess { Unit.asSuccess() }
+    fun prepare(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<Unit> {
+        return this.getOrFindEntrypoint(environment).onSuccess { Unit.asSuccess() }
     }
 
-    fun execute(context: ExecutionEnvironment<M>): ResultWithDiagnostics<Unit> {
+    fun execute(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<Unit> {
         if (this.isRunning()) {
             return makeFailureResult("Cannot execute script while it's already running")
         }
-        return this.getOrFindEntrypoint(context).onSuccess { entrypoint ->
-            val job = context.invoke(entrypoint)
+        return this.getOrFindEntrypoint(environment).onSuccess { entrypoint ->
+            val job = environment.invoke(entrypoint)
             this.job = job
             Unit.asSuccess()
         }
@@ -109,7 +109,7 @@ abstract class ScriptInstance<M: Any>(
         return this.getCompileDirectoryPath().resolve("${this.name}.jar")
     }
 
-    private fun getOrFindEntrypoint(context: ExecutionEnvironment<M>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
+    private fun getOrFindEntrypoint(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
         val existing = this.entrypoint
         if (existing != null) {
             return existing.asSuccess()
@@ -129,15 +129,15 @@ abstract class ScriptInstance<M: Any>(
             val diagnostics = ArrayList<ScriptDiagnostic>()
             val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
             if (env != null) {
-                if (context.type != env.type) {
+                if (environment.type != env.type) {
                     return makeFailureResult(
-                        "Script marked for ${env.type.name} environment, but running on ${context.type}"
+                        "Script marked for ${env.type.name} environment, but running on ${environment.type}"
                     )
                 }
                 diagnostics.addAll(EnvironmentUtils.getDiagnosticsForTarget(env.version))
             }
             return diagnostics + result.onSuccess { klass ->
-                findEntrypoint(context, klass).onSuccess { entrypoint ->
+                findEntrypoint(environment, klass).onSuccess { entrypoint ->
                     this.entrypoint = entrypoint
                     entrypoint.asSuccess()
                 }
@@ -148,11 +148,11 @@ abstract class ScriptInstance<M: Any>(
     }
 
     private fun findEntrypoint(
-        context: ExecutionEnvironment<M>,
+        environment: ExecutionEnvironment<M, *>,
         klass: KClass<*>
     ): ResultWithDiagnostics<ScriptEntrypoint<M>> {
-        val mcType = context.minecraftType()
-        val ctxType = context.contextType()
+        val mcType = environment.minecraftType()
+        val ctxType = environment.contextType()
 
         findEntrypoint(klass) { _, _ -> emptyArray() }?.let { return it.asSuccess() }
         findEntrypoint(klass, ctxType) { _, args -> arrayOf(args) }?.let { return it.asSuccess() }
