@@ -76,7 +76,7 @@ dependencies {
     implementation(libs.bundles.arcade)
 
     include(implementation(libs.keybinds.get())!!)
-    include(implementation(project(":scripting-api"))!!)
+    include(implementation(project(":kursive-api"))!!)
 
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-common")!!) // fine
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")!!) // fine

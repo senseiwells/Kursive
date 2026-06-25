@@ -1,8 +1,6 @@
-# EssentialScripting
-
 <br/>
 <div align="center">
-<h3 align="center">EssentialScripting</h3>
+<h3 align="center">Kursive</h3>
 <p align="center">
 A Minecraft mod that allows you to run kotlin scripts
 on the client and/or the server!
@@ -25,7 +23,7 @@ Minecraft's code.
 You can build the mod from source, you will need Java 25 for this:
 1. Clone the repo
    ```sh
-   git clone https://github.com/senseiwells/EssentialScripting.git
+   git clone https://github.com/senseiwells/Kursive.git
    ```
 2. Compile the mod
    ```sh
@@ -47,17 +45,17 @@ You will need Java 25 and IntelliJ installed on your machine to get started.
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/senseiwells/EssentialScripting.git
+   git clone https://github.com/senseiwells/Kursive.git
    ```
 2. Generate the dependency jar, this will publish to maven local
    ```sh
-   gradlew publishMces
+   gradlew publishKmc
    ```
    
 ### Creating a Script
 
-To create a script you need to locate the `essential-scripts` directory.
-To create a server-side script, locate the `essential-scripts` directory
+To create a script you need to locate the `kursive/scripts` directory.
+To create a server-side script, locate the `kursive/scripts` directory
 in your world folder, and to create a client-side script it will be in your
 `.minecraft` directory. Create a new file in the scripts directory named 
 `<name>.main.kts`, for example: `test.main.kts`. You can then open this
@@ -65,10 +63,10 @@ file in IntelliJ.
 
 A basic entrypoint script for a server-side script is as follows:
 ```kts
-@file:DependsOn("me.senseiwells:mces:0.2.0-alpha.2+26.1")
+@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.2+26.1")
 
 import kotlinx.coroutines.awaitCancellation
-import me.senseiwells.scripting.api.ServerScriptContext
+import me.senseiwells.kursive.api.ServerScriptContext
 import net.minecraft.server.MinecraftServer
 
 suspend fun main(server: MinecraftServer, context: ServerScriptContext) {
@@ -78,10 +76,10 @@ suspend fun main(server: MinecraftServer, context: ServerScriptContext) {
 
 And for the client-side:
 ```kts
-@file:DependsOn("me.senseiwells:mces:0.2.0-alpha.2+26.1")
+@file:DependsOn("me.senseiwells:kmc:0.2.0-alpha.2+26.1")
 
 import kotlinx.coroutines.awaitCancellation
-import me.senseiwells.scripting.api.ClientScriptContext
+import me.senseiwells.kursive.api.ClientScriptContext
 import net.minecraft.client.Minecraft
 
 suspend fun main(minecraft: Minecraft, context: ClientScriptContext) {
@@ -98,7 +96,7 @@ More details about this will be documented later...
 
 ### Running the Script
 
-Once in game, you have access to the `essential-script-client` and/or `essential-script-server`
+Once in game, you have access to the `kursive-client` and/or `kursive-server`
 commands which will allow you to start and stop your scripts.
 
 ## License

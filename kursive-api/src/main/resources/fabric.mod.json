@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "kursive",
+  "id": "kursive-api",
   "version": "${version}",
-  "name": "Kursive",
+  "name": "KursiveApi",
   "description": "",
   "authors": [
     "Sensei"
@@ -13,30 +13,25 @@
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
-    "client": [
-      {
-        "adapter": "kotlin",
-        "value": "me.senseiwells.kursive.client.KursiveClient"
-      }
-    ],
     "main": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.kursive.common.Kursive"
-      },
+        "value": "me.senseiwells.kursive.impl.CommonScriptingApi"
+      }
+    ],
+    "client": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.kursive.server.KursiveServer"
+        "value": "me.senseiwells.kursive.impl.ClientScriptingApi"
       }
     ]
   },
   "mixins": [
-    "kursive.mixins.json"
+
   ],
   "depends": {
     "fabric-api": "*",
     "fabricloader": ">=${fabric_loader_dependency}",
-    "yet_another_config_lib_v3": ">=${yacl_dependency}",
     "minecraft": "${minecraft_dependency}"
   }
 }

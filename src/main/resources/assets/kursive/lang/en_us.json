@@ -1,0 +1,8 @@
+{
+  "kursive.command.noScriptWithThatName": "No script with that name",
+  "kursive.command.scriptAlreadyStarted": "Script was already started",
+  "kursive.command.scriptAlreadyStopped": "Script was already stopped",
+  "kursive.command.failedToRunScript": "Failed to run script, check logs for diagnostics",
+  "kursive.command.successfullyStartedScript": "Successfully started script %s",
+  "kursive.command.successfullyStoppedScript": "Successfully stopped script %s"
+}

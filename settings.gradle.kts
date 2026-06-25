@@ -1,6 +1,6 @@
-rootProject.name = "EssentialScripting"
+rootProject.name = "Kursive"
 
-include(":scripting-api")
+include(":kursive-api")
 
 dependencyResolutionManagement {
     versionCatalogs {
