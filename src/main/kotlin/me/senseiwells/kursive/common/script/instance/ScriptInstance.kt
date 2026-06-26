@@ -126,7 +126,9 @@ class ScriptInstance<M: Any>(
             ScriptWithClasspathCompilationConfiguration,
             ScriptWithClassloaderEvaluationConfiguration
         )
-        Files.move(tmp, jar, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        if (!result.isError()) {
+            Files.move(tmp, jar, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        }
         val time = System.currentTimeMillis() - start
         this.log("Finished compiling ${this.definition.name}, took $time ms")
         return result.onSuccess { Unit.asSuccess() }
@@ -206,7 +208,11 @@ class ScriptInstance<M: Any>(
             val result = script.getClass(ScriptWithClassloaderEvaluationConfiguration)
             val metadata = script.compilationConfiguration[ScriptCompilationConfiguration.scriptMetadata]
                 ?: ScriptMetadata.named(this.definition.name)
-            return result.onSuccess { klass -> LoadedScript(script, klass, metadata).asSuccess() }
+            return result.onSuccess { klass ->
+                val loaded = LoadedScript(script, klass, metadata)
+                this.loaded = loaded
+                loaded.asSuccess()
+            }
         } catch (e: IOException) {
             return makeFailureResult(e.asDiagnostics(customMessage = "Failed to load script jar"))
         }
