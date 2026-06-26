@@ -3,9 +3,10 @@ package me.senseiwells.kursive.common.script.configuration
 import me.senseiwells.kursive.annotation.Environment
 import me.senseiwells.kursive.annotation.Script
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
+import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.dependencies.DependsOn
-import kotlin.script.experimental.jvm.dependenciesFromClassloader
+import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.jvmTarget
 import kotlin.script.experimental.util.filterByAnnotationType
@@ -13,17 +14,17 @@ import kotlin.script.experimental.util.filterByAnnotationType
 open class BaseScript
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
-    val loader = BaseScript::class.java.classLoader
     defaultImports(Environment::class, DependsOn::class, Script::class)
     jvm {
         jvmTarget("25")
-        dependenciesFromClassloader(classLoader = loader, wholeClasspath = true)
+        dependenciesFromCurrentContext(wholeClasspath = true)
     }
     refineConfiguration {
         onAnnotations(Environment::class, handler = ::configureEnvironment)
         onAnnotations(Script::class, handler = ::configureScript)
     }
     // We need this so that everything is loaded with the KnotClassLoader
+    hostConfiguration(ScriptConfigurationUtils.HOST_CONFIGURATION)
     baseClass(BaseScript::class)
 }) {
     private fun readResolve(): Any = ScriptWithClasspathCompilationConfiguration

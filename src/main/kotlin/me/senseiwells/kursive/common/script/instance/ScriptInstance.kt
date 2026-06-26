@@ -9,6 +9,7 @@ import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
+import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
 import net.fabricmc.loader.api.FabricLoader
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
@@ -44,7 +45,9 @@ class ScriptInstance<M: Any>(
         this.log("Starting to compile ${this.definition.name}")
         this.entrypoint = null
         val jar = this.getCompileJarPath().toFile()
-        val host = BasicJvmScriptingHost(evaluator = BasicJvmScriptJarGenerator(jar))
+        val host = BasicJvmScriptingHost(
+            ScriptConfigurationUtils.HOST_CONFIGURATION, evaluator = BasicJvmScriptJarGenerator(jar)
+        )
         val result = host.eval(
             this.definition.getSource(),
             ScriptWithClasspathCompilationConfiguration,
