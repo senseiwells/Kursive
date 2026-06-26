@@ -14,6 +14,7 @@ class ScriptKeybindManager: KeybindRegistry {
 
     override fun register(id: Identifier, name: Component, keys: InputKeys): Keybind {
         val keybind = SimpleKeybind(name, keys)
+        this.keybinds[id] = keybind
         KeybindManager.register(id, keybind)
         return keybind
     }

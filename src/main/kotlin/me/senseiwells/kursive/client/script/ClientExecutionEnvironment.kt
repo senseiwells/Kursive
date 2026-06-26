@@ -3,7 +3,10 @@ package me.senseiwells.kursive.client.script
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ClientScriptContext
+import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.script.keybinds.ScriptKeybindManager
+import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
+import me.senseiwells.kursive.common.script.data.FileBasedDataStores
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
@@ -31,9 +34,12 @@ class ClientExecutionEnvironment(
         return ClientScriptContext::class
     }
 
-    override fun createContext(): ClientScriptContext {
+    override fun createContext(metadata: ScriptMetadata): ClientScriptContext {
         val events = SimpleListenerRegistry()
-        return ClientScriptContext(this.args, events, ScriptKeybindManager())
+        val stores = FileBasedDataStores(KursiveClient.directory().resolve("data"), metadata.id) {
+            this.minecraft.level?.registryAccess()
+        }
+        return ClientScriptContext(this.args, stores, events, ScriptKeybindManager())
     }
 
     override fun initializeContext(context: ClientScriptContext) {
@@ -43,5 +49,6 @@ class ClientExecutionEnvironment(
     override fun cleanupContext(context: ClientScriptContext) {
         GlobalEventHandler.Client.removeProvider(context.events)
         (context.keybinds as ScriptKeybindManager).unregister()
+        (context.stores as FileBasedDataStores).write()
     }
 }

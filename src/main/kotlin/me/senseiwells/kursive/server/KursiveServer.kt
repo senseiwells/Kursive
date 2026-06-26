@@ -13,6 +13,7 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.network.chat.Component
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.storage.LevelResource
+import java.nio.file.Path
 
 object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, CommandSourceStack> {
     override val scripts = ScriptInstances(this::findScriptDefinitions)
@@ -41,8 +42,11 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
         return source.server
     }
 
+    fun directory(server: MinecraftServer): Path {
+        return server.getWorldPath(LevelResource.ROOT).resolve(Kursive.MOD_ID)
+    }
+
     private fun findScriptDefinitions(server: MinecraftServer): Collection<ScriptDefinition<MinecraftServer>> {
-        val origin = server.getWorldPath(LevelResource.ROOT).resolve(Kursive.MOD_ID).resolve("scripts")
-        return Kursive.findScriptDefinitions(origin)
+        return Kursive.findScriptDefinitions(this.directory(server).resolve("scripts"))
     }
 }

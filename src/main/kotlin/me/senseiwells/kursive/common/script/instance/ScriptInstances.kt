@@ -17,21 +17,21 @@ class ScriptInstances<M: Any>(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun add(definition: ScriptDefinition<M>): Boolean {
-        return this.scripts.putIfAbsent(definition, definition.create()) == null
+        return this.scripts.putIfAbsent(definition, ScriptInstance(definition)) == null
     }
 
-    fun resolve(minecraft: M): Collection<ScriptInstance<M>> {
+    fun resolve(minecraft: M): Set<ScriptDefinition<M>> {
         val discovered = this.resolver.invoke(minecraft)
         for (definition in discovered) {
             this.add(definition)
         }
         this.deleteInvalidScripts()
-        return this.scripts.values
+        return this.scripts.keys
     }
 
     fun find(name: String): ScriptInstance<M>? {
-        for (instance in this.scripts.values) {
-            if (instance.name == name) {
+        for ((definition, instance) in this.scripts) {
+            if (definition.name == name) {
                 return instance
             }
         }
@@ -44,7 +44,7 @@ class ScriptInstances<M: Any>(
 
     private fun deleteInvalidScripts() {
         for ((definition, instance) in this.scripts.toList()) {
-            if (!instance.isValid()) {
+            if (!definition.isValid()) {
                 this.scripts.remove(definition, instance)
                 this.scope.launch { instance.delete() }
             }

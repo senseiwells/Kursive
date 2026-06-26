@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
+import java.nio.file.Path
 
 object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, ClientCommandSource> {
     override val scripts = ScriptInstances<Minecraft> { this.findScriptDefinitions() }
@@ -41,8 +42,11 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         return source.client
     }
 
+    fun directory(): Path {
+        return FabricLoader.getInstance().gameDir.resolve(Kursive.MOD_ID)
+    }
+
     private fun findScriptDefinitions(): Collection<ScriptDefinition<Minecraft>> {
-        val origin = FabricLoader.getInstance().gameDir.resolve(Kursive.MOD_ID).resolve("scripts")
-        return Kursive.findScriptDefinitions(origin)
+        return Kursive.findScriptDefinitions(this.directory().resolve("scripts"))
     }
 }

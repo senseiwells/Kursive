@@ -4,16 +4,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
 import me.senseiwells.kursive.api.ScriptContext
-import me.senseiwells.kursive.common.script.configuration.ScriptWithClassloaderEvaluationConfiguration
-import me.senseiwells.kursive.common.script.configuration.ScriptWithClasspathCompilationConfiguration
-import me.senseiwells.kursive.common.script.configuration.environment
+import me.senseiwells.kursive.common.script.configuration.*
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
-import java.time.Instant
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
@@ -26,21 +23,12 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptJarGenerator
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
-abstract class ScriptInstance<M: Any>(
+class ScriptInstance<M: Any>(
     private val definition: ScriptDefinition<M>
 ) {
     private var entrypoint: ScriptEntrypoint<M>? = null
+    private var metadata: ScriptMetadata? = null
     private var job: Job? = null
-
-    abstract val name: String
-
-    abstract fun isValid(): Boolean
-
-    abstract fun getSource(): SourceCode
-
-    protected abstract fun lastSourceUpdate(): Instant
-
-    protected abstract fun getCompileDirectoryPath(): Path
 
     fun isRunning(): Boolean {
         val job = this.job
@@ -55,7 +43,7 @@ abstract class ScriptInstance<M: Any>(
         val jar = this.getCompileJarPath().toFile()
         val host = BasicJvmScriptingHost(evaluator = BasicJvmScriptJarGenerator(jar))
         val result = host.eval(
-            this.getSource(),
+            this.definition.getSource(),
             ScriptWithClasspathCompilationConfiguration,
             ScriptWithClassloaderEvaluationConfiguration
         )
@@ -71,7 +59,7 @@ abstract class ScriptInstance<M: Any>(
             return makeFailureResult("Cannot execute script while it's already running")
         }
         return this.getOrFindEntrypoint(environment).onSuccess { entrypoint ->
-            val job = environment.invoke(entrypoint)
+            val job = environment.invoke(entrypoint, this.metadata ?: ScriptMetadata.named(this.definition.name))
             this.job = job
             Unit.asSuccess()
         }
@@ -91,7 +79,7 @@ abstract class ScriptInstance<M: Any>(
         if (jar.isRegularFile()) {
             try {
                 val creationTime = jar.readAttributes<BasicFileAttributes>().creationTime()
-                return creationTime.toInstant() < this.lastSourceUpdate()
+                return creationTime.toInstant() < this.definition.lastSourceUpdate()
             } catch (_: IOException) {
 
             }
@@ -101,12 +89,12 @@ abstract class ScriptInstance<M: Any>(
 
     suspend fun delete() {
         this.job?.join()
-        this.definition.delete(this)
+        this.definition.delete()
         this.getCompileJarPath().deleteIfExists()
     }
 
     private fun getCompileJarPath(): Path {
-        return this.getCompileDirectoryPath().resolve("${this.name}.jar")
+        return this.definition.getCompileDirectoryPath().resolve("${this.definition.name}.jar")
     }
 
     private fun getOrFindEntrypoint(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
@@ -121,11 +109,12 @@ abstract class ScriptInstance<M: Any>(
         }
         try {
             val script = jar.toFile().loadScriptFromJar(false)
-                ?: return makeFailureResult("Failed to find script main class for ${this.name}")
+                ?: return makeFailureResult("Failed to find script main class for ${this.definition.name}")
 
             val result = runBlocking {
                 script.getClass(ScriptWithClassloaderEvaluationConfiguration)
             }
+            this.metadata = script.compilationConfiguration[ScriptCompilationConfiguration.scriptMetadata]
             val diagnostics = ArrayList<ScriptDiagnostic>()
             val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
             if (env != null) {

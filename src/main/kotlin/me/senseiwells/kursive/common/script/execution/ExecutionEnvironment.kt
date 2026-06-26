@@ -3,6 +3,7 @@ package me.senseiwells.kursive.common.script.execution
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ScriptContext
+import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import net.fabricmc.api.EnvType
 import kotlin.reflect.KClass
 
@@ -12,12 +13,15 @@ abstract class ExecutionEnvironment<M: Any, C: ScriptContext>(
 ) {
     abstract val type: EnvType
 
-    fun invoke(entrypoint: ScriptEntrypoint<M>): Job {
-        val context = this.createContext()
+    fun invoke(entrypoint: ScriptEntrypoint<M>, metadata: ScriptMetadata): Job {
+        val context = this.createContext(metadata)
         this.initializeContext(context)
         return this.launch {
-            entrypoint.invoke(minecraft, context)
-            cleanupContext(context)
+            try {
+                entrypoint.invoke(minecraft, context)
+            } finally {
+                cleanupContext(context)
+            }
         }
     }
 
@@ -27,7 +31,7 @@ abstract class ExecutionEnvironment<M: Any, C: ScriptContext>(
 
     abstract fun contextType(): KClass<C>
 
-    protected abstract fun createContext(): C
+    protected abstract fun createContext(metadata: ScriptMetadata): C
 
     protected abstract fun initializeContext(context: C)
 

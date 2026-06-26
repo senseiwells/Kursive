@@ -1,11 +1,21 @@
 package me.senseiwells.kursive.common.script.definition
 
-import me.senseiwells.kursive.common.script.instance.ScriptInstance
+import java.nio.file.Path
+import java.time.Instant
+import kotlin.script.experimental.api.SourceCode
 
 interface ScriptDefinition<M: Any> {
-    fun create(): ScriptInstance<M>
+    val name: String
 
-    fun delete(instance: ScriptInstance<M>)
+    fun isValid(): Boolean
+
+    fun getSource(): SourceCode
+
+    fun lastSourceUpdate(): Instant
+
+    fun getCompileDirectoryPath(): Path
+
+    fun delete()
 
     override fun equals(other: Any?): Boolean
 

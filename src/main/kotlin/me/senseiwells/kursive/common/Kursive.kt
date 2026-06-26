@@ -24,7 +24,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.extension
+import kotlin.io.path.name
 import kotlin.io.path.walk
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptDiagnostic
@@ -56,7 +56,7 @@ object Kursive: ModInitializer {
     fun <M: Any> findScriptDefinitions(origin: Path): Collection<ScriptDefinition<M>> {
         try {
             val compiled = origin.resolve(".compiled").createDirectories()
-            return origin.createDirectories().walk().filter { it.extension == "kts" }.map {
+            return origin.createDirectories().walk().filter { it.name.endsWith(".main.kts") }.map {
                 FileScriptDefinition.of<M>(it, origin, compiled)
             }.toList()
         } catch (e: Exception) {

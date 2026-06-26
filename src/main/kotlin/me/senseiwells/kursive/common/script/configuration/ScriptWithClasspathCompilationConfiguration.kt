@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.common.script.configuration
 
 import me.senseiwells.kursive.annotation.Environment
+import me.senseiwells.kursive.annotation.Script
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import java.io.File
 import kotlin.script.experimental.api.*
@@ -9,12 +10,11 @@ import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.jvmTarget
 import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvm.util.classpathFromClassloader
-import kotlin.script.experimental.jvm.util.isError
 
 open class BaseScript
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
-    defaultImports(Environment::class, DependsOn::class)
+    defaultImports(Environment::class, DependsOn::class, Script::class)
     jvm {
         updateClasspath(getClasspath())
         jvmTarget("25")
@@ -35,16 +35,31 @@ private fun getClasspath(): List<File>? {
 private fun configureEnvironment(
     context: ScriptConfigurationRefinementContext
 ): ResultWithDiagnostics<ScriptCompilationConfiguration> {
-    val (annotation, _) = context.collectedData?.get(ScriptCollectedData.collectedAnnotations)?.first {
-        it.annotation is Environment
-    } ?: return context.compilationConfiguration.asSuccess()
-    annotation as Environment
-    val result = EnvironmentWithVersion.parse(annotation)
-    if (result.isError()) {
-        return ResultWithDiagnostics.Failure(result.reports)
+    var result: ResultWithDiagnostics<ScriptCompilationConfiguration> = context.compilationConfiguration.asSuccess()
+    val annotations = context.collectedData?.get(ScriptCollectedData.collectedAnnotations)?.map { it.annotation }
+        ?: return result
+
+    val environment = annotations.filterIsInstance<Environment>().firstOrNull()?.let(EnvironmentWithVersion::parse)
+        ?.onFailure { return ResultWithDiagnostics.Failure(it.reports) }
+        ?.valueOrThrow()
+    val scriptId = annotations.filterIsInstance<Script>().firstOrNull()?.let(ScriptMetadata::parse)
+        ?.onFailure { return ResultWithDiagnostics.Failure(it.reports) }
+        ?.valueOrThrow()
+
+    if (environment != null) {
+        result = result.onSuccess { configuration ->
+            configuration.with {
+                environment(environment)
+            }.asSuccess(EnvironmentUtils.getDiagnosticsForTarget(environment.version))
+        }
     }
-    val env = result.valueOrThrow()
-    return context.compilationConfiguration.with {
-        environment(result.valueOrThrow())
-    }.asSuccess(EnvironmentUtils.getDiagnosticsForTarget(env.version))
+    if (scriptId != null) {
+        result = result.onSuccess { configuration ->
+            configuration.with {
+                scriptMetadata(scriptId)
+            }.asSuccess()
+        }
+    }
+
+    return result
 }
