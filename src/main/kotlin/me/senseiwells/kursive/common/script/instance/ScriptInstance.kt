@@ -78,8 +78,8 @@ class ScriptInstance<M: Any>(
         val jar = this.getCompileJarPath()
         if (jar.isRegularFile()) {
             try {
-                val creationTime = jar.readAttributes<BasicFileAttributes>().creationTime()
-                return creationTime.toInstant() < this.definition.lastSourceUpdate()
+                val lastModifiedTime = jar.readAttributes<BasicFileAttributes>().lastModifiedTime()
+                return lastModifiedTime.toInstant() < this.definition.lastSourceUpdate()
             } catch (_: IOException) {
 
             }
@@ -159,8 +159,8 @@ class ScriptInstance<M: Any>(
         val function = klass.declaredMemberFunctions.find { func ->
             func.name == "main" && func.parameters.drop(1).map { it.type.classifier } == params.toList()
         } ?: return null
-        val instance = klass.java.getDeclaredConstructor().newInstance()
         return ScriptEntrypoint { mc, args ->
+            val instance = klass.java.getDeclaredConstructor().newInstance()
             function.callSuspend(instance, *remap(mc, args))
         }
     }

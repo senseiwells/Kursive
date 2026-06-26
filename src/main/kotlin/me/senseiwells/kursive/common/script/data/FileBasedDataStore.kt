@@ -94,6 +94,8 @@ class FileBasedDataStore(
     }
 
     fun write() {
+        this.lazyInit()
+
         val output = JsonValueOutput.create(ProblemReporter.DISCARDING, this.ops(), this.raw.deepCopy())
 
         fun <T: Any> store(key: String, vwc: ValueWithCodec<T>) = output.store(key, vwc.codec, vwc.value)
