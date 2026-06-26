@@ -6,8 +6,6 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
-import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
-import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.common.utils.compileAndExecute
@@ -24,8 +22,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.name
-import kotlin.io.path.walk
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvm.util.isError
@@ -53,24 +49,12 @@ object Kursive: ModInitializer {
         }
     }
 
-    fun <M: Any> findScriptDefinitions(origin: Path): Collection<ScriptDefinition<M>> {
-        try {
-            val compiled = origin.resolve(".compiled").createDirectories()
-            return origin.createDirectories().walk().filter { it.name.endsWith(".main.kts") }.map {
-                FileScriptDefinition.of<M>(it, origin, compiled)
-            }.toList()
-        } catch (e: Exception) {
-            logger.error("Failed to find scripts", e)
-            return emptyList()
-        }
-    }
-
     fun <M: Any, S> registerCommonCommands(
         node: LiteralArgumentBuilder<S>,
         handler: CommonCommandHandler<M, S>
     ) {
-        val suggester = SuggestionProvider { context, builder ->
-            handler.scripts.suggestions(handler.minecraft(context.source), builder)
+        val suggester = SuggestionProvider<S> { _, builder ->
+            handler.scripts.suggestions(builder)
         }
         node.literal("start") {
             argument("name", StringArgumentType.string()) {
@@ -105,7 +89,7 @@ object Kursive: ModInitializer {
             handler.failure(source, Component.translatable("kursive.command.scriptAlreadyStarted"))
             return 0
         }
-        val environment = handler.environment(source, args)
+        val environment = handler.environment(handler.minecraft(source), args)
         environment.launch {
             val result = instance.compileAndExecute(environment)
             onScriptResult(source, handler, name, result)
@@ -170,6 +154,6 @@ object Kursive: ModInitializer {
 
         fun failure(source: S, component: Component)
 
-        fun environment(source: S, args: List<String>): ExecutionEnvironment<M, *>
+        fun environment(minecraft: M, args: List<String>): ExecutionEnvironment<M, *>
     }
 }

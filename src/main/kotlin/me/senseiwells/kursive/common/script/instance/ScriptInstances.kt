@@ -7,26 +7,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
+import me.senseiwells.kursive.common.script.definition.resolver.ScriptDefinitionSource
 import net.minecraft.commands.SharedSuggestionProvider
 import java.util.concurrent.CompletableFuture
 
 class ScriptInstances<M: Any>(
-    private val resolver: (M) -> Collection<ScriptDefinition<M>>
-) {
+    private val source: ScriptDefinitionSource<M>
+): Iterable<ScriptInstance<M>> {
     private val scripts = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun add(definition: ScriptDefinition<M>): Boolean {
         return this.scripts.putIfAbsent(definition, ScriptInstance(definition)) == null
-    }
-
-    fun resolve(minecraft: M): Set<ScriptDefinition<M>> {
-        val discovered = this.resolver.invoke(minecraft)
-        for (definition in discovered) {
-            this.add(definition)
-        }
-        this.deleteInvalidScripts()
-        return this.scripts.keys
     }
 
     fun find(name: String): ScriptInstance<M>? {
@@ -38,8 +30,24 @@ class ScriptInstances<M: Any>(
         return null
     }
 
-    fun suggestions(minecraft: M, builder: SuggestionsBuilder): CompletableFuture<Suggestions> {
-        return SharedSuggestionProvider.suggest(this.resolve(minecraft).map { "\"${it.name}\"" }, builder)
+    fun suggestions(builder: SuggestionsBuilder): CompletableFuture<Suggestions> {
+        return SharedSuggestionProvider.suggest(this.scripts.keys.map { "\"${it.name}\"" }, builder)
+    }
+
+    fun initialize(minecraft: M) {
+        this.source.initialize(minecraft)
+    }
+
+    fun update() {
+        val available = this.source.get()
+        for (definition in available) {
+            this.add(definition)
+        }
+        this.deleteInvalidScripts()
+    }
+
+    fun close() {
+        this.source.close()
     }
 
     private fun deleteInvalidScripts() {
@@ -49,5 +57,9 @@ class ScriptInstances<M: Any>(
                 this.scope.launch { instance.delete() }
             }
         }
+    }
+
+    override fun iterator(): Iterator<ScriptInstance<M>> {
+        return this.scripts.values.iterator()
     }
 }

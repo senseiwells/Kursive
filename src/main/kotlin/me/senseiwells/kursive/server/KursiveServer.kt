@@ -2,11 +2,16 @@ package me.senseiwells.kursive.server
 
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
-import me.senseiwells.kursive.common.script.definition.ScriptDefinition
+import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.server.script.ServerExecutionEnvironment
 import net.casual.arcade.commands.registerLiteral
+import net.casual.arcade.events.GlobalEventHandler
+import net.casual.arcade.events.ListenerRegistry.Companion.register
+import net.casual.arcade.events.server.ServerStartEvent
+import net.casual.arcade.events.server.ServerStopEvent
+import net.casual.arcade.events.server.ServerTickEvent
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.commands.CommandSourceStack
@@ -16,7 +21,9 @@ import net.minecraft.world.level.storage.LevelResource
 import java.nio.file.Path
 
 object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, CommandSourceStack> {
-    override val scripts = ScriptInstances(this::findScriptDefinitions)
+    override val scripts = ScriptInstances<MinecraftServer>(FileScriptDefinitionSource { server ->
+        this.directory(server).resolve("scripts")
+    })
 
     override fun onInitialize() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
@@ -24,10 +31,14 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
                 Kursive.registerCommonCommands(this, KursiveServer)
             }
         }
+
+        GlobalEventHandler.Server.register<ServerStartEvent>(::onServerStart)
+        GlobalEventHandler.Server.register<ServerTickEvent>(::onServerTick)
+        GlobalEventHandler.Server.register<ServerStopEvent>(::onServerStop)
     }
 
-    override fun environment(source: CommandSourceStack, args: List<String>): ExecutionEnvironment<MinecraftServer, *> {
-        return ServerExecutionEnvironment(source.server, args)
+    override fun environment(minecraft: MinecraftServer, args: List<String>): ExecutionEnvironment<MinecraftServer, *> {
+        return ServerExecutionEnvironment(minecraft, args)
     }
 
     override fun failure(source: CommandSourceStack, component: Component) {
@@ -46,7 +57,15 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
         return server.getWorldPath(LevelResource.ROOT).resolve(Kursive.MOD_ID)
     }
 
-    private fun findScriptDefinitions(server: MinecraftServer): Collection<ScriptDefinition<MinecraftServer>> {
-        return Kursive.findScriptDefinitions(this.directory(server).resolve("scripts"))
+    private fun onServerStart(event: ServerStartEvent) {
+        this.scripts.initialize(event.server)
+    }
+
+    private fun onServerTick(@Suppress("Unused") event: ServerTickEvent) {
+        this.scripts.update()
+    }
+
+    private fun onServerStop(@Suppress("Unused") event: ServerStopEvent) {
+        this.scripts.close()
     }
 }

@@ -15,7 +15,7 @@ suspend fun <M: Any> ScriptInstance<M>.compileAndExecute(
 ): ResultWithDiagnostics<Unit> = coroutineScope cs@ {
     if (shouldRecompile()) {
         val result = withContext(Dispatchers.Default) {
-            compile().onSuccess { prepare(environment) }
+            compile()
         }
         if (result.isError() || result.isIncomplete()) {
             return@cs result

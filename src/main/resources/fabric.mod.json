@@ -11,6 +11,7 @@
 
   },
   "license": "MIT",
+  "icon": "assets/kursive/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
@@ -27,6 +28,12 @@
       {
         "adapter": "kotlin",
         "value": "me.senseiwells.kursive.server.KursiveServer"
+      }
+    ],
+    "modmenu": [
+      {
+        "adapter": "kotlin",
+        "value": "me.senseiwells.kursive.client.compat.ModMenuKursiveImpl"
       }
     ]
   },

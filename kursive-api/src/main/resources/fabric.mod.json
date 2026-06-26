@@ -11,6 +11,7 @@
 
   },
   "license": "MIT",
+  "icon": "assets/kursive-api/icon.png",
   "environment": "client",
   "entrypoints": {
     "main": [
@@ -32,5 +33,14 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_dependency}",
     "minecraft": "${minecraft_dependency}"
+  },
+  "custom": {
+    "modmenu": {
+      "badges": ["library"],
+      "parent": {
+        "id": "kursive",
+        "name": "Kursive"
+      }
+    }
   }
 }
