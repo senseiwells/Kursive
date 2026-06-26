@@ -1,5 +1,8 @@
 <br/>
 <div align="center">
+<a href="https://github.com/senseiwells/Kursive">
+<img src="./src/main/resources/assets/kursive/icon.png" alt="Logo" width="80" height="80">
+</a>
 <h3 align="center">Kursive</h3>
 <p align="center">
 A Minecraft mod that allows you to run kotlin scripts
