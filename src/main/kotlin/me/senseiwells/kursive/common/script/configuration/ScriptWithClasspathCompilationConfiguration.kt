@@ -1,7 +1,7 @@
 package me.senseiwells.kursive.common.script.configuration
 
 import me.senseiwells.kursive.annotation.Environment
-import me.senseiwells.kursive.annotation.Script
+import me.senseiwells.kursive.annotation.KursiveScript
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
 import kotlin.script.experimental.api.*
@@ -14,14 +14,14 @@ import kotlin.script.experimental.util.filterByAnnotationType
 open class BaseScript
 
 object ScriptWithClasspathCompilationConfiguration: ScriptCompilationConfiguration({
-    defaultImports(Environment::class, DependsOn::class, Script::class)
+    defaultImports(Environment::class, DependsOn::class, KursiveScript::class)
     jvm {
         jvmTarget("25")
         dependenciesFromCurrentContext(wholeClasspath = true)
     }
     refineConfiguration {
         onAnnotations(Environment::class, handler = ::configureEnvironment)
-        onAnnotations(Script::class, handler = ::configureScript)
+        onAnnotations(KursiveScript::class, handler = ::configureScript)
     }
     // We need this so that everything is loaded with the KnotClassLoader
     hostConfiguration(ScriptConfigurationUtils.HOST_CONFIGURATION)
@@ -34,7 +34,7 @@ private fun configureScript(
     context: ScriptConfigurationRefinementContext
 ): ResultWithDiagnostics<ScriptCompilationConfiguration> {
     val (annotation) = context.collectedData?.get(ScriptCollectedData.collectedAnnotations)
-        ?.filterByAnnotationType<Script>()
+        ?.filterByAnnotationType<KursiveScript>()
         ?.firstOrNull()
         ?: return context.compilationConfiguration.asSuccess()
     val metadata = ScriptMetadata.parse(annotation)

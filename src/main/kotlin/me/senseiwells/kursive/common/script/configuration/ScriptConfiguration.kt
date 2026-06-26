@@ -1,6 +1,6 @@
 package me.senseiwells.kursive.common.script.configuration
 
-import me.senseiwells.kursive.annotation.Script
+import me.senseiwells.kursive.annotation.KursiveScript
 import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.impl.util.version.VersionParser
 import java.io.Serializable
@@ -24,7 +24,7 @@ class ScriptMetadata private constructor(
     }
 
     companion object {
-        fun parse(script: Script): ResultWithDiagnostics<ScriptMetadata> {
+        fun parse(script: KursiveScript): ResultWithDiagnostics<ScriptMetadata> {
             return ResultWithDiagnostics.Success(ScriptMetadata(script.id, script.version))
         }
 
