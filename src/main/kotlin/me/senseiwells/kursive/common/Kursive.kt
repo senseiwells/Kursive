@@ -8,7 +8,6 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
-import me.senseiwells.kursive.common.utils.compileAndExecute
 import net.casual.arcade.commands.argument
 import net.casual.arcade.commands.literal
 import net.casual.arcade.utils.component.bold
@@ -43,7 +42,7 @@ object Kursive: ModInitializer {
         for (report in result.reports) {
             when (report.severity) {
                 ScriptDiagnostic.Severity.WARNING -> this.logger.warn(report.render(withSeverity = false))
-                ScriptDiagnostic.Severity.ERROR -> this.logger.error(report.render(withSeverity = false))
+                ScriptDiagnostic.Severity.ERROR -> this.logger.error(report.render(withSeverity = false, withStackTrace = true))
                 else -> { }
             }
         }
@@ -91,7 +90,7 @@ object Kursive: ModInitializer {
         }
         val environment = handler.environment(handler.minecraft(source), args)
         environment.launch {
-            val result = instance.compileAndExecute(environment)
+            val result = instance.start(environment)
             onScriptResult(source, handler, name, result)
         }
         return Command.SINGLE_SUCCESS
@@ -105,7 +104,7 @@ object Kursive: ModInitializer {
             handler.failure(source, Component.translatable("kursive.command.noScriptWithThatName"))
             return 0
         }
-        if (!instance.cancel()) {
+        if (!instance.stop()) {
             handler.failure(source, Component.translatable("kursive.command.scriptAlreadyStopped"))
             return 0
         }

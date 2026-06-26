@@ -1,6 +1,11 @@
 package me.senseiwells.kursive.common.script.instance
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import me.senseiwells.kursive.api.ScriptContext
 import me.senseiwells.kursive.common.Kursive
@@ -11,16 +16,18 @@ import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
 import net.fabricmc.loader.api.FabricLoader
+import java.io.Closeable
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.isReadable
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.readAttributes
+import kotlin.io.path.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.script.experimental.api.*
+import kotlin.script.experimental.jvm.util.isError
+import kotlin.script.experimental.jvm.util.isIncomplete
 import kotlin.script.experimental.jvmhost.BasicJvmScriptJarGenerator
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
@@ -28,48 +35,36 @@ import kotlin.script.experimental.jvmhost.loadScriptFromJar
 class ScriptInstance<M: Any>(
     val definition: ScriptDefinition<M>
 ) {
+    private val mutex = Mutex()
+
     private var entrypoint: ScriptEntrypoint<M>? = null
-    private var metadata: ScriptMetadata? = null
+    private var loaded: LoadedScript? = null
     private var job: Job? = null
+
+    private var diagnostics: List<ScriptDiagnostic> = listOf()
 
     fun isRunning(): Boolean {
         val job = this.job
         return job != null && job.isActive
     }
 
-    fun compile(): ResultWithDiagnostics<Unit> {
-        if (this.isRunning()) {
-            return makeFailureResult("Cannot re-compile while script is running")
-        }
-        val start = System.currentTimeMillis()
-        this.log("Starting to compile ${this.definition.name}")
-        this.entrypoint = null
-        val jar = this.getCompileJarPath().toFile()
-        val host = BasicJvmScriptingHost(
-            ScriptConfigurationUtils.HOST_CONFIGURATION, evaluator = BasicJvmScriptJarGenerator(jar)
-        )
-        val result = host.eval(
-            this.definition.getSource(),
-            ScriptWithClasspathCompilationConfiguration,
-            ScriptWithClassloaderEvaluationConfiguration
-        )
-        val time = System.currentTimeMillis() - start
-        this.log("Finished compiling ${this.definition.name}, took $time ms")
-        return result.onSuccess { Unit.asSuccess() }
+    suspend fun start(
+        environment: ExecutionEnvironment<M, *>
+    ): ResultWithDiagnostics<Unit> {
+        val result = this.mutex.withLock { this.internalStart(environment) }
+        this.diagnostics = result.reports
+        return result
     }
 
-    suspend fun execute(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<Unit> {
-        if (this.isRunning()) {
-            return makeFailureResult("Cannot execute script while it's already running")
-        }
-        return this.getOrFindEntrypoint(environment).onSuccess { entrypoint ->
-            val job = environment.invoke(entrypoint, this.metadata!!)
-            this.job = job
-            Unit.asSuccess()
+    suspend fun compile(): ResultWithDiagnostics<Unit> = coroutineScope {
+        withContext(Dispatchers.Default) {
+            val result = mutex.withLock { internalCompile() }
+            diagnostics = result.reports
+            result
         }
     }
 
-    fun cancel(): Boolean {
+    fun stop(): Boolean {
         if (!this.isRunning()) {
             return false
         }
@@ -78,7 +73,77 @@ class ScriptInstance<M: Any>(
         return true
     }
 
-    fun shouldRecompile(): Boolean {
+    suspend fun tryGetOrLoadMetadata(): ScriptMetadata? {
+        if (this.loaded == null && !this.shouldRecompile()) {
+            this.getOrLoadScript()
+        }
+        return this.loaded?.metadata
+    }
+
+    fun getLatestScriptDiagnostics(): List<ScriptDiagnostic> {
+        return this.diagnostics
+    }
+
+    suspend fun delete() {
+        this.mutex.withLock {
+            this.job?.join()
+            this.definition.delete()
+            this.closeLoadedScript()
+            this.getCompileJarPath().deleteIfExists()
+        }
+    }
+
+    private suspend fun internalStart(
+        environment: ExecutionEnvironment<M, *>
+    ): ResultWithDiagnostics<Unit> = coroutineScope cs@ {
+        if (shouldRecompile()) {
+            val result = withContext(Dispatchers.Default) {
+                internalCompile()
+            }
+            if (result.isError() || result.isIncomplete()) {
+                return@cs result
+            }
+            return@cs result.onSuccess { execute(environment) }
+        }
+        return@cs execute(environment)
+    }
+
+    private fun internalCompile(): ResultWithDiagnostics<Unit> {
+        if (this.isRunning()) {
+            return makeFailureResult("Cannot re-compile while script is running")
+        }
+        this.closeLoadedScript()
+
+        val start = System.currentTimeMillis()
+        this.log("Starting to compile ${this.definition.name}")
+        val jar = this.getCompileJarPath()
+        val tmp = jar.resolveSibling("${jar.name}.tmp")
+        val host = BasicJvmScriptingHost(
+            ScriptConfigurationUtils.HOST_CONFIGURATION, evaluator = BasicJvmScriptJarGenerator(tmp.toFile())
+        )
+        val result = host.eval(
+            this.definition.getSource(),
+            ScriptWithClasspathCompilationConfiguration,
+            ScriptWithClassloaderEvaluationConfiguration
+        )
+        Files.move(tmp, jar, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        val time = System.currentTimeMillis() - start
+        this.log("Finished compiling ${this.definition.name}, took $time ms")
+        return result.onSuccess { Unit.asSuccess() }
+    }
+
+    private suspend fun execute(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<Unit> {
+        if (this.isRunning()) {
+            return makeFailureResult("Cannot execute script while it's already running")
+        }
+        return this.getOrFindEntrypoint(environment).onSuccess { (entrypoint, metadata) ->
+            val job = environment.invoke(entrypoint, metadata)
+            this.job = job
+            Unit.asSuccess()
+        }
+    }
+
+    private fun shouldRecompile(): Boolean {
         val jar = this.getCompileJarPath()
         if (jar.isRegularFile()) {
             try {
@@ -91,32 +156,21 @@ class ScriptInstance<M: Any>(
         return true
     }
 
-    suspend fun getOrLoadMetadata(): ScriptMetadata {
-        if (this.metadata == null) {
-            this.loadScript()
-        }
-        return this.metadata!!
-    }
-
-    suspend fun delete() {
-        this.job?.join()
-        this.definition.delete()
-        this.getCompileJarPath().deleteIfExists()
-    }
-
     private fun getCompileJarPath(): Path {
         return this.definition.getCompileDirectoryPath().resolve("${this.definition.name}.jar")
     }
 
-    private suspend fun getOrFindEntrypoint(environment: ExecutionEnvironment<M, *>): ResultWithDiagnostics<ScriptEntrypoint<M>> {
-        val existing = this.entrypoint
-        if (existing != null) {
-            return existing.asSuccess()
-        }
-
-        val (script, klass) = this.loadScript()
+    private suspend fun getOrFindEntrypoint(
+        environment: ExecutionEnvironment<M, *>
+    ): ResultWithDiagnostics<EntrypointWithMetadata<M>> {
+        val (script, klass, metadata) = this.getOrLoadScript()
             .onFailure { return ResultWithDiagnostics.Failure(it.reports) }
             .valueOrThrow()
+
+        val existing = this.entrypoint
+        if (existing != null) {
+            return EntrypointWithMetadata(existing, metadata).asSuccess()
+        }
 
         val diagnostics = ArrayList<ScriptDiagnostic>()
         val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
@@ -130,11 +184,16 @@ class ScriptInstance<M: Any>(
         }
         return diagnostics + findEntrypoint(environment, klass).onSuccess { entrypoint ->
             this.entrypoint = entrypoint
-            entrypoint.asSuccess()
+            EntrypointWithMetadata(entrypoint, metadata).asSuccess()
         }
     }
 
-    private suspend fun loadScript(): ResultWithDiagnostics<Pair<CompiledScript, KClass<*>>> {
+    private suspend fun getOrLoadScript(): ResultWithDiagnostics<LoadedScript> {
+        val existing = this.loaded
+        if (existing != null) {
+            return existing.asSuccess()
+        }
+
         val jar = this.getCompileJarPath()
         if (!jar.isReadable()) {
             return makeFailureResult("Script jar isn't readable: '${jar}'")
@@ -145,12 +204,23 @@ class ScriptInstance<M: Any>(
 
             this.log("Loading script class for ${this.definition.name}")
             val result = script.getClass(ScriptWithClassloaderEvaluationConfiguration)
-            this.metadata = script.compilationConfiguration[ScriptCompilationConfiguration.scriptMetadata]
+            val metadata = script.compilationConfiguration[ScriptCompilationConfiguration.scriptMetadata]
                 ?: ScriptMetadata.named(this.definition.name)
-            return result.onSuccess { (script to it).asSuccess() }
+            return result.onSuccess { klass -> LoadedScript(script, klass, metadata).asSuccess() }
         } catch (e: IOException) {
             return makeFailureResult(e.asDiagnostics(customMessage = "Failed to load script jar"))
         }
+    }
+
+    private fun closeLoadedScript() {
+        this.entrypoint = null
+
+        val loaded = this.loaded ?: return
+        val classLoader = loaded.klass.java.classLoader
+        if (classLoader is Closeable) {
+            classLoader.close()
+        }
+        this.loaded = null
     }
 
     private fun findEntrypoint(
@@ -187,6 +257,10 @@ class ScriptInstance<M: Any>(
             Kursive.logger.info(message)
         }
     }
+
+    private data class LoadedScript(val script: CompiledScript, val klass: KClass<*>, val metadata: ScriptMetadata)
+
+    private data class EntrypointWithMetadata<M>(val entrypoint: ScriptEntrypoint<M>, val metadata: ScriptMetadata)
 
     companion object {
         private val DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment

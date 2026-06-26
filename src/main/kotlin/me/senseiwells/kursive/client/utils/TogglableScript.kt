@@ -3,7 +3,6 @@ package me.senseiwells.kursive.client.utils
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
-import me.senseiwells.kursive.common.utils.compileAndExecute
 import net.minecraft.client.Minecraft
 
 interface TogglableScript {
@@ -30,13 +29,13 @@ interface TogglableScript {
 
                 override fun start() {
                     environment.launch {
-                        val result = instance.compileAndExecute(environment)
+                        val result = instance.start(environment)
                         Kursive.logDiagnostics(result)
                     }
                 }
 
                 override fun stop() {
-                    instance.cancel()
+                    instance.stop()
                 }
             }
         }

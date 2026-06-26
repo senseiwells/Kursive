@@ -46,7 +46,9 @@ class ClientScriptsList(
         private val parent: ClientScriptsList,
         private val script: ScriptInstance<Minecraft>
     ): Entry() {
+        private val diagnosticIcon = ScriptDiagnosticIcon(this.script::getLatestScriptDiagnostics)
         private val nameWidget = this.createNameWidget()
+        private val compileButton = this.createCompileButton()
         private val toggleButton = this.createToggleButton()
         private val openButton = this.createOpenButton()
 
@@ -57,35 +59,43 @@ class ClientScriptsList(
             hovered: Boolean,
             a: Float
         ) {
-            val toggleButtonX = this.parent.scrollBarX() - this.toggleButton.width - 10
-            val buttonY = this.contentY - 2
+            this.diagnosticIcon.setPosition(this.contentX - 18, this.contentYMiddle - 6)
+            this.diagnosticIcon.extractRenderState(graphics, mouseX, mouseY, a)
 
             this.nameWidget.setPosition(this.contentX, this.contentYMiddle - 9 / 2)
             this.nameWidget.extractRenderState(graphics, mouseX, mouseY, a)
 
-            this.toggleButton.message = if (this.script.isRunning()) Component.literal("Stop") else Component.literal("Start")
+            val toggleButtonX = this.parent.scrollBarX() - this.toggleButton.width - 10
+            val buttonY = this.contentY - 2
+
+            this.toggleButton.message = if (this.script.isRunning()) Component.literal("Stop Script") else Component.literal("Start Script")
+            this.toggleButton.setTooltip(Tooltip.create(this.toggleButton.message))
             this.toggleButton.setPosition(toggleButtonX, buttonY)
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a)
 
+            val compileButtonX = toggleButtonX - this.compileButton.width - 5
+            this.compileButton.setPosition(compileButtonX, buttonY)
+            this.compileButton.extractRenderState(graphics, mouseX, mouseY, a)
+
             if (this.openButton != null) {
-                val openButtonX = toggleButtonX - this.openButton.width - 5
+                val openButtonX = compileButtonX - this.openButton.width - 5
                 this.openButton.setPosition(openButtonX, buttonY)
                 this.openButton.extractRenderState(graphics, mouseX, mouseY, a)
             }
         }
 
         override fun children(): List<GuiEventListener> {
-            return listOfNotNull(this.nameWidget, this.openButton, this.toggleButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.compileButton, this.toggleButton)
         }
 
         override fun narratables(): List<NarratableEntry> {
-            return listOfNotNull(this.nameWidget, this.openButton, this.toggleButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.compileButton, this.toggleButton)
         }
 
         private fun createNameWidget(): StringWidget {
             val widget = StringWidget(Component.literal(this.script.definition.name), this.parent.minecraft.font)
             this.parent.minecraft.launch {
-                val metadata = script.getOrLoadMetadata()
+                val metadata = script.tryGetOrLoadMetadata() ?: return@launch
                 widget.setTooltip(Tooltip.create(Component {
                     empty() + literal("Script Id: ") + literal(metadata.id).yellow() + nl +
                         literal("Version: ") + literal("${metadata.version}").teal()
@@ -97,11 +107,17 @@ class ClientScriptsList(
         private fun createOpenButton(): Button? {
             if (this.script.definition is FileScriptDefinition) {
                 val path = this.script.definition.absolute
-                return SpriteIconButton.builder(Component.literal("Open"), {
+                return SpriteIconButton.builder(Component.literal("Open Script"), {
                     Util.getPlatform().openPath(path)
-                }, true).width(20).sprite(kursive("icon/open"), 16, 16).tooltip(Component.literal("Open File")).build()
+                }, true).width(20).sprite(kursive("icon/open"), 16, 16).withTootip().build()
             }
             return null
+        }
+
+        private fun createCompileButton(): Button {
+            return SpriteIconButton.builder(Component.literal("Compile Script"), {
+                this.parent.minecraft.launch { script.compile() }
+            }, true).width(20).sprite(kursive("icon/compile"), 20, 16).withTootip().build()
         }
 
         private fun createToggleButton(): Button {
