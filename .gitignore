@@ -24,4 +24,8 @@ bin/
 
 run/
 
+# kotlin
+
+.kotlin/
+
 kursive-scripts/
