@@ -17,6 +17,9 @@ class ScriptInstances<M: Any>(
     private val scripts = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    var dirty: Boolean = false
+        private set
+
     fun add(definition: ScriptDefinition<M>): Boolean {
         return this.scripts.putIfAbsent(definition, ScriptInstance(definition)) == null
     }
@@ -40,23 +43,27 @@ class ScriptInstances<M: Any>(
 
     fun update() {
         val available = this.source.get()
+        var dirty = false
         for (definition in available) {
-            this.add(definition)
+            dirty = dirty or this.add(definition)
         }
-        this.deleteInvalidScripts()
+        this.dirty = dirty or this.deleteInvalidScripts()
     }
 
     fun close() {
         this.source.close()
     }
 
-    private fun deleteInvalidScripts() {
+    private fun deleteInvalidScripts(): Boolean {
+        var dirty = false
         for ((definition, instance) in this.scripts.toList()) {
             if (!definition.isValid()) {
                 this.scripts.remove(definition, instance)
                 this.scope.launch { instance.delete() }
+                dirty = true
             }
         }
+        return dirty
     }
 
     override fun iterator(): Iterator<ScriptInstance<M>> {

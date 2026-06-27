@@ -36,6 +36,12 @@ class ClientScriptsList(
         }
     }
 
+    fun tick() {
+        if (KursiveClient.scripts.dirty) {
+            this.refresh()
+        }
+    }
+
     override fun getRowWidth(): Int {
         return 280
     }

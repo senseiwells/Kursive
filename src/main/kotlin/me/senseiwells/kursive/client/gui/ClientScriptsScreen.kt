@@ -29,6 +29,10 @@ class ClientScriptsScreen(
         this.repositionElements()
     }
 
+    override fun tick() {
+        this.list.tick()
+    }
+
     override fun repositionElements() {
         this.layout.arrangeElements()
         this.list.updateSize(this.width, this.layout)
