@@ -19,7 +19,7 @@ import java.nio.file.Path
 
 object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, ClientCommandSource> {
     override val scripts = ScriptInstances<Minecraft>(FileScriptDefinitionSource {
-        this.directory().resolve("scripts")
+        this.scriptsDirectory()
     })
 
     override fun onInitializeClient() {
@@ -52,6 +52,10 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
 
     fun directory(): Path {
         return FabricLoader.getInstance().gameDir.resolve(Kursive.MOD_ID)
+    }
+
+    fun scriptsDirectory(): Path {
+        return this.directory().resolve("scripts")
     }
 
     private fun onClientStart(minecraft: Minecraft) {

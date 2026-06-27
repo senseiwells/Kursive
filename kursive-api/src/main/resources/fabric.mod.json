@@ -17,13 +17,7 @@
     "main": [
       {
         "adapter": "kotlin",
-        "value": "me.senseiwells.kursive.impl.CommonScriptingApi"
-      }
-    ],
-    "client": [
-      {
-        "adapter": "kotlin",
-        "value": "me.senseiwells.kursive.impl.ClientScriptingApi"
+        "value": "me.senseiwells.kursive.api.KursiveApi"
       }
     ]
   },

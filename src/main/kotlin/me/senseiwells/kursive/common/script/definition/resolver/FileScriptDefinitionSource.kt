@@ -5,6 +5,7 @@ import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.createDirectories
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
@@ -71,11 +72,12 @@ class FileScriptDefinitionSource<M: Any>(
         indexed: MutableMap<Path, ScriptDefinition<M>>
     ) {
         while (isActive) {
-            val key = service.take()
+            val key = service.poll(100, TimeUnit.MILLISECONDS) ?: continue
             for (event in key.pollEvents()) {
                 @Suppress("UNCHECKED_CAST")
                 updateIndexedScriptDefinitions(directory, indexed, event as WatchEvent<Path>)
             }
+            key.reset()
         }
     }
 

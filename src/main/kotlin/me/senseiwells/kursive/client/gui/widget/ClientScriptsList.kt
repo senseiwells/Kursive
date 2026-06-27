@@ -46,7 +46,7 @@ class ClientScriptsList(
         private val parent: ClientScriptsList,
         private val script: ScriptInstance<Minecraft>
     ): Entry() {
-        private val diagnosticIcon = ScriptDiagnosticIcon(this.script::getLatestScriptDiagnostics)
+        private val diagnosticIcon = this.createDiagnosticWidget()
         private val nameWidget = this.createNameWidget()
         private val compileButton = this.createCompileButton()
         private val toggleButton = this.createToggleButton()
@@ -76,6 +76,13 @@ class ClientScriptsList(
             val compileButtonX = toggleButtonX - this.compileButton.width - 5
             this.compileButton.setPosition(compileButtonX, buttonY)
             this.compileButton.extractRenderState(graphics, mouseX, mouseY, a)
+            if (this.script.isRunning()) {
+                this.compileButton.active = false
+                this.compileButton.setTooltip(Tooltip.create(Component.literal("Cannot recompile while running")))
+            } else {
+                this.compileButton.active = true
+                this.compileButton.setTooltip(null)
+            }
 
             if (this.openButton != null) {
                 val openButtonX = compileButtonX - this.openButton.width - 5
@@ -92,8 +99,18 @@ class ClientScriptsList(
             return listOfNotNull(this.nameWidget, this.openButton, this.compileButton, this.toggleButton)
         }
 
+        private fun createDiagnosticWidget(): ScriptDiagnosticIcon {
+            return ScriptDiagnosticIcon(
+                this.script::isRunning,
+                this.script::isCompiled,
+                this.script::getLatestScriptDiagnostics
+            )
+        }
+
         private fun createNameWidget(): StringWidget {
-            val widget = StringWidget(Component.literal(this.script.definition.name), this.parent.minecraft.font)
+            val widget = StringWidget(
+                Component.literal("${this.script.definition.name}.kts"), this.parent.minecraft.font
+            )
             this.parent.minecraft.launch {
                 val metadata = script.tryGetOrLoadMetadata() ?: return@launch
                 widget.setTooltip(Tooltip.create(Component {

@@ -84,6 +84,10 @@ class ScriptInstance<M: Any>(
         return this.diagnostics
     }
 
+    fun isCompiled(): Boolean {
+        return !this.shouldRecompile()
+    }
+
     suspend fun delete() {
         this.mutex.withLock {
             this.job?.join()
