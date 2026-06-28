@@ -6,7 +6,6 @@ import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import net.casual.arcade.utils.optional.optional
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.server.MinecraftServer
 import kotlin.jvm.optionals.getOrNull
 
 data class RemoteScriptData(
@@ -27,7 +26,7 @@ data class RemoteScriptData(
             RemoteScriptData(name, running, compiled, metadata.getOrNull(), diagnostics.getOrNull())
         }
 
-        fun from(instance: ScriptInstance<MinecraftServer>): RemoteScriptData {
+        fun from(instance: ScriptInstance<*>): RemoteScriptData {
             return RemoteScriptData(
                 instance.definition.name,
                 instance.isRunning(),

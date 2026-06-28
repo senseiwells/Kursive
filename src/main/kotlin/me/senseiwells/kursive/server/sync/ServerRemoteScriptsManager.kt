@@ -18,6 +18,7 @@ import net.casual.arcade.utils.coroutine.launch
 import net.casual.arcade.utils.player.username
 import net.casual.arcade.utils.server.players
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.PermissionLevel
@@ -39,14 +40,21 @@ object ServerRemoteScriptsManager {
         return player.checkPermission(kursive("remote"), PermissionLevel.OWNERS)
     }
 
+    fun synchronize(server: MinecraftServer, script: ScriptInstance<MinecraftServer>) {
+        this.synchronize(server, UpdateRemoteScriptPayload.from(script))
+    }
+
+    private fun synchronize(server: MinecraftServer, payload: CustomPacketPayload) {
+        for (player in server.players) {
+            if (this.isPermitted(player) && ServerPlayNetworking.canSend(player, payload.type())) {
+                ServerPlayNetworking.send(player, payload)
+            }
+        }
+    }
+
     private fun onServerTick(event: ServerTickEvent) {
         if (KursiveServer.scripts.dirty) {
-            val payload by lazy { ListRemoteScriptsPayload.from(KursiveServer.scripts) }
-            for (player in event.server.players) {
-                if (this.isPermitted(player) && ServerPlayNetworking.canSend(player, ListRemoteScriptsPayload.TYPE)) {
-                    ServerPlayNetworking.send(player, payload)
-                }
-            }
+            this.synchronize(event.server, ListRemoteScriptsPayload.from(KursiveServer.scripts))
         }
     }
 
@@ -60,7 +68,7 @@ object ServerRemoteScriptsManager {
 
     private fun handleCompileRemoteScript(payload: CompileRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            this.tryRunScriptActionAndSync(payload.id, context) { script -> script.compile() }
+            this.tryRunScriptAction(payload.id, context) { script -> script.compile() }
         }
     }
 
@@ -75,7 +83,7 @@ object ServerRemoteScriptsManager {
 
     private fun handleStartRemoteScript(payload: StartRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            this.tryRunScriptActionAndSync(payload.id, context) { script ->
+            this.tryRunScriptAction(payload.id, context) { script ->
                 script.start(KursiveServer.environment(context.server(), listOf()))
             }
         }
@@ -83,16 +91,15 @@ object ServerRemoteScriptsManager {
 
     private fun handleStopRemoteScript(payload: StopRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            this.tryRunScriptActionAndSync(payload.id, context) { script -> script.stop() }
+            this.tryRunScriptAction(payload.id, context) { script -> script.stop() }
         }
     }
 
-    private inline fun tryRunScriptActionAndSync(
+    private inline fun tryRunScriptAction(
         id: ScriptInstance.Id,
         context: ServerPlayNetworking.Context,
         crossinline action: suspend (ScriptInstance<MinecraftServer>) -> Unit
     ) {
-        val sender = context.responseSender()
         val script = KursiveServer.scripts.find(id)
         if (script == null) {
             val player = context.player()
@@ -100,9 +107,6 @@ object ServerRemoteScriptsManager {
             return
         }
 
-        context.server().launch {
-            action.invoke(script)
-            sender.sendPacket(UpdateRemoteScriptPayload.from(script))
-        }
+        context.server().launch { action.invoke(script) }
     }
 }

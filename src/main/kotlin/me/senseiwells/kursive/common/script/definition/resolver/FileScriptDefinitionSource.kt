@@ -13,15 +13,13 @@ import kotlin.io.path.name
 import kotlin.io.path.walk
 
 class FileScriptDefinitionSource<M: Any>(
-    private val directory: (M) -> Path
+    private val directory: Path
 ): ScriptDefinitionSource<M> {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = CoroutineScope(Dispatchers.IO + Job())
     private var indexed = ConcurrentHashMap<Path, ScriptDefinition<M>>()
 
-    override fun initialize(minecraft: M) {
-        this.scope.coroutineContext.cancelChildren()
-
-        val directory = this.directory.invoke(minecraft).createDirectories()
+    override fun initialize() {
+        val directory = this.directory.createDirectories()
         this.scope.launch {
             indexScriptDefinitions(directory, indexed)
             val service = FileSystems.getDefault().newWatchService()
@@ -35,6 +33,7 @@ class FileScriptDefinitionSource<M: Any>(
     }
 
     override fun close() {
+        this.indexed.clear()
         this.scope.cancel()
     }
 

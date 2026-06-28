@@ -22,9 +22,7 @@ import net.minecraft.world.level.storage.LevelResource
 import java.nio.file.Path
 
 object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, CommandSourceStack> {
-    override val scripts = ScriptInstances<MinecraftServer>(FileScriptDefinitionSource { server ->
-        this.scriptsDirectory(server)
-    })
+    override lateinit var scripts: ScriptInstances<MinecraftServer>
 
     override fun onInitialize() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
@@ -65,7 +63,12 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
     }
 
     private fun onServerStart(event: ServerStartEvent) {
-        this.scripts.initialize(event.server)
+        val server = event.server
+        this.scripts = ScriptInstances(
+            FileScriptDefinitionSource(this.scriptsDirectory(server))
+        ) { script -> ServerRemoteScriptsManager.synchronize(server, script) }
+
+        this.scripts.initialize()
     }
 
     private fun onServerTick(@Suppress("Unused") event: ServerTickEvent) {

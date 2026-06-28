@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.client.gui.script.server
 
+import me.senseiwells.kursive.client.config.KursiveClientConfig
 import me.senseiwells.kursive.client.gui.script.ScriptsList
 import me.senseiwells.kursive.client.gui.script.widget.ScriptCompileButton
 import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
@@ -23,16 +24,19 @@ class ServerScriptsList(
     override fun refresh() {
         this.clearEntries()
 
-        val server = this.minecraft.singleplayerServer
-        if (server != null) {
-            for (script in KursiveServer.scripts.sortedBy { it.definition.name }) {
-                val handle = LocalScriptHandle(script, KursiveServer.environment(server, listOf()))
-                this.addEntry(ScriptEntry(this, handle))
+        if (KursiveClientConfig.TREAT_INTEGRATED_AS_LOCAL) {
+            val server = this.minecraft.singleplayerServer
+            if (server != null) {
+                for (script in KursiveServer.scripts.sortedBy { it.definition.name }) {
+                    val handle = LocalScriptHandle(script, KursiveServer.environment(server, listOf()))
+                    this.addEntry(ScriptEntry(this, handle))
+                }
+                return
             }
-        } else {
-            for (script in ClientRemoteScriptsManager.scripts.sortedBy { it.name() }) {
-                this.addEntry(ScriptEntry(this, script))
-            }
+        }
+
+        for (script in ClientRemoteScriptsManager.scripts.sortedBy { it.name() }) {
+            this.addEntry(ScriptEntry(this, script))
         }
     }
 

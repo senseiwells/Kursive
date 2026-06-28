@@ -22,9 +22,7 @@ import net.minecraft.network.chat.Component
 import java.nio.file.Path
 
 object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, ClientCommandSource> {
-    override val scripts = ScriptInstances<Minecraft>(FileScriptDefinitionSource {
-        this.scriptsDirectory()
-    })
+    override val scripts = ScriptInstances<Minecraft>(FileScriptDefinitionSource(this.scriptsDirectory()))
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
@@ -73,8 +71,8 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         return this.directory().resolve("scripts")
     }
 
-    private fun onClientStart(minecraft: Minecraft) {
-        this.scripts.initialize(minecraft)
+    private fun onClientStart(@Suppress("Unused") minecraft: Minecraft) {
+        this.scripts.initialize()
     }
 
     private fun onClientTick(@Suppress("Unused") minecraft: Minecraft) {

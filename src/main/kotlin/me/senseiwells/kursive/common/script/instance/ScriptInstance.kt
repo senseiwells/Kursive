@@ -14,9 +14,9 @@ import me.senseiwells.kursive.common.script.configuration.*
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
+import me.senseiwells.kursive.common.script.instance.sync.ScriptSynchronizer
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.network.codec.ByteBufCodecs
 import java.io.Closeable
 import java.nio.file.Files
@@ -36,7 +36,8 @@ import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 class ScriptInstance<M: Any>(
     val id: Id,
-    val definition: ScriptDefinition<M>
+    val definition: ScriptDefinition<M>,
+    private val synchronizer: ScriptSynchronizer<M>
 ) {
     private val mutex = Mutex()
 
@@ -59,6 +60,7 @@ class ScriptInstance<M: Any>(
     ): ResultWithDiagnostics<Unit> {
         val result = this.mutex.withLock { this.internalStart(environment) }
         this.diagnostics = result.reports
+        this.synchronizer.sync(this)
         return result
     }
 
@@ -66,6 +68,7 @@ class ScriptInstance<M: Any>(
         withContext(Dispatchers.Default) {
             val result = mutex.withLock { internalCompile() }
             diagnostics = result.reports
+            synchronizer.sync(this@ScriptInstance)
             result
         }
     }
@@ -76,6 +79,7 @@ class ScriptInstance<M: Any>(
         }
         this.job?.cancel()
         this.job = null
+        this.synchronizer.sync(this)
         return true
     }
 
@@ -280,7 +284,7 @@ class ScriptInstance<M: Any>(
     private data class EntrypointWithMetadata<M>(val entrypoint: ScriptEntrypoint<M>, val metadata: ScriptMetadata)
 
     @JvmInline
-    value class Id internal constructor(internal val value: Int) {
+    value class Id private constructor(internal val value: Int) {
         class Provider internal constructor() {
             private val current = atomic(0)
 
@@ -295,7 +299,7 @@ class ScriptInstance<M: Any>(
     }
 
     companion object {
-        private val DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment
+        private const val DEBUG = false
     }
 }
 

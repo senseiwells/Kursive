@@ -9,12 +9,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.definition.resolver.ScriptDefinitionSource
+import me.senseiwells.kursive.common.script.instance.sync.ScriptSynchronizer
 import net.minecraft.commands.SharedSuggestionProvider
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 
 class ScriptInstances<M: Any>(
-    private val source: ScriptDefinitionSource<M>
+    private val source: ScriptDefinitionSource<M>,
+    private val synchronizer: ScriptSynchronizer<M> = { }
 ): Iterable<ScriptInstance<M>> {
     private val scriptsByDefinition = ConcurrentHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
     private val scriptsById = Int2ObjectOpenHashMap<ScriptInstance<M>>()
@@ -28,7 +30,7 @@ class ScriptInstances<M: Any>(
     fun add(definition: ScriptDefinition<M>): Boolean {
         if (!this.scriptsByDefinition.containsKey(definition)) {
             val id = this.ids.next()
-            val instance = ScriptInstance(id, definition)
+            val instance = ScriptInstance(id, definition, this.synchronizer)
             this.scriptsByDefinition[definition] = instance
             this.scriptsById[id.value] = instance
             return true
@@ -53,8 +55,8 @@ class ScriptInstances<M: Any>(
         return SharedSuggestionProvider.suggest(this.scriptsByDefinition.keys.map { "\"${it.name}\"" }, builder)
     }
 
-    fun initialize(minecraft: M) {
-        this.source.initialize(minecraft)
+    fun initialize() {
+        this.source.initialize()
     }
 
     fun update() {
