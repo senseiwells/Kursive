@@ -26,7 +26,7 @@ class ServerScriptsScreen(
         ClientPlayNetworking.send(CreateRemoteScriptPayload(name))
     }
 
-    override fun createScriptsList(): ScriptsList<*> {
+    override fun createScriptsList(): ScriptsList {
         return ServerScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
     }
 

@@ -15,7 +15,7 @@ abstract class ScriptsScreen(
     private val parent: Screen?
 ): Screen(title) {
     protected val layout = HeaderAndFooterLayout(this)
-    protected lateinit var list: ScriptsList<*>
+    protected lateinit var list: ScriptsList
 
     override fun init() {
         this.layout.addToHeader(ScaledStringWidget(this.title, this.font, 1.5F)) { settings ->
@@ -58,7 +58,7 @@ abstract class ScriptsScreen(
 
     abstract fun createNewScript(name: String)
 
-    protected abstract fun createScriptsList(): ScriptsList<*>
+    protected abstract fun createScriptsList(): ScriptsList
 
     protected abstract fun getScriptsDirectory(): Path?
 

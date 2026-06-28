@@ -27,7 +27,7 @@ class ClientScriptsScreen(
         )
     }
 
-    override fun createScriptsList(): ScriptsList<*> {
+    override fun createScriptsList(): ScriptsList {
         return ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
     }
 

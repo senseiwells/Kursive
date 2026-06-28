@@ -16,12 +16,12 @@ import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
 import net.minecraft.network.chat.Component
 
-abstract class ScriptsList<E: ScriptsList.Entry<E>>(
+abstract class ScriptsList(
     minecraft: Minecraft,
     width: Int,
     height: Int,
     y: Int
-): ContainerObjectSelectionList<E>(minecraft, width, height, y, 20) {
+): ContainerObjectSelectionList<ScriptsList.Entry>(minecraft, width, height, y, 20) {
     init {
         this.refresh()
     }
@@ -40,26 +40,27 @@ abstract class ScriptsList<E: ScriptsList.Entry<E>>(
 
     protected abstract fun dirty(): Boolean
 
-    abstract class Entry<E: Entry<E>>: ContainerObjectSelectionList.Entry<E>()
+    abstract class Entry: ContainerObjectSelectionList.Entry<Entry>()
 
-    interface ScriptEntry {
-        val parent: ScriptsList<*>
+    class ScriptEntry(
+        private val parent: ScriptsList,
+        private val handle: ScriptHandle
+    ): Entry() {
+        private val diagnosticIcon = ScriptDiagnosticIcon(this.handle)
+        private val nameWidget = ScriptNameWidget(this.parent.minecraft.font, this.handle)
+        private val compileButton = ScriptCompileButton(this.handle)
+        private val toggleButton = ScriptToggleButton(this.handle)
+        private val openButton = this.createOpenButton(this.handle)
 
-        val diagnosticIcon: ScriptDiagnosticIcon
-        val nameWidget: ScriptNameWidget
-        val compileButton: ScriptCompileButton
-        val toggleButton: ScriptToggleButton
-        val openButton: Button?
-
-        fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, hovered: Boolean, a: Float) {
-            this.diagnosticIcon.setPosition(this.getContentX() - 18, this.getContentYMiddle() - 6)
+        override fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, hovered: Boolean, a: Float) {
+            this.diagnosticIcon.setPosition(this.contentX - 18, this.contentYMiddle - 6)
             this.diagnosticIcon.extractRenderState(graphics, mouseX, mouseY, a)
 
-            this.nameWidget.setPosition(this.getContentX(), this.getContentYMiddle() - 9 / 2)
+            this.nameWidget.setPosition(this.contentX, this.contentYMiddle - 9 / 2)
             this.nameWidget.extractRenderState(graphics, mouseX, mouseY, a)
 
             val toggleButtonX = this.parent.scrollBarX() - this.toggleButton.width - 10
-            val buttonY = this.getContentY() - 2
+            val buttonY = this.contentY - 2
 
             this.toggleButton.setPosition(toggleButtonX, buttonY)
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a)
@@ -76,30 +77,22 @@ abstract class ScriptsList<E: ScriptsList.Entry<E>>(
             }
         }
 
-        fun children(): List<GuiEventListener> {
+        override fun children(): List<GuiEventListener> {
             return listOfNotNull(this.nameWidget, this.openButton, this.compileButton, this.toggleButton)
         }
 
-        fun narratables(): List<NarratableEntry> {
+        override fun narratables(): List<NarratableEntry> {
             return listOfNotNull(this.nameWidget, this.openButton, this.compileButton, this.toggleButton)
         }
 
-        fun getContentX(): Int
-
-		fun getContentY(): Int
-
-		fun getContentYMiddle(): Int
-
-        companion object {
-            fun createOpenButton(handle: ScriptHandle): Button? {
-                if (handle is LocalScriptHandle<*>) {
-                    val definition = handle.instance.definition
-                    if (definition is FileScriptDefinition) {
-                        return OpenFileButton(Component.literal("Open Script")) { definition.absolute }
-                    }
+        private fun createOpenButton(handle: ScriptHandle): Button? {
+            if (handle is LocalScriptHandle<*>) {
+                val definition = handle.instance.definition
+                if (definition is FileScriptDefinition) {
+                    return OpenFileButton(Component.literal("Open Script")) { definition.absolute }
                 }
-                return null
             }
+            return null
         }
     }
 }
