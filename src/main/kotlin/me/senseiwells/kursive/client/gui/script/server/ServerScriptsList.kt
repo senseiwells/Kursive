@@ -6,6 +6,7 @@ import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
 import me.senseiwells.kursive.client.gui.script.widget.ScriptNameWidget
 import me.senseiwells.kursive.client.gui.script.widget.ScriptToggleButton
 import me.senseiwells.kursive.client.script.executable.RemoteScriptHandle
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.events.GuiEventListener
@@ -19,10 +20,13 @@ class ServerScriptsList(
 ): ScriptsList<ServerScriptsList.Entry>(minecraft, width, height, y) {
     override fun refresh() {
         this.clearEntries()
+        for (script in ClientRemoteScriptsManager.scripts.sortedBy { it.name() }) {
+            this.addEntry(ScriptEntry(this, script))
+        }
     }
 
     override fun dirty(): Boolean {
-        return false
+        return ClientRemoteScriptsManager.dirty
     }
 
     abstract class Entry: ScriptsList.Entry<Entry>()

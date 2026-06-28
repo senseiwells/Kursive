@@ -3,11 +3,11 @@ package me.senseiwells.kursive.client.script.executable
 import kotlinx.coroutines.Deferred
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
+import me.senseiwells.kursive.common.script.diagnostics.FormattedDiagnostics
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import net.casual.arcade.utils.coroutine.getNowOrNull
 import net.minecraft.client.Minecraft
-import kotlin.script.experimental.api.ScriptDiagnostic
 
 class LocalScriptHandle(
     private val instance: ScriptInstance<Minecraft>,
@@ -35,8 +35,8 @@ class LocalScriptHandle(
         return this.metadata.deferred.getNowOrNull()
     }
 
-    override fun getDiagnostics(): List<ScriptDiagnostic> {
-        return this.instance.diagnostics
+    override fun getDiagnostics(): FormattedDiagnostics? {
+        return FormattedDiagnostics.from(this.instance.diagnostics)
     }
 
     override fun start() {

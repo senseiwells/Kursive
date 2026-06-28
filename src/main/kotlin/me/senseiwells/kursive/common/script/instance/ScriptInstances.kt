@@ -2,6 +2,7 @@ package me.senseiwells.kursive.common.script.instance
 
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,18 +15,28 @@ import java.util.concurrent.CompletableFuture
 class ScriptInstances<M: Any>(
     private val source: ScriptDefinitionSource<M>
 ): Iterable<ScriptInstance<M>> {
-    private val scripts = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
+    private val scriptsByDefinition = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
+    private val scriptsById = Int2ObjectOpenHashMap<ScriptInstance<M>>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private val ids = ScriptInstance.Id.Provider()
 
     var dirty: Boolean = false
         private set
 
     fun add(definition: ScriptDefinition<M>): Boolean {
-        return this.scripts.putIfAbsent(definition, ScriptInstance(definition)) == null
+        if (!this.scriptsByDefinition.containsKey(definition)) {
+            val id = this.ids.next()
+            val instance = ScriptInstance(id, definition)
+            this.scriptsByDefinition[definition] = instance
+            this.scriptsById[id.value] = instance
+            return true
+        }
+        return false
     }
 
     fun find(name: String): ScriptInstance<M>? {
-        for ((definition, instance) in this.scripts) {
+        for ((definition, instance) in this.scriptsByDefinition) {
             if (definition.name == name) {
                 return instance
             }
@@ -33,8 +44,12 @@ class ScriptInstances<M: Any>(
         return null
     }
 
+    fun find(id: ScriptInstance.Id): ScriptInstance<M>? {
+        return this.scriptsById[id.value]
+    }
+
     fun suggestions(builder: SuggestionsBuilder): CompletableFuture<Suggestions> {
-        return SharedSuggestionProvider.suggest(this.scripts.keys.map { "\"${it.name}\"" }, builder)
+        return SharedSuggestionProvider.suggest(this.scriptsByDefinition.keys.map { "\"${it.name}\"" }, builder)
     }
 
     fun initialize(minecraft: M) {
@@ -56,9 +71,10 @@ class ScriptInstances<M: Any>(
 
     private fun deleteInvalidScripts(): Boolean {
         var dirty = false
-        for ((definition, instance) in this.scripts.toList()) {
+        for ((definition, instance) in this.scriptsByDefinition.toList()) {
             if (!definition.isValid()) {
-                this.scripts.remove(definition, instance)
+                this.scriptsByDefinition.remove(definition, instance)
+                this.scriptsById.remove(instance.id.value, instance as Any)
                 this.scope.launch { instance.delete() }
                 dirty = true
             }
@@ -67,6 +83,6 @@ class ScriptInstances<M: Any>(
     }
 
     override fun iterator(): Iterator<ScriptInstance<M>> {
-        return this.scripts.values.iterator()
+        return this.scriptsByDefinition.values.iterator()
     }
 }

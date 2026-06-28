@@ -6,6 +6,7 @@ import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefini
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.server.script.ServerExecutionEnvironment
+import me.senseiwells.kursive.server.sync.ServerRemoteScriptsManager
 import net.casual.arcade.commands.registerLiteral
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.ListenerRegistry.Companion.register
@@ -35,6 +36,8 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
         GlobalEventHandler.Server.register<ServerStartEvent>(::onServerStart)
         GlobalEventHandler.Server.register<ServerTickEvent>(::onServerTick)
         GlobalEventHandler.Server.register<ServerStopEvent>(::onServerStop)
+
+        ServerRemoteScriptsManager.registerEvents()
     }
 
     override fun environment(minecraft: MinecraftServer, args: List<String>): ExecutionEnvironment<MinecraftServer, *> {

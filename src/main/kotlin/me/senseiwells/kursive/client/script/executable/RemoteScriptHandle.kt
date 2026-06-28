@@ -1,38 +1,70 @@
 package me.senseiwells.kursive.client.script.executable
 
+import me.senseiwells.kursive.common.network.data.RemoteScriptData
+import me.senseiwells.kursive.common.network.payload.serverbound.CompileRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.StartRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.StopRemoteScriptPayload
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
-import kotlin.script.experimental.api.ScriptDiagnostic
+import me.senseiwells.kursive.common.script.diagnostics.FormattedDiagnostics
+import me.senseiwells.kursive.common.script.instance.ScriptInstance
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 
-class RemoteScriptHandle: ScriptHandle {
+class RemoteScriptHandle(
+    private val id: ScriptInstance.Id,
+    private var name: String,
+    private var running: Boolean,
+    private var compiled: Boolean,
+    private var metadata: ScriptMetadata?,
+    private var diagnostics: FormattedDiagnostics?,
+    private val sender: PayloadSender
+): ScriptHandle {
+    constructor(
+        id: ScriptInstance.Id,
+        data: RemoteScriptData,
+        sender: PayloadSender
+    ): this(id, data.name, data.running, data.compiled, data.metadata, data.diagnostics, sender)
+
+    fun update(data: RemoteScriptData) {
+        this.name = data.name
+        this.running = data.running
+        this.compiled = data.compiled
+        this.metadata = data.metadata
+        this.diagnostics = data.diagnostics
+    }
+
     override fun name(): String {
-        TODO("Not yet implemented")
+        return this.name
     }
 
     override fun isRunning(): Boolean {
-        TODO("Not yet implemented")
+        return this.running
     }
 
     override fun isCompiled(): Boolean {
-        TODO("Not yet implemented")
+        return this.compiled
     }
 
     override fun getMetadata(): ScriptMetadata? {
-        TODO("Not yet implemented")
+        return this.metadata
     }
 
-    override fun getDiagnostics(): List<ScriptDiagnostic> {
-        TODO("Not yet implemented")
+    override fun getDiagnostics(): FormattedDiagnostics? {
+        return this.diagnostics
     }
 
     override fun start() {
-        TODO("Not yet implemented")
+        this.sender.send(StartRemoteScriptPayload(this.id))
     }
 
     override fun compile() {
-        TODO("Not yet implemented")
+        this.sender.send(CompileRemoteScriptPayload(this.id))
     }
 
     override fun stop() {
-        TODO("Not yet implemented")
+        this.sender.send(StopRemoteScriptPayload(this.id))
+    }
+
+    fun interface PayloadSender {
+        fun send(payload: CustomPacketPayload)
     }
 }

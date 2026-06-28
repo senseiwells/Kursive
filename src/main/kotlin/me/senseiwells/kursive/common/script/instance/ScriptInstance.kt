@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.common.script.instance
 
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -16,6 +17,7 @@ import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
 import me.senseiwells.kursive.common.utils.EnvironmentUtils
 import me.senseiwells.kursive.common.utils.ScriptConfigurationUtils
 import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.network.codec.ByteBufCodecs
 import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.Path
@@ -33,6 +35,7 @@ import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.loadScriptFromJar
 
 class ScriptInstance<M: Any>(
+    val id: Id,
     val definition: ScriptDefinition<M>
 ) {
     private val mutex = Mutex()
@@ -76,11 +79,15 @@ class ScriptInstance<M: Any>(
         return true
     }
 
+    fun tryGetMetadata(): ScriptMetadata? {
+        return this.loaded?.metadata
+    }
+
     suspend fun tryGetOrLoadMetadata(): ScriptMetadata? {
         if (this.loaded == null && !this.shouldRecompile()) {
             this.getOrLoadScript()
         }
-        return this.loaded?.metadata
+        return this.tryGetMetadata()
     }
 
     fun isCompiled(): Boolean {
@@ -271,6 +278,21 @@ class ScriptInstance<M: Any>(
     private data class LoadedScript(val script: CompiledScript, val klass: KClass<*>, val metadata: ScriptMetadata)
 
     private data class EntrypointWithMetadata<M>(val entrypoint: ScriptEntrypoint<M>, val metadata: ScriptMetadata)
+
+    @JvmInline
+    value class Id internal constructor(internal val value: Int) {
+        class Provider internal constructor() {
+            private val current = atomic(0)
+
+            fun next(): Id {
+                return Id(this.current.getAndIncrement())
+            }
+        }
+
+        companion object {
+            val STREAM_CODEC = ByteBufCodecs.INT.map(::Id, Id::value)
+        }
+    }
 
     companion object {
         private val DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment

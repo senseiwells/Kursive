@@ -3,6 +3,8 @@ package me.senseiwells.kursive.common.script.configuration
 import me.senseiwells.kursive.annotation.KursiveScript
 import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.impl.util.version.VersionParser
+import net.minecraft.network.codec.ByteBufCodecs
+import net.minecraft.network.codec.StreamCodec
 import java.io.Serializable
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptCompilationConfigurationKeys
@@ -24,6 +26,12 @@ class ScriptMetadata private constructor(
     }
 
     companion object {
+        val STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.STRING_UTF8, ScriptMetadata::id,
+            ByteBufCodecs.STRING_UTF8, ScriptMetadata::rawVersion,
+            ::ScriptMetadata
+        )
+
         fun parse(script: KursiveScript): ResultWithDiagnostics<ScriptMetadata> {
             return ResultWithDiagnostics.Success(ScriptMetadata(script.id, script.version))
         }

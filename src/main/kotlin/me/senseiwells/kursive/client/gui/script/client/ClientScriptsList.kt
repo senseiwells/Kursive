@@ -25,7 +25,7 @@ class ClientScriptsList(
 ): ScriptsList<ClientScriptsList.Entry>(minecraft, width, height, y) {
     override fun refresh() {
         this.clearEntries()
-        for (script in KursiveClient.scripts) {
+        for (script in KursiveClient.scripts.sortedBy { it.definition.name }) {
             this.addEntry(ScriptEntry(this, script))
         }
     }

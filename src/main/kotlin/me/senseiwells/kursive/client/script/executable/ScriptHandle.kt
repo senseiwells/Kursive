@@ -1,7 +1,7 @@
 package me.senseiwells.kursive.client.script.executable
 
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
-import kotlin.script.experimental.api.ScriptDiagnostic
+import me.senseiwells.kursive.common.script.diagnostics.FormattedDiagnostics
 
 interface ScriptHandle {
     fun name(): String
@@ -12,7 +12,7 @@ interface ScriptHandle {
 
     fun getMetadata(): ScriptMetadata?
 
-    fun getDiagnostics(): List<ScriptDiagnostic>
+    fun getDiagnostics(): FormattedDiagnostics?
 
     fun start()
 

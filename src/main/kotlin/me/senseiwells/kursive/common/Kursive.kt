@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
+import me.senseiwells.kursive.common.network.payload.KursivePayloads
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import net.casual.arcade.commands.argument
@@ -31,7 +32,7 @@ object Kursive: ModInitializer {
     val logger: Logger = LoggerFactory.getLogger(MOD_ID)
 
     override fun onInitialize() {
-
+        KursivePayloads.register()
     }
 
     fun configDirectory(): Path {

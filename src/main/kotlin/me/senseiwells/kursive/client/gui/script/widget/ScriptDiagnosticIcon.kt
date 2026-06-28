@@ -2,16 +2,13 @@ package me.senseiwells.kursive.client.gui.script.widget
 
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.common.script.diagnostics.FormattedDiagnostics
 import me.senseiwells.kursive.common.utils.kursive
-import net.casual.arcade.utils.component.joinToComponent
-import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
-import kotlin.script.experimental.api.ScriptDiagnostic
 
 class ScriptDiagnosticIcon(
     private val script: ScriptHandle
@@ -22,8 +19,7 @@ class ScriptDiagnosticIcon(
 
     override fun extractWidgetRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         val diagnostics = this.script.getDiagnostics()
-        val severity = diagnostics.maxOfOrNull { diagnostic -> diagnostic.severity } ?: ScriptDiagnostic.Severity.INFO
-        if (severity < ScriptDiagnostic.Severity.WARNING) {
+        if (diagnostics == null) {
             val icon = if (this.script.isRunning()) {
                 this.setTooltip(Component.literal("Script Running"))
                 RUNNING
@@ -45,29 +41,16 @@ class ScriptDiagnosticIcon(
             return
         }
 
-        val icon = if (severity == ScriptDiagnostic.Severity.WARNING) WARNING else ERROR
+        val icon = if (diagnostics.severity == FormattedDiagnostics.Severity.Warning) WARNING else ERROR
         graphics.blitSprite(
             RenderPipelines.GUI_TEXTURED, icon, this.x, this.y, this.width, this.height, this.alpha
         )
 
-        val warnings = diagnostics.filter { diagnostic -> diagnostic.severity >= ScriptDiagnostic.Severity.WARNING }
-            .joinToComponent(CommonComponents.NEW_LINE) { diagnostic ->
-                Component.literal(diagnostic.render(withSeverity = false)).withStyle(this.color(diagnostic.severity))
-            }
-        this.setTooltip(warnings)
+        this.setTooltip(diagnostics.component)
     }
 
     override fun updateWidgetNarration(output: NarrationElementOutput) {
 
-    }
-
-    private fun color(severity: ScriptDiagnostic.Severity): ChatFormatting {
-        return when (severity) {
-            ScriptDiagnostic.Severity.WARNING -> ChatFormatting.YELLOW
-            ScriptDiagnostic.Severity.ERROR -> ChatFormatting.RED
-            ScriptDiagnostic.Severity.FATAL -> ChatFormatting.DARK_RED
-            else -> ChatFormatting.WHITE
-        }
     }
 
     companion object {

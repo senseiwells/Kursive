@@ -1,12 +1,16 @@
 package me.senseiwells.kursive.client
 
+import com.mojang.brigadier.Command
+import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
 import me.senseiwells.kursive.client.script.ClientExecutionEnvironment
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
 import me.senseiwells.kursive.client.utils.ClientCommandSource
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
 import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
+import net.casual.arcade.commands.literal
 import net.casual.arcade.commands.registerLiteral
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
@@ -26,12 +30,23 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.registerLiteral("kursive-client") {
                 Kursive.registerCommonCommands(this, KursiveClient)
+                // TODO: Remove this:
+                literal("server") {
+                    executes { context ->
+                        context.source.client.schedule {
+                            context.source.client.gui.setScreen(ServerScriptsScreen())
+                        }
+                        Command.SINGLE_SUCCESS
+                    }
+                }
             }
         }
 
         ClientLifecycleEvents.CLIENT_STARTED.register(::onClientStart)
         ClientTickEvents.END_CLIENT_TICK.register(::onClientTick)
         ClientLifecycleEvents.CLIENT_STOPPING.register(::onClientStop)
+
+        ClientRemoteScriptsManager.registerEvents()
     }
 
     override fun environment(minecraft: Minecraft, args: List<String>): ExecutionEnvironment<Minecraft, *> {
