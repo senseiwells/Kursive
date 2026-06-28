@@ -1,17 +1,10 @@
-package me.senseiwells.kursive.client.gui
+package me.senseiwells.kursive.client.gui.scripts
 
-import kotlinx.io.IOException
-import me.senseiwells.kursive.api.ClientScriptContext
-import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.client.utils.FilenameUtils
 import me.senseiwells.kursive.client.utils.setTooltip
-import me.senseiwells.kursive.common.Kursive
-import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
-import me.senseiwells.kursive.common.utils.ScriptTemplates
 import net.casual.arcade.utils.component.red
 import net.casual.arcade.utils.component.silver
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.EditBox
@@ -21,11 +14,9 @@ import net.minecraft.client.gui.layouts.GridLayout
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import net.minecraft.util.ARGB
-import kotlin.io.path.exists
-import kotlin.io.path.writeText
 
-class CreateNewClientScriptScreen(
-    private val parent: ClientScriptsScreen
+class NewScriptScreen(
+    private val parent: ScriptsScreen
 ): Screen(Component.literal("Create New Kursive Script")) {
     private lateinit var nameBox: EditBox
     private lateinit var createButton: Button
@@ -48,7 +39,11 @@ class CreateNewClientScriptScreen(
             3, layout.newCellSettings().alignHorizontallyLeft().paddingTop(1)
         )
         helper.addChild(
-            ScaledStringWidget(Component.literal("Creates a new .kts file in your scripts folder").silver(), this.font, 0.62F),
+            ScaledStringWidget(
+                Component.literal("Creates a new .kts file in the scripts folder").silver(),
+                this.font,
+                0.62F
+            ),
             3, layout.newCellSettings().alignHorizontallyLeft().paddingTop(12)
         )
 
@@ -88,7 +83,7 @@ class CreateNewClientScriptScreen(
         if (raw.isBlank() || !FilenameUtils.isValidFilename(name)) {
             this.createButton.active = false
             this.createButton.setTooltip(Component.literal("Invalid script name").red())
-        } else if (KursiveClient.scriptsDirectory().resolve(name).exists()) {
+        } else if (this.parent.doesScriptExist(name)) {
             this.createButton.active = false
             this.createButton.setTooltip(Component.literal("Script already exists").red())
         } else {
@@ -113,21 +108,8 @@ class CreateNewClientScriptScreen(
 
     private fun createCreateButton(): Button {
         return Button.builder(Component.literal("Create")) {
-            this.writeTemplateScript()
+            this.parent.createNewScript(this.getScriptName())
             this.onClose()
         }.width(50).build()
-    }
-
-    private fun writeTemplateScript() {
-        val name = this.getScriptName()
-        val path = KursiveClient.scriptsDirectory().resolve(this.getScriptName())
-        val template = ScriptTemplates.create(
-            Minecraft::class.java, ClientScriptContext::class.java, metadata = ScriptMetadata.named(name)
-        )
-        try {
-            path.writeText(template)
-        } catch (e: IOException) {
-            Kursive.logger.error("Failed to create script", e)
-        }
     }
 }

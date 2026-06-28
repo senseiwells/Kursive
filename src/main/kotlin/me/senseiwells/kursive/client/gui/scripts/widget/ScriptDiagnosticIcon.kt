@@ -1,5 +1,6 @@
-package me.senseiwells.kursive.client.gui.widget
+package me.senseiwells.kursive.client.gui.scripts.widget
 
+import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.client.utils.setTooltip
 import me.senseiwells.kursive.common.utils.kursive
 import net.casual.arcade.utils.component.joinToComponent
@@ -13,22 +14,20 @@ import net.minecraft.network.chat.Component
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 class ScriptDiagnosticIcon(
-    private val running: () -> Boolean,
-    private val compiled: () -> Boolean,
-    private val diagnostics: () -> List<ScriptDiagnostic>
+    private val script: ScriptHandle
 ): AbstractWidget(0, 0, 12, 12, Component.literal("Script Diagnostics")) {
     init {
         this.active = false
     }
 
     override fun extractWidgetRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        val diagnostics = this.diagnostics.invoke()
+        val diagnostics = this.script.getDiagnostics()
         val severity = diagnostics.maxOfOrNull { diagnostic -> diagnostic.severity } ?: ScriptDiagnostic.Severity.INFO
         if (severity < ScriptDiagnostic.Severity.WARNING) {
-            val icon = if (this.running.invoke()) {
+            val icon = if (this.script.isRunning()) {
                 this.setTooltip(Component.literal("Script Running"))
                 RUNNING
-            } else if (this.compiled.invoke()) {
+            } else if (this.script.isCompiled()) {
                 this.setTooltip(Component.literal("Script Compiled"))
                 COMPILED
             } else {

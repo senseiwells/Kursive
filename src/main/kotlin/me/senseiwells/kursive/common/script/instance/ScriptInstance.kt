@@ -41,7 +41,10 @@ class ScriptInstance<M: Any>(
     private var loaded: LoadedScript? = null
     private var job: Job? = null
 
-    private var diagnostics: List<ScriptDiagnostic> = listOf()
+    var diagnostics: List<ScriptDiagnostic> = listOf()
+        private set
+    var iteration: Int = 0
+        private set
 
     fun isRunning(): Boolean {
         val job = this.job
@@ -78,10 +81,6 @@ class ScriptInstance<M: Any>(
             this.getOrLoadScript()
         }
         return this.loaded?.metadata
-    }
-
-    fun getLatestScriptDiagnostics(): List<ScriptDiagnostic> {
-        return this.diagnostics
     }
 
     fun isCompiled(): Boolean {
@@ -132,6 +131,7 @@ class ScriptInstance<M: Any>(
         )
         if (!result.isError()) {
             Files.move(tmp, jar, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+            this.iteration += 1
         }
         val time = System.currentTimeMillis() - start
         this.log("Finished compiling ${this.definition.name}, took $time ms")

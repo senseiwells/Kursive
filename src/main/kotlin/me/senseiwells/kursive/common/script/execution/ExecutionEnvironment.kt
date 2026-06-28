@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.common.script.execution
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ScriptContext
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
@@ -26,6 +27,8 @@ abstract class ExecutionEnvironment<M: Any, C: ScriptContext>(
     }
 
     abstract fun launch(block: suspend CoroutineScope.() -> Unit): Job
+
+    abstract fun <T> async(block: suspend CoroutineScope.() -> T): Deferred<T>
 
     abstract fun minecraftType(): KClass<M>
 

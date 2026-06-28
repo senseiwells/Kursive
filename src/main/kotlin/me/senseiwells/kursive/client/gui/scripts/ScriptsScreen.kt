@@ -1,7 +1,5 @@
-package me.senseiwells.kursive.client.gui
+package me.senseiwells.kursive.client.gui.scripts
 
-import me.senseiwells.kursive.client.KursiveClient
-import me.senseiwells.kursive.client.gui.widget.ClientScriptsList
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.common.utils.kursive
 import net.minecraft.client.gui.components.Button
@@ -10,12 +8,14 @@ import net.minecraft.client.gui.layouts.HeaderAndFooterLayout
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import net.minecraft.util.Util
+import java.nio.file.Path
 
-class ClientScriptsScreen(
-    private val parent: Screen? = null
-): Screen(Component.literal("Kursive Client Scripts")) {
-    private val layout = HeaderAndFooterLayout(this)
-    private lateinit var list: ClientScriptsList
+abstract class ScriptsScreen(
+    title: Component,
+    private val parent: Screen?
+): Screen(title) {
+    protected val layout = HeaderAndFooterLayout(this)
+    protected lateinit var list: ScriptsList<*>
 
     override fun init() {
         this.layout.addToHeader(ScaledStringWidget(this.title, this.font, 1.5F)) { settings ->
@@ -24,13 +24,14 @@ class ClientScriptsScreen(
         this.layout.addToHeader(this.createNewScriptButton()) { settings ->
             settings.alignHorizontallyRight().paddingRight(10).paddingBottom(2)
         }
-        this.layout.addToHeader(this.createOpenScriptsDirectoryButton()) { settings ->
-            settings.alignHorizontallyRight().paddingRight(35).paddingBottom(2)
+        val openScriptsDirectoryButton = this.createOpenScriptsDirectoryButton()
+        if (openScriptsDirectoryButton != null) {
+            this.layout.addToHeader(openScriptsDirectoryButton) { settings ->
+                settings.alignHorizontallyRight().paddingRight(35).paddingBottom(2)
+            }
         }
 
-        this.list = this.layout.addToContents(
-            ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight, 20)
-        )
+        this.list = this.layout.addToContents(this.createScriptsList())
 
         this.layout.addToFooter(this.createDoneButton()) { settings ->
             settings.alignHorizontallyRight().paddingRight(10)
@@ -53,15 +54,24 @@ class ClientScriptsScreen(
         this.minecraft.gui.setScreen(this.parent)
     }
 
+    abstract fun doesScriptExist(name: String): Boolean
+
+    abstract fun createNewScript(name: String)
+
+    protected abstract fun createScriptsList(): ScriptsList<*>
+
+    protected abstract fun getScriptsDirectory(): Path?
+
     private fun createNewScriptButton(): Button {
         return SpriteIconButton.builder(Component.literal("Create New Script"), {
-            this.minecraft.gui.setScreen(CreateNewClientScriptScreen(this))
+            this.minecraft.gui.setScreen(NewScriptScreen(this))
         }, true).sprite(kursive("icon/create"), 16, 16).size(20, 20).withTootip().build()
     }
 
-    private fun createOpenScriptsDirectoryButton(): Button {
+    private fun createOpenScriptsDirectoryButton(): Button? {
+        val directory = this.getScriptsDirectory() ?: return null
         return SpriteIconButton.builder(Component.literal("Open Scripts Directory"), {
-            Util.getPlatform().openPath(KursiveClient.scriptsDirectory())
+            Util.getPlatform().openPath(directory)
         }, true).sprite(kursive("icon/open_directory"), 16, 16).size(20, 20).withTootip().build()
     }
 

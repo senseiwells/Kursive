@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.server.script
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ServerScriptContext
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
@@ -13,6 +14,7 @@ import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.SimpleListenerRegistry
 import net.casual.arcade.events.server.ServerSaveEvent
+import net.casual.arcade.utils.coroutine.async
 import net.casual.arcade.utils.coroutine.launch
 import net.fabricmc.api.EnvType
 import net.minecraft.server.MinecraftServer
@@ -27,6 +29,10 @@ class ServerExecutionEnvironment(
 
     override fun launch(block: suspend CoroutineScope.() -> Unit): Job {
         return this.minecraft.launch(block)
+    }
+
+    override fun <T> async(block: suspend CoroutineScope.() -> T): Deferred<T> {
+        return this.minecraft.async(block)
     }
 
     override fun minecraftType(): KClass<MinecraftServer> {

@@ -1,23 +1,22 @@
-package me.senseiwells.kursive.client.gui.widget
+package me.senseiwells.kursive.client.gui.scripts.client
 
 import me.senseiwells.kursive.client.KursiveClient
-import me.senseiwells.kursive.client.utils.TogglableScript
-import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.client.gui.scripts.ScriptsList
+import me.senseiwells.kursive.client.gui.scripts.widget.ScriptCompileButton
+import me.senseiwells.kursive.client.gui.scripts.widget.ScriptDiagnosticIcon
+import me.senseiwells.kursive.client.gui.scripts.widget.ScriptNameWidget
+import me.senseiwells.kursive.client.gui.scripts.widget.ScriptToggleButton
+import me.senseiwells.kursive.client.gui.widget.OpenFileButton
+import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
 import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
-import me.senseiwells.kursive.common.utils.kursive
-import net.casual.arcade.utils.component.Component
-import net.casual.arcade.utils.component.plus
-import net.casual.arcade.utils.component.teal
-import net.casual.arcade.utils.component.yellow
-import net.casual.arcade.utils.coroutine.launch
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.*
+import net.minecraft.client.gui.components.Button
+import net.minecraft.client.gui.components.StringWidget
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Util
 
 class ClientScriptsList(
     minecraft: Minecraft,
@@ -25,34 +24,26 @@ class ClientScriptsList(
     height: Int,
     y: Int,
     itemHeight: Int
-): ContainerObjectSelectionList<ClientScriptsList.Entry>(minecraft, width, height, y, itemHeight) {
-    init {
-        this.refresh()
-    }
-
-    fun refresh() {
+): ScriptsList<ClientScriptsList.Entry>(minecraft, width, height, y, itemHeight) {
+    override fun refresh() {
         this.clearEntries()
         for (script in KursiveClient.scripts) {
             this.addEntry(ScriptEntry(this, script))
         }
     }
 
-    fun tick() {
-        if (KursiveClient.scripts.dirty) {
-            this.refresh()
-        }
+    override fun dirty(): Boolean {
+        return KursiveClient.scripts.dirty
     }
 
-    override fun getRowWidth(): Int {
-        return 280
-    }
-
-    abstract class Entry: ContainerObjectSelectionList.Entry<Entry>()
+    abstract class Entry: ScriptsList.Entry<Entry>()
 
     class ScriptEntry(
         private val parent: ClientScriptsList,
         private val script: ScriptInstance<Minecraft>
     ): Entry() {
+        private val handle = LocalScriptHandle(this.script, KursiveClient.environment(this.parent.minecraft, listOf()))
+
         private val diagnosticIcon = this.createDiagnosticWidget()
         private val nameWidget = this.createNameWidget()
         private val compileButton = this.createCompileButton()
@@ -75,21 +66,12 @@ class ClientScriptsList(
             val toggleButtonX = this.parent.scrollBarX() - this.toggleButton.width - 10
             val buttonY = this.contentY - 2
 
-            this.toggleButton.message = if (this.script.isRunning()) Component.literal("Stop Script") else Component.literal("Start Script")
-            this.toggleButton.setTooltip(this.toggleButton.message)
             this.toggleButton.setPosition(toggleButtonX, buttonY)
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a)
 
             val compileButtonX = toggleButtonX - this.compileButton.width - 5
             this.compileButton.setPosition(compileButtonX, buttonY)
             this.compileButton.extractRenderState(graphics, mouseX, mouseY, a)
-            if (this.script.isRunning()) {
-                this.compileButton.active = false
-                this.compileButton.setTooltip(Component.literal("Cannot recompile while running"))
-            } else {
-                this.compileButton.active = true
-                this.compileButton.setTooltip(this.compileButton.message)
-            }
 
             if (this.openButton != null) {
                 val openButtonX = compileButtonX - this.openButton.width - 5
@@ -107,47 +89,28 @@ class ClientScriptsList(
         }
 
         private fun createDiagnosticWidget(): ScriptDiagnosticIcon {
-            return ScriptDiagnosticIcon(
-                this.script::isRunning,
-                this.script::isCompiled,
-                this.script::getLatestScriptDiagnostics
-            )
+            return ScriptDiagnosticIcon(this.handle)
         }
 
         private fun createNameWidget(): StringWidget {
-            val widget = StringWidget(
-                Component.literal("${this.script.definition.name}.kts"), this.parent.minecraft.font
-            )
-            this.parent.minecraft.launch {
-                val metadata = script.tryGetOrLoadMetadata() ?: return@launch
-                widget.setTooltip(Tooltip.create(Component {
-                    empty() + literal("Script Id: ") + literal(metadata.id).yellow() + nl +
-                        literal("Version: ") + literal("${metadata.version}").teal()
-                }))
-            }
-            return widget
+            return ScriptNameWidget(this.parent.minecraft.font, this.handle)
         }
 
         private fun createOpenButton(): Button? {
             if (this.script.definition is FileScriptDefinition) {
-                val path = this.script.definition.absolute
-                return SpriteIconButton.builder(Component.literal("Open Script"), {
-                    Util.getPlatform().openPath(path)
-                }, true).width(20).sprite(kursive("icon/open_file"), 16, 16).withTootip().build()
+                return OpenFileButton(Component.literal("Open Script")) {
+                    this.script.definition.absolute
+                }
             }
             return null
         }
 
         private fun createCompileButton(): Button {
-            return SpriteIconButton.builder(Component.literal("Compile Script"), {
-                this.parent.minecraft.launch { script.compile() }
-            }, true).width(20).sprite(kursive("icon/compile"), 20, 16).withTootip().build()
+            return ScriptCompileButton(this.handle)
         }
 
         private fun createToggleButton(): Button {
-            return ScriptToggleButton(
-                TogglableScript.from(this.script, KursiveClient.environment(this.parent.minecraft, listOf()))
-            )
+            return ScriptToggleButton(this.handle)
         }
     }
 }

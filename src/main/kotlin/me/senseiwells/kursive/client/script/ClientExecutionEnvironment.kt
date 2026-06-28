@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.client.script
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ClientScriptContext
 import me.senseiwells.kursive.client.KursiveClient
@@ -10,6 +11,7 @@ import me.senseiwells.kursive.common.script.data.FileBasedDataStores
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
+import net.casual.arcade.utils.coroutine.async
 import net.casual.arcade.utils.coroutine.launch
 import net.fabricmc.api.EnvType
 import net.minecraft.client.Minecraft
@@ -24,6 +26,10 @@ class ClientExecutionEnvironment(
 
     override fun launch(block: suspend CoroutineScope.() -> Unit): Job {
         return this.minecraft.launch(block)
+    }
+
+    override fun <T> async(block: suspend CoroutineScope.() -> T): Deferred<T> {
+        return this.minecraft.async(block)
     }
 
     override fun minecraftType(): KClass<Minecraft> {
