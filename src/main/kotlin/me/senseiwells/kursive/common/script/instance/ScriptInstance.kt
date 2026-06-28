@@ -130,7 +130,7 @@ class ScriptInstance<M: Any>(
 
         val start = System.currentTimeMillis()
         this.log("Starting to compile ${this.definition.name}")
-        val jar = this.getCompileJarPath()
+        val jar = this.getCompileJarPath().createParentDirectories()
         val tmp = jar.resolveSibling("${jar.name}.tmp")
         val host = BasicJvmScriptingHost(
             ScriptConfigurationUtils.HOST_CONFIGURATION, evaluator = BasicJvmScriptJarGenerator(tmp.toFile())

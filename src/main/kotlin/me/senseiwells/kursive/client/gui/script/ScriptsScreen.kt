@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.client.gui.script
 
+import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.common.utils.kursive
 import net.minecraft.client.gui.components.Button
@@ -33,7 +34,7 @@ abstract class ScriptsScreen(
 
         this.list = this.layout.addToContents(this.createScriptsList())
 
-        this.layout.addToFooter(this.createDoneButton()) { settings ->
+        this.layout.addToFooter(DoneButton(this)) { settings ->
             settings.alignHorizontallyRight().paddingRight(10)
         }
 
@@ -73,11 +74,5 @@ abstract class ScriptsScreen(
         return SpriteIconButton.builder(Component.literal("Open Scripts Directory"), {
             Util.getPlatform().openPath(directory)
         }, true).sprite(kursive("icon/open_directory"), 16, 16).size(20, 20).withTootip().build()
-    }
-
-    private fun createDoneButton(): Button {
-        return Button.builder(Component.literal("Done")) {
-            this.onClose()
-        }.size(80, 20).build()
     }
 }

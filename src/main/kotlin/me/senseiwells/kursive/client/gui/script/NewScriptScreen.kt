@@ -4,6 +4,7 @@ import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.client.utils.FilenameUtils
 import me.senseiwells.kursive.client.utils.setTooltip
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
+import net.casual.arcade.utils.component.bold
 import net.casual.arcade.utils.component.red
 import net.casual.arcade.utils.component.silver
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -28,7 +29,7 @@ class NewScriptScreen(
 
         val helper = layout.createRowHelper(3)
         helper.addChild(
-            ScaledStringWidget(Component.literal("New Script"), this.font, 1.2F),
+            StringWidget(Component.literal("New Script").bold(), this.font),
             2, layout.newCellSettings().alignHorizontallyLeft().paddingTop(45)
         )
         helper.addChild(
