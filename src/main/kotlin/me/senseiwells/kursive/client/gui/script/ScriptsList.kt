@@ -4,12 +4,17 @@ import me.senseiwells.kursive.client.gui.script.widget.ScriptCompileButton
 import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
 import me.senseiwells.kursive.client.gui.script.widget.ScriptNameWidget
 import me.senseiwells.kursive.client.gui.script.widget.ScriptToggleButton
+import me.senseiwells.kursive.client.gui.widget.OpenFileButton
+import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
+import me.senseiwells.kursive.client.script.executable.ScriptHandle
+import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.ContainerObjectSelectionList
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.network.chat.Component
 
 abstract class ScriptsList<E: ScriptsList.Entry<E>>(
     minecraft: Minecraft,
@@ -84,5 +89,17 @@ abstract class ScriptsList<E: ScriptsList.Entry<E>>(
 		fun getContentY(): Int
 
 		fun getContentYMiddle(): Int
+
+        companion object {
+            fun createOpenButton(handle: ScriptHandle): Button? {
+                if (handle is LocalScriptHandle<*>) {
+                    val definition = handle.instance.definition
+                    if (definition is FileScriptDefinition) {
+                        return OpenFileButton(Component.literal("Open Script")) { definition.absolute }
+                    }
+                }
+                return null
+            }
+        }
     }
 }

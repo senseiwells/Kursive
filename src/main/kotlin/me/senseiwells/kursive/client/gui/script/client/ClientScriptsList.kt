@@ -6,16 +6,12 @@ import me.senseiwells.kursive.client.gui.script.widget.ScriptCompileButton
 import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
 import me.senseiwells.kursive.client.gui.script.widget.ScriptNameWidget
 import me.senseiwells.kursive.client.gui.script.widget.ScriptToggleButton
-import me.senseiwells.kursive.client.gui.widget.OpenFileButton
 import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
-import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
-import net.minecraft.network.chat.Component
 
 class ClientScriptsList(
     minecraft: Minecraft,
@@ -46,7 +42,7 @@ class ClientScriptsList(
         override val nameWidget = ScriptNameWidget(this.parent.minecraft.font, this.handle)
         override val compileButton = ScriptCompileButton(this.handle)
         override val toggleButton = ScriptToggleButton(this.handle)
-        override val openButton = this.createOpenButton()
+        override val openButton = ScriptsList.ScriptEntry.createOpenButton(this.handle)
 
         override fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, hovered: Boolean, a: Float) {
             super.extractContent(graphics, mouseX, mouseY, hovered, a)
@@ -58,15 +54,6 @@ class ClientScriptsList(
 
         override fun narratables(): List<NarratableEntry> {
             return super.narratables()
-        }
-
-        private fun createOpenButton(): Button? {
-            if (this.script.definition is FileScriptDefinition) {
-                return OpenFileButton(Component.literal("Open Script")) {
-                    this.script.definition.absolute
-                }
-            }
-            return null
         }
     }
 }

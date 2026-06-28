@@ -5,8 +5,10 @@ import me.senseiwells.kursive.client.gui.script.widget.ScriptCompileButton
 import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
 import me.senseiwells.kursive.client.gui.script.widget.ScriptNameWidget
 import me.senseiwells.kursive.client.gui.script.widget.ScriptToggleButton
-import me.senseiwells.kursive.client.script.executable.RemoteScriptHandle
+import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
+import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
+import me.senseiwells.kursive.server.KursiveServer
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.events.GuiEventListener
@@ -20,8 +22,17 @@ class ServerScriptsList(
 ): ScriptsList<ServerScriptsList.Entry>(minecraft, width, height, y) {
     override fun refresh() {
         this.clearEntries()
-        for (script in ClientRemoteScriptsManager.scripts.sortedBy { it.name() }) {
-            this.addEntry(ScriptEntry(this, script))
+
+        val server = this.minecraft.singleplayerServer
+        if (server != null) {
+            for (script in KursiveServer.scripts.sortedBy { it.definition.name }) {
+                val handle = LocalScriptHandle(script, KursiveServer.environment(server, listOf()))
+                this.addEntry(ScriptEntry(this, handle))
+            }
+        } else {
+            for (script in ClientRemoteScriptsManager.scripts.sortedBy { it.name() }) {
+                this.addEntry(ScriptEntry(this, script))
+            }
         }
     }
 
@@ -33,13 +44,13 @@ class ServerScriptsList(
 
     class ScriptEntry(
         override val parent: ServerScriptsList,
-        private val handle: RemoteScriptHandle,
+        private val handle: ScriptHandle,
     ): Entry(), ScriptsList.ScriptEntry {
         override val diagnosticIcon = ScriptDiagnosticIcon(this.handle)
         override val nameWidget = ScriptNameWidget(this.parent.minecraft.font, this.handle)
         override val compileButton = ScriptCompileButton(this.handle)
         override val toggleButton = ScriptToggleButton(this.handle)
-        override val openButton = null
+        override val openButton = ScriptsList.ScriptEntry.createOpenButton(this.handle)
 
         override fun extractContent(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, hovered: Boolean, a: Float) {
             super.extractContent(graphics, mouseX, mouseY, hovered, a)

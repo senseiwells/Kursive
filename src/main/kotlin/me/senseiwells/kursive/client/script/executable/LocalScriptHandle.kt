@@ -7,13 +7,16 @@ import me.senseiwells.kursive.common.script.diagnostics.FormattedDiagnostics
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import net.casual.arcade.utils.coroutine.getNowOrNull
-import net.minecraft.client.Minecraft
 
-class LocalScriptHandle(
-    private val instance: ScriptInstance<Minecraft>,
-    private val environment: ExecutionEnvironment<Minecraft, *>
+class LocalScriptHandle<M: Any>(
+    val instance: ScriptInstance<M>,
+    private val environment: ExecutionEnvironment<M, *>
 ): ScriptHandle {
     private lateinit var metadata: CachedMetadata
+
+    override fun id(): ScriptInstance.Id {
+        return this.instance.id
+    }
 
     override fun name(): String {
         return this.instance.definition.name
@@ -53,7 +56,9 @@ class LocalScriptHandle(
     }
 
     override fun stop() {
-        this.instance.stop()
+        this.environment.launch {
+            instance.stop()
+        }
     }
 
     private data class CachedMetadata(val iteration: Int, val deferred: Deferred<ScriptMetadata?>)

@@ -23,7 +23,7 @@ import java.nio.file.Path
 
 object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, CommandSourceStack> {
     override val scripts = ScriptInstances<MinecraftServer>(FileScriptDefinitionSource { server ->
-        this.directory(server).resolve("scripts")
+        this.scriptsDirectory(server)
     })
 
     override fun onInitialize() {
@@ -58,6 +58,10 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
 
     fun directory(server: MinecraftServer): Path {
         return server.getWorldPath(LevelResource.ROOT).resolve(Kursive.MOD_ID)
+    }
+
+    fun scriptsDirectory(server: MinecraftServer): Path {
+        return this.directory(server).resolve("scripts")
     }
 
     private fun onServerStart(event: ServerStartEvent) {

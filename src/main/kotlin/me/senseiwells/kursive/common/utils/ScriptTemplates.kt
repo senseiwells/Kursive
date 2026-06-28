@@ -1,16 +1,38 @@
 package me.senseiwells.kursive.common.utils
 
+import kotlinx.io.IOException
 import me.senseiwells.kursive.annotation.KursiveScript
 import me.senseiwells.kursive.api.KursiveApi
+import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import net.casual.arcade.utils.string.CamelCase
+import java.nio.file.Path
+import kotlin.io.path.writeText
 
 object ScriptTemplates {
+    private const val DEFAULT_BODY = "// TODO: Write your code here!"
+
+    fun write(
+        path: Path,
+        minecraftType: Class<*>,
+        contextType: Class<*>,
+        imports: List<String> = listOf(),
+        body: String = DEFAULT_BODY,
+        metadata: ScriptMetadata? = null
+    ) {
+        val template = this.create(minecraftType, contextType, imports, body, metadata)
+        try {
+            path.writeText(template)
+        } catch (e: IOException) {
+            Kursive.logger.error("Failed to create script", e)
+        }
+    }
+
     fun create(
         minecraftType: Class<*>,
         contextType: Class<*>,
         imports: List<String> = listOf(),
-        body: String = "// TODO: Write your code here!",
+        body: String = DEFAULT_BODY,
         metadata: ScriptMetadata? = null
     ): String {
         val imports = mutableListOf(

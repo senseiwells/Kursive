@@ -11,11 +11,12 @@ import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.definition.resolver.ScriptDefinitionSource
 import net.minecraft.commands.SharedSuggestionProvider
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 
 class ScriptInstances<M: Any>(
     private val source: ScriptDefinitionSource<M>
 ): Iterable<ScriptInstance<M>> {
-    private val scriptsByDefinition = LinkedHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
+    private val scriptsByDefinition = ConcurrentHashMap<ScriptDefinition<M>, ScriptInstance<M>>()
     private val scriptsById = Int2ObjectOpenHashMap<ScriptInstance<M>>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -66,14 +67,17 @@ class ScriptInstances<M: Any>(
     }
 
     fun close() {
+        this.scriptsByDefinition.clear()
+        this.scriptsById.clear()
         this.source.close()
     }
 
     private fun deleteInvalidScripts(): Boolean {
         var dirty = false
-        for ((definition, instance) in this.scriptsByDefinition.toList()) {
+        val iterator = this.scriptsByDefinition.iterator()
+        for ((definition, instance) in iterator) {
             if (!definition.isValid()) {
-                this.scriptsByDefinition.remove(definition, instance)
+                iterator.remove()
                 this.scriptsById.remove(instance.id.value, instance as Any)
                 this.scope.launch { instance.delete() }
                 dirty = true

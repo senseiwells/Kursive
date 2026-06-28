@@ -2,10 +2,7 @@ package me.senseiwells.kursive.common.network.payload
 
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.CompileRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.RequestRemoteScriptsPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.StartRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.StopRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.*
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 
 internal object KursivePayloads {
@@ -15,6 +12,7 @@ internal object KursivePayloads {
 
         PayloadTypeRegistry.serverboundPlay().register(RequestRemoteScriptsPayload.TYPE, RequestRemoteScriptsPayload.STREAM_CODEC)
         PayloadTypeRegistry.serverboundPlay().register(CompileRemoteScriptPayload.TYPE, CompileRemoteScriptPayload.STREAM_CODEC)
+        PayloadTypeRegistry.serverboundPlay().register(CreateRemoteScriptPayload.TYPE, CreateRemoteScriptPayload.STREAM_CODEC)
         PayloadTypeRegistry.serverboundPlay().register(StartRemoteScriptPayload.TYPE, StartRemoteScriptPayload.STREAM_CODEC)
         PayloadTypeRegistry.serverboundPlay().register(StopRemoteScriptPayload.TYPE, StopRemoteScriptPayload.STREAM_CODEC)
     }

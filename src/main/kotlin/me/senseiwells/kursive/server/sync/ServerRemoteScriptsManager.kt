@@ -1,13 +1,13 @@
 package me.senseiwells.kursive.server.sync
 
+import me.senseiwells.kursive.api.ClientScriptContext
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.CompileRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.RequestRemoteScriptsPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.StartRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.serverbound.StopRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.*
+import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
+import me.senseiwells.kursive.common.utils.ScriptTemplates
 import me.senseiwells.kursive.common.utils.kursive
 import me.senseiwells.kursive.server.KursiveServer
 import net.casual.arcade.events.GlobalEventHandler
@@ -17,17 +17,19 @@ import net.casual.arcade.utils.coroutine.launch
 import net.casual.arcade.utils.player.username
 import net.casual.arcade.utils.server.players
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.minecraft.client.Minecraft
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.PermissionLevel
 
 object ServerRemoteScriptsManager {
     internal fun registerEvents() {
-        GlobalEventHandler.Server.register<ServerTickEvent>(::onServerTick)
+        GlobalEventHandler.Server.register<ServerTickEvent>(phase = ServerTickEvent.PHASE_POST, listener = ::onServerTick)
 
         ServerPlayNetworking.registerGlobalReceiver(RequestRemoteScriptsPayload.TYPE, ::handleRequestRemoteScripts)
 
         ServerPlayNetworking.registerGlobalReceiver(CompileRemoteScriptPayload.TYPE, ::handleCompileRemoteScript)
+        ServerPlayNetworking.registerGlobalReceiver(CreateRemoteScriptPayload.TYPE, ::handleCreateRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
     }
@@ -59,6 +61,15 @@ object ServerRemoteScriptsManager {
     private fun handleCompileRemoteScript(payload: CompileRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
             this.tryRunScriptActionAndSync(payload.id, context) { script -> script.compile() }
+        }
+    }
+
+    private fun handleCreateRemoteScript(payload: CreateRemoteScriptPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            val path = KursiveServer.scriptsDirectory(context.server()).resolve(payload.name)
+            ScriptTemplates.write(
+                path, Minecraft::class.java, ClientScriptContext::class.java, metadata = ScriptMetadata.named(payload.name)
+            )
         }
     }
 

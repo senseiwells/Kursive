@@ -32,6 +32,10 @@ class RemoteScriptHandle(
         this.diagnostics = data.diagnostics
     }
 
+    override fun id(): ScriptInstance.Id {
+        return this.id
+    }
+
     override fun name(): String {
         return this.name
     }
