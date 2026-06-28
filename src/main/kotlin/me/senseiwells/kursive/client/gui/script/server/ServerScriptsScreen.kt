@@ -1,7 +1,7 @@
-package me.senseiwells.kursive.client.gui.scripts.server
+package me.senseiwells.kursive.client.gui.script.server
 
-import me.senseiwells.kursive.client.gui.scripts.ScriptsList
-import me.senseiwells.kursive.client.gui.scripts.ScriptsScreen
+import me.senseiwells.kursive.client.gui.script.ScriptsList
+import me.senseiwells.kursive.client.gui.script.ScriptsScreen
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import java.nio.file.Path
@@ -18,7 +18,7 @@ class ServerScriptsScreen(
     }
 
     override fun createScriptsList(): ScriptsList<*> {
-        TODO("Not implemented yet")
+        return ServerScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
     }
 
     override fun getScriptsDirectory(): Path? {

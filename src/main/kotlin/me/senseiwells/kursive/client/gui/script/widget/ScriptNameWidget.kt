@@ -1,4 +1,4 @@
-package me.senseiwells.kursive.client.gui.scripts.widget
+package me.senseiwells.kursive.client.gui.script.widget
 
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.client.utils.setTooltip

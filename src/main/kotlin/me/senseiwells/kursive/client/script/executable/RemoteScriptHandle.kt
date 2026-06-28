@@ -4,6 +4,10 @@ import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 class RemoteScriptHandle: ScriptHandle {
+    override fun name(): String {
+        TODO("Not yet implemented")
+    }
+
     override fun isRunning(): Boolean {
         TODO("Not yet implemented")
     }

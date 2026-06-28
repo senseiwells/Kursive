@@ -1,10 +1,10 @@
-package me.senseiwells.kursive.client.gui.scripts.client
+package me.senseiwells.kursive.client.gui.script.client
 
 import kotlinx.io.IOException
 import me.senseiwells.kursive.api.ClientScriptContext
 import me.senseiwells.kursive.client.KursiveClient
-import me.senseiwells.kursive.client.gui.scripts.ScriptsList
-import me.senseiwells.kursive.client.gui.scripts.ScriptsScreen
+import me.senseiwells.kursive.client.gui.script.ScriptsList
+import me.senseiwells.kursive.client.gui.script.ScriptsScreen
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import me.senseiwells.kursive.common.utils.ScriptTemplates
@@ -35,7 +35,7 @@ class ClientScriptsScreen(
     }
 
     override fun createScriptsList(): ScriptsList<*> {
-        return ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight, 20)
+        return ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
     }
 
     override fun getScriptsDirectory(): Path {

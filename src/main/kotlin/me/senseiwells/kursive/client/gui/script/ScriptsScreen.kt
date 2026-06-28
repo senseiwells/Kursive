@@ -1,4 +1,4 @@
-package me.senseiwells.kursive.client.gui.scripts
+package me.senseiwells.kursive.client.gui.script
 
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.common.utils.kursive
