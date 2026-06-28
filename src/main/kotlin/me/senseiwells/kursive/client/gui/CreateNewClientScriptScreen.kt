@@ -43,8 +43,10 @@ class CreateNewClientScriptScreen(
             StringWidget(Component.literal("Name").silver(), this.font),
             2, layout.newCellSettings().alignHorizontallyLeft().paddingTop(8)
         )
-        this.nameBox = EditBox(this.font, 160, 16, Component.literal("Script Name"))
-        helper.addChild(this.nameBox, 3, layout.newCellSettings().alignHorizontallyLeft().paddingTop(1))
+        this.nameBox = helper.addChild(
+            EditBox(this.font, 160, 16, Component.literal("Script Name")),
+            3, layout.newCellSettings().alignHorizontallyLeft().paddingTop(1)
+        )
         helper.addChild(
             ScaledStringWidget(Component.literal("Creates a new .kts file in your scripts folder").silver(), this.font, 0.62F),
             3, layout.newCellSettings().alignHorizontallyLeft().paddingTop(12)
@@ -53,8 +55,7 @@ class CreateNewClientScriptScreen(
         layout.addChild(this.createCancelButton(), 4, 1) { settings ->
             settings.paddingTop(5)
         }
-        this.createButton = this.createCreateButton()
-        layout.addChild(this.createButton, 4, 2) { settings ->
+        this.createButton = layout.addChild(this.createCreateButton(), 4, 2) { settings ->
             settings.alignHorizontallyRight().paddingTop(5)
         }
 

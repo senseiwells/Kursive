@@ -2,6 +2,7 @@ package me.senseiwells.kursive.client.gui.widget
 
 import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.utils.TogglableScript
+import me.senseiwells.kursive.client.utils.setTooltip
 import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.utils.kursive
@@ -75,7 +76,7 @@ class ClientScriptsList(
             val buttonY = this.contentY - 2
 
             this.toggleButton.message = if (this.script.isRunning()) Component.literal("Stop Script") else Component.literal("Start Script")
-            this.toggleButton.setTooltip(Tooltip.create(this.toggleButton.message))
+            this.toggleButton.setTooltip(this.toggleButton.message)
             this.toggleButton.setPosition(toggleButtonX, buttonY)
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a)
 
@@ -84,10 +85,10 @@ class ClientScriptsList(
             this.compileButton.extractRenderState(graphics, mouseX, mouseY, a)
             if (this.script.isRunning()) {
                 this.compileButton.active = false
-                this.compileButton.setTooltip(Tooltip.create(Component.literal("Cannot recompile while running")))
+                this.compileButton.setTooltip(Component.literal("Cannot recompile while running"))
             } else {
                 this.compileButton.active = true
-                this.compileButton.setTooltip(null)
+                this.compileButton.setTooltip(this.compileButton.message)
             }
 
             if (this.openButton != null) {
@@ -132,7 +133,7 @@ class ClientScriptsList(
                 val path = this.script.definition.absolute
                 return SpriteIconButton.builder(Component.literal("Open Script"), {
                     Util.getPlatform().openPath(path)
-                }, true).width(20).sprite(kursive("icon/open"), 16, 16).withTootip().build()
+                }, true).width(20).sprite(kursive("icon/open_file"), 16, 16).withTootip().build()
             }
             return null
         }
