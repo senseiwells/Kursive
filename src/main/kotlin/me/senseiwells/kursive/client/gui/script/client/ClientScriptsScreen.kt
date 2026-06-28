@@ -5,6 +5,7 @@ import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.gui.script.ScriptsList
 import me.senseiwells.kursive.client.gui.script.ScriptsScreen
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.common.utils.ScriptTemplates
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
@@ -20,7 +21,7 @@ class ClientScriptsScreen(
     }
 
     override fun createNewScript(name: String) {
-        val path = this.getScriptsDirectory().resolve(name)
+        val path = this.getScriptsDirectory().resolve(ScriptFileUtils.suffixate(name))
         ScriptTemplates.write(
             path, Minecraft::class.java, ClientScriptContext::class.java, metadata = ScriptMetadata.named(name)
         )

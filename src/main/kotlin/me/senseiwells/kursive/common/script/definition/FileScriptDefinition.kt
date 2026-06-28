@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.common.script.definition
 
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import java.nio.file.Path
 import java.time.Instant
 import kotlin.io.path.deleteIfExists
@@ -47,7 +48,7 @@ class FileScriptDefinition<M: Any> private constructor(
     companion object {
         fun <M: Any> of(path: Path, origin: Path, compiled: Path): FileScriptDefinition<M> {
             val relativized = origin.relativize(path)
-            return FileScriptDefinition(path, relativized.pathString.removeSuffix(".main.kts"), compiled)
+            return FileScriptDefinition(path, relativized.pathString.removeSuffix(ScriptFileUtils.SUFFIX), compiled)
         }
     }
 }

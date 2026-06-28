@@ -3,6 +3,7 @@ package me.senseiwells.kursive.common.script.definition.resolver
 import kotlinx.coroutines.*
 import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import java.nio.file.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -86,6 +87,6 @@ class FileScriptDefinitionSource<M: Any>(
     }
 
     private fun isScriptFile(path: Path): Boolean {
-        return path.name.endsWith(".main.kts")
+        return path.name.endsWith(ScriptFileUtils.SUFFIX)
     }
 }

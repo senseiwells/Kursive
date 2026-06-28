@@ -3,6 +3,7 @@ package me.senseiwells.kursive.client.gui.script
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.client.utils.FilenameUtils
 import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import net.casual.arcade.utils.component.red
 import net.casual.arcade.utils.component.silver
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -94,10 +95,10 @@ class NewScriptScreen(
 
     private fun getScriptName(): String {
         val name = this.nameBox.value
-        if (name.endsWith(".main.kts")) {
+        if (name.endsWith(ScriptFileUtils.SUFFIX)) {
             return name
         }
-        return "${name.removeSuffix(".kts")}.main.kts"
+        return "${name.removeSuffix(".kts")}${ScriptFileUtils.SUFFIX}"
     }
 
     private fun createCancelButton(): Button {
@@ -108,7 +109,7 @@ class NewScriptScreen(
 
     private fun createCreateButton(): Button {
         return Button.builder(Component.literal("Create")) {
-            this.parent.createNewScript(this.getScriptName())
+            this.parent.createNewScript(this.getScriptName().removeSuffix(ScriptFileUtils.SUFFIX))
             this.onClose()
         }.width(50).build()
     }

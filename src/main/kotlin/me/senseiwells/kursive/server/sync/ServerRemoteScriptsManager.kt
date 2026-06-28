@@ -7,6 +7,7 @@ import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScr
 import me.senseiwells.kursive.common.network.payload.serverbound.*
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.common.utils.ScriptTemplates
 import me.senseiwells.kursive.common.utils.kursive
 import me.senseiwells.kursive.server.KursiveServer
@@ -66,7 +67,7 @@ object ServerRemoteScriptsManager {
 
     private fun handleCreateRemoteScript(payload: CreateRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            val path = KursiveServer.scriptsDirectory(context.server()).resolve(payload.name)
+            val path = KursiveServer.scriptsDirectory(context.server()).resolve(ScriptFileUtils.suffixate(payload.name))
             ScriptTemplates.write(
                 path, Minecraft::class.java, ClientScriptContext::class.java, metadata = ScriptMetadata.named(payload.name)
             )
