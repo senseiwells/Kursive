@@ -11,6 +11,10 @@ class ClientScriptsList(
     height: Int,
     y: Int
 ): ScriptsList(minecraft, width, height, y) {
+    init {
+        this.refresh()
+    }
+
     override fun refresh() {
         this.clearEntries()
         val environment = KursiveClient.environment(this.minecraft, listOf())
@@ -21,5 +25,9 @@ class ClientScriptsList(
 
     override fun dirty(): Boolean {
         return KursiveClient.scripts.dirty
+    }
+
+    override fun downloader(): DownloadHandler? {
+        return null
     }
 }

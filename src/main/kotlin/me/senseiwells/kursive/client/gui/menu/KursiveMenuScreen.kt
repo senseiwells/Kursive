@@ -27,7 +27,7 @@ class KursiveMenuScreen(
             settings.paddingTop(16)
         }
 
-        this.layout.addToFooter(DoneButton(this, 120))
+        this.layout.addToFooter(DoneButton(this, width = 120))
 
         this.layout.addToContents(this.createCardGrid())
 

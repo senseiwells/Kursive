@@ -4,6 +4,7 @@ import me.senseiwells.kursive.api.ServerScriptContext
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.common.RemoteScriptContentsPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.*
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
@@ -31,6 +32,7 @@ object ServerRemoteScriptsManager {
 
         ServerPlayNetworking.registerGlobalReceiver(CompileRemoteScriptPayload.TYPE, ::handleCompileRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(CreateRemoteScriptPayload.TYPE, ::handleCreateRemoteScript)
+        ServerPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleDownloadRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
     }
@@ -78,6 +80,15 @@ object ServerRemoteScriptsManager {
             ScriptTemplates.write(
                 path, MinecraftServer::class.java, ServerScriptContext::class.java, metadata = ScriptMetadata.named(payload.name)
             )
+        }
+    }
+
+    private fun handleDownloadRemoteScript(payload: DownloadRemoteScriptPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            val script = KursiveServer.scripts.find(payload.id) ?: return
+            val contents = script.definition.getSource().text.encodeToByteArray()
+            val name = payload.name ?: script.definition.name
+            context.responseSender().sendPacket(RemoteScriptContentsPayload(name, contents))
         }
     }
 

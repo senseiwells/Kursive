@@ -5,6 +5,7 @@ import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
 import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.server.script.ServerExecutionEnvironment
 import me.senseiwells.kursive.server.sync.ServerRemoteScriptsManager
 import net.casual.arcade.commands.registerLiteral
@@ -59,7 +60,7 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
     }
 
     fun scriptsDirectory(server: MinecraftServer): Path {
-        return this.directory(server).resolve("scripts")
+        return this.directory(server).resolve(ScriptFileUtils.SCRIPTS_DIRECTORY)
     }
 
     private fun onServerStart(event: ServerStartEvent) {

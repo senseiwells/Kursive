@@ -8,6 +8,7 @@ import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
 import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
+import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import net.casual.arcade.commands.registerLiteral
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
@@ -17,6 +18,7 @@ import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 import java.nio.file.Path
+import kotlin.io.path.exists
 
 object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, ClientCommandSource> {
     override val scripts = ScriptInstances<Minecraft>(FileScriptDefinitionSource(this.scriptsDirectory()))
@@ -56,7 +58,19 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
     }
 
     fun scriptsDirectory(): Path {
-        return this.directory().resolve("scripts")
+        return this.directory().resolve(ScriptFileUtils.SCRIPTS_DIRECTORY)
+    }
+
+    fun doesScriptExist(name: String): Boolean {
+        return this.scriptsDirectory().resolve(name).exists()
+    }
+
+    fun remoteScriptsDirectory(): Path {
+        return this.directory().resolve("sync").resolve(ScriptFileUtils.SCRIPTS_DIRECTORY)
+    }
+
+    fun doesRemoteScriptExist(name: String): Boolean {
+        return this.remoteScriptsDirectory().resolve(name).exists()
     }
 
     private fun onClientStart(@Suppress("Unused") minecraft: Minecraft) {

@@ -11,13 +11,12 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 import java.nio.file.Path
-import kotlin.io.path.exists
 
 class ClientScriptsScreen(
     parent: Screen? = null
 ): ScriptsScreen(Component.literal("Kursive Client Scripts"), parent) {
     override fun doesScriptExist(name: String): Boolean {
-        return this.getScriptsDirectory().resolve(name).exists()
+        return KursiveClient.doesScriptExist(name)
     }
 
     override fun createNewScript(name: String) {

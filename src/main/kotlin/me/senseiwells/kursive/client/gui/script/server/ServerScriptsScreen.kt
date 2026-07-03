@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.client.gui.script.server
 
+import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.gui.script.ScriptsList
 import me.senseiwells.kursive.client.gui.script.ScriptsScreen
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
@@ -27,7 +28,7 @@ class ServerScriptsScreen(
     }
 
     override fun createScriptsList(): ScriptsList {
-        return ServerScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
+        return ServerScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight, this)
     }
 
     override fun getScriptsDirectory(): Path? {

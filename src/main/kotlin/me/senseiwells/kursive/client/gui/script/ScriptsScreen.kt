@@ -1,5 +1,7 @@
 package me.senseiwells.kursive.client.gui.script
 
+import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
+import me.senseiwells.kursive.client.gui.script.server.UploadScriptsScreen
 import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.common.utils.kursive
@@ -22,13 +24,25 @@ abstract class ScriptsScreen(
         this.layout.addToHeader(ScaledStringWidget(this.title, this.font, 1.5F)) { settings ->
             settings.alignHorizontallyLeft().paddingLeft(15).paddingBottom(6)
         }
+
+        var paddingRight = 10
         this.layout.addToHeader(this.createNewScriptButton()) { settings ->
-            settings.alignHorizontallyRight().paddingRight(10).paddingBottom(2)
+            settings.alignHorizontallyRight().paddingRight(paddingRight).paddingBottom(2)
         }
+
+        val uploadScriptsButton = this.createUploadScriptsButton()
+        if (uploadScriptsButton != null) {
+            paddingRight += uploadScriptsButton.width + 5
+            this.layout.addToHeader(uploadScriptsButton) { settings ->
+                settings.alignHorizontallyRight().paddingRight(paddingRight).paddingBottom(2)
+            }
+        }
+
         val openScriptsDirectoryButton = this.createOpenScriptsDirectoryButton()
         if (openScriptsDirectoryButton != null) {
+            paddingRight += openScriptsDirectoryButton.width + 5
             this.layout.addToHeader(openScriptsDirectoryButton) { settings ->
-                settings.alignHorizontallyRight().paddingRight(35).paddingBottom(2)
+                settings.alignHorizontallyRight().paddingRight(paddingRight).paddingBottom(2)
             }
         }
 
@@ -74,5 +88,14 @@ abstract class ScriptsScreen(
         return SpriteIconButton.builder(Component.literal("Open Scripts Directory"), {
             Util.getPlatform().openPath(directory)
         }, true).sprite(kursive("icon/open_directory"), 16, 16).size(20, 20).withTootip().build()
+    }
+
+    private fun createUploadScriptsButton(): Button? {
+        if (this is ServerScriptsScreen) {
+            return SpriteIconButton.builder(Component.literal("Upload Scripts"), {
+                this.minecraft.gui.setScreen(UploadScriptsScreen(this))
+            }, true).sprite(kursive("icon/upload"), 16, 16).size(20, 20).withTootip().build()
+        }
+        return null
     }
 }
