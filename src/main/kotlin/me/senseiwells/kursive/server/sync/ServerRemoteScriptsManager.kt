@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.server.sync
 
 import me.senseiwells.kursive.api.ServerScriptContext
+import me.senseiwells.kursive.api.utils.ScriptType
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
@@ -23,6 +24,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.PermissionLevel
+import kotlin.io.path.writeBytes
 
 object ServerRemoteScriptsManager {
     internal fun registerEvents() {
@@ -35,6 +37,8 @@ object ServerRemoteScriptsManager {
         ServerPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleDownloadRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
+
+        ServerPlayNetworking.registerGlobalReceiver(RemoteScriptContentsPayload.TYPE, ::handleRemoteScriptContents)
     }
 
     @Suppress("UnstableApiUsage")
@@ -78,7 +82,7 @@ object ServerRemoteScriptsManager {
         if (this.isPermitted(context.player())) {
             val path = KursiveServer.scriptsDirectory(context.server()).resolve(ScriptFileUtils.suffixate(payload.name))
             ScriptTemplates.write(
-                path, MinecraftServer::class.java, ServerScriptContext::class.java, metadata = ScriptMetadata.named(payload.name)
+                path, MinecraftServer::class.java, ServerScriptContext::class.java, metadata = ScriptMetadata.named(payload.name, ScriptType.Server)
             )
         }
     }
@@ -86,9 +90,7 @@ object ServerRemoteScriptsManager {
     private fun handleDownloadRemoteScript(payload: DownloadRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
             val script = KursiveServer.scripts.find(payload.id) ?: return
-            val contents = script.definition.getSource().text.encodeToByteArray()
-            val name = payload.name ?: script.definition.name
-            context.responseSender().sendPacket(RemoteScriptContentsPayload(name, contents))
+            context.responseSender().sendPacket(RemoteScriptContentsPayload.from(script.definition, payload.name))
         }
     }
 
@@ -103,6 +105,13 @@ object ServerRemoteScriptsManager {
     private fun handleStopRemoteScript(payload: StopRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
             this.tryRunScriptAction(payload.id, context) { script -> script.stop() }
+        }
+    }
+
+    private fun handleRemoteScriptContents(payload: RemoteScriptContentsPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            val path = KursiveServer.scriptsDirectory(context.server()).resolve(ScriptFileUtils.suffixate(payload.name))
+            path.writeBytes(payload.contents)
         }
     }
 

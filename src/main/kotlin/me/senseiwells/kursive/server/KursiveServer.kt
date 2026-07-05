@@ -2,7 +2,7 @@ package me.senseiwells.kursive.server
 
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
-import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
+import me.senseiwells.kursive.common.script.definition.resolver.PolledFileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
@@ -14,6 +14,7 @@ import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.server.ServerStartEvent
 import net.casual.arcade.events.server.ServerStopEvent
 import net.casual.arcade.events.server.ServerTickEvent
+import net.casual.arcade.utils.coroutine.launch
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.commands.CommandSourceStack
@@ -66,10 +67,13 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
     private fun onServerStart(event: ServerStartEvent) {
         val server = event.server
         this.scripts = ScriptInstances(
-            FileScriptDefinitionSource(this.scriptsDirectory(server))
+            PolledFileScriptDefinitionSource(this.scriptsDirectory(server))
         ) { script -> ServerRemoteScriptsManager.synchronize(server, script) }
 
-        this.scripts.initialize()
+        this.scripts.initialize(true)
+        server.launch {
+            scripts.start(environment(server, listOf()))
+        }
     }
 
     private fun onServerTick(@Suppress("Unused") event: ServerTickEvent) {

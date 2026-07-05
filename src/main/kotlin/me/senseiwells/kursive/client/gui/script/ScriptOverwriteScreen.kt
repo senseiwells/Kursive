@@ -42,6 +42,7 @@ class ScriptOverwriteScreen(
     private fun createOverwriteButton(): Button {
         return Button.builder(Component.literal("Overwrite")) {
             this.action.invoke(null)
+            this.onClose()
         }.width(60).build()
     }
 

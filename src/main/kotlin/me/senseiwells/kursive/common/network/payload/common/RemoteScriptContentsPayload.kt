@@ -1,9 +1,11 @@
 package me.senseiwells.kursive.common.network.payload.common
 
+import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.utils.kursive
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
+import net.minecraft.server.MinecraftServer
 
 class RemoteScriptContentsPayload(
     val name: String,
@@ -21,5 +23,10 @@ class RemoteScriptContentsPayload(
             ByteBufCodecs.BYTE_ARRAY, RemoteScriptContentsPayload::contents,
             ::RemoteScriptContentsPayload
         )
+
+        fun from(definition: ScriptDefinition<MinecraftServer>, name: String? = null): RemoteScriptContentsPayload {
+            val contents = definition.getSource().text.encodeToByteArray()
+            return RemoteScriptContentsPayload(name ?: definition.name, contents)
+        }
     }
 }

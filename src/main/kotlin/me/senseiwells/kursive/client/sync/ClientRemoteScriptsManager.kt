@@ -27,6 +27,10 @@ object ClientRemoteScriptsManager {
     var dirty = false
         private set
 
+    fun doesScriptExist(name: String): Boolean {
+        return this.scripts.any { handle -> handle.name() == name }
+    }
+
     internal fun registerEvents() {
         ClientPlayConnectionEvents.JOIN.register(::onPlayerJoin)
         ClientPlayConnectionEvents.DISCONNECT.register(::onPlayerLeave)
@@ -34,6 +38,7 @@ object ClientRemoteScriptsManager {
 
         ClientPlayNetworking.registerGlobalReceiver(ListRemoteScriptsPayload.TYPE, ::handleListRemoteScripts)
         ClientPlayNetworking.registerGlobalReceiver(UpdateRemoteScriptPayload.TYPE, ::handleUpdateRemoteScript)
+
         ClientPlayNetworking.registerGlobalReceiver(RemoteScriptContentsPayload.TYPE, ::handleRemoteScriptContents)
     }
 

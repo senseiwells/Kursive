@@ -88,8 +88,8 @@ dependencies {
     include(implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlinVersion")!!)
     // shade(implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies-maven")!!)
 
+    include(implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")!!)
     include("org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion")
-    include("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
     include("org.jetbrains.kotlin:kotlin-build-tools-api:$kotlinVersion")
     include("org.jetbrains.kotlin:kotlin-daemon-embeddable:$kotlinVersion")
     include("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlinVersion")

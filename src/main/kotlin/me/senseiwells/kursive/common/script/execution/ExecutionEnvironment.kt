@@ -4,15 +4,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import me.senseiwells.kursive.api.ScriptContext
+import me.senseiwells.kursive.api.utils.ScriptType
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
-import net.fabricmc.api.EnvType
 import kotlin.reflect.KClass
 
 abstract class ExecutionEnvironment<M: Any, C: ScriptContext>(
     val minecraft: M,
     val args: List<String>
 ) {
-    abstract val type: EnvType
+    abstract val type: ScriptType
 
     fun invoke(entrypoint: ScriptEntrypoint<M>, metadata: ScriptMetadata): Job {
         val context = this.createContext(metadata)

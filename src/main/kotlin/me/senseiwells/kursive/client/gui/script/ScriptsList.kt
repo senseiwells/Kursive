@@ -23,7 +23,7 @@ abstract class ScriptsList(
     width: Int,
     height: Int,
     y: Int
-): ContainerObjectSelectionList<ScriptsList.Entry>(minecraft, width, height, y, 20) {
+): ContainerObjectSelectionList<ScriptsList.Entry>(minecraft, width, height, y, 22) {
     abstract fun refresh()
 
     fun tick() {
@@ -70,18 +70,18 @@ abstract class ScriptsList(
             this.toggleButton.setPosition(buttonX, buttonY)
             this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a)
 
-            buttonX = buttonX - this.compileButton.width - 5
+            buttonX -= this.compileButton.width + 5
             this.compileButton.setPosition(buttonX, buttonY)
             this.compileButton.extractRenderState(graphics, mouseX, mouseY, a)
 
             if (this.downloadButton != null) {
-                buttonX = buttonX - this.downloadButton.width - 5
+                buttonX -= this.downloadButton.width + 5
                 this.downloadButton.setPosition(buttonX, buttonY)
                 this.downloadButton.extractRenderState(graphics, mouseX, mouseY, a)
             }
 
             if (this.openButton != null) {
-                buttonX = buttonX - this.openButton.width - 5
+                buttonX -= this.openButton.width + 5
                 this.openButton.setPosition(buttonX, buttonY)
                 this.openButton.extractRenderState(graphics, mouseX, mouseY, a)
             }

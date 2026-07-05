@@ -1,8 +1,9 @@
 package me.senseiwells.kursive.client.gui.script
 
 import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
-import me.senseiwells.kursive.client.gui.script.server.UploadScriptsScreen
+import me.senseiwells.kursive.client.gui.script.server.SavedServerScriptsScreen
 import me.senseiwells.kursive.client.gui.widget.DoneButton
+import me.senseiwells.kursive.client.gui.widget.OpenDirectoryButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.common.utils.kursive
 import net.minecraft.client.gui.components.Button
@@ -10,7 +11,6 @@ import net.minecraft.client.gui.components.SpriteIconButton
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
-import net.minecraft.util.Util
 import java.nio.file.Path
 
 abstract class ScriptsScreen(
@@ -85,15 +85,13 @@ abstract class ScriptsScreen(
 
     private fun createOpenScriptsDirectoryButton(): Button? {
         val directory = this.getScriptsDirectory() ?: return null
-        return SpriteIconButton.builder(Component.literal("Open Scripts Directory"), {
-            Util.getPlatform().openPath(directory)
-        }, true).sprite(kursive("icon/open_directory"), 16, 16).size(20, 20).withTootip().build()
+        return OpenDirectoryButton(Component.literal("Open Scripts Directory")) { directory }
     }
 
     private fun createUploadScriptsButton(): Button? {
         if (this is ServerScriptsScreen) {
             return SpriteIconButton.builder(Component.literal("Upload Scripts"), {
-                this.minecraft.gui.setScreen(UploadScriptsScreen(this))
+                this.minecraft.gui.setScreen(SavedServerScriptsScreen(this))
             }, true).sprite(kursive("icon/upload"), 16, 16).size(20, 20).withTootip().build()
         }
         return null

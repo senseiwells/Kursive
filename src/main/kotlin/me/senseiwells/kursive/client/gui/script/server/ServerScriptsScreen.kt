@@ -1,6 +1,5 @@
 package me.senseiwells.kursive.client.gui.script.server
 
-import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.gui.script.ScriptsList
 import me.senseiwells.kursive.client.gui.script.ScriptsScreen
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
@@ -20,7 +19,7 @@ class ServerScriptsScreen(
         if (directory != null) {
             return directory.resolve(name).exists()
         }
-        return ClientRemoteScriptsManager.scripts.any { handle -> handle.name() == name }
+        return ClientRemoteScriptsManager.doesScriptExist(name)
     }
 
     override fun createNewScript(name: String) {

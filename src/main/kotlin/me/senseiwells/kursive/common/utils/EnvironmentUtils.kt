@@ -2,17 +2,20 @@ package me.senseiwells.kursive.common.utils
 
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.Version
+import net.fabricmc.loader.api.metadata.version.VersionPredicate
 import kotlin.script.experimental.api.ScriptDiagnostic
 
 object EnvironmentUtils {
     private val minecraft by lazy { FabricLoader.getInstance().getModContainer("minecraft").get() }
 
-    fun getDiagnosticsForTarget(target: Version): List<ScriptDiagnostic> {
-        val comparison = target.compareTo(minecraft.metadata.version)
-        return when {
-            comparison > 0 -> listOf("Script was made for a newer version of Minecraft".asWarningDiagnostics())
-            comparison < 0 -> listOf("Script was made for an older version of Minecraft".asWarningDiagnostics())
-            else -> emptyList()
+    fun getCurrentMinecraftVersion(): Version {
+        return this.minecraft.metadata.version
+    }
+
+    fun getDiagnosticsForTarget(target: VersionPredicate): List<ScriptDiagnostic> {
+        if (!target.test(this.getCurrentMinecraftVersion())) {
+            return listOf("Script was made for a different version of Minecraft".asWarningDiagnostics())
         }
+        return listOf()
     }
 }

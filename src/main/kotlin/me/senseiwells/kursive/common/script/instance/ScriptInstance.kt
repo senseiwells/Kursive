@@ -10,7 +10,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import me.senseiwells.kursive.api.ScriptContext
 import me.senseiwells.kursive.common.Kursive
-import me.senseiwells.kursive.common.script.configuration.*
+import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
+import me.senseiwells.kursive.common.script.configuration.ScriptWithClassloaderEvaluationConfiguration
+import me.senseiwells.kursive.common.script.configuration.ScriptWithClasspathCompilationConfiguration
+import me.senseiwells.kursive.common.script.configuration.scriptMetadata
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.execution.ScriptEntrypoint
@@ -98,6 +101,19 @@ class ScriptInstance<M: Any>(
         return !this.shouldRecompile()
     }
 
+    fun shouldRecompile(): Boolean {
+        val jar = this.getCompileJarPath()
+        if (jar.isRegularFile()) {
+            try {
+                val lastModifiedTime = jar.readAttributes<BasicFileAttributes>().lastModifiedTime()
+                return lastModifiedTime.toInstant() < this.definition.lastSourceUpdate()
+            } catch (_: IOException) {
+
+            }
+        }
+        return true
+    }
+
     suspend fun delete() {
         this.mutex.withLock {
             this.job?.join()
@@ -160,19 +176,6 @@ class ScriptInstance<M: Any>(
         }
     }
 
-    private fun shouldRecompile(): Boolean {
-        val jar = this.getCompileJarPath()
-        if (jar.isRegularFile()) {
-            try {
-                val lastModifiedTime = jar.readAttributes<BasicFileAttributes>().lastModifiedTime()
-                return lastModifiedTime.toInstant() < this.definition.lastSourceUpdate()
-            } catch (_: IOException) {
-
-            }
-        }
-        return true
-    }
-
     private fun getCompileJarPath(): Path {
         return this.definition.getCompileDirectoryPath().resolve("${this.definition.name}.jar")
     }
@@ -180,7 +183,7 @@ class ScriptInstance<M: Any>(
     private suspend fun getOrFindEntrypoint(
         environment: ExecutionEnvironment<M, *>
     ): ResultWithDiagnostics<EntrypointWithMetadata<M>> {
-        val (script, klass, metadata) = this.getOrLoadScript()
+        val (_, klass, metadata) = this.getOrLoadScript()
             .onFailure { return ResultWithDiagnostics.Failure(it.reports) }
             .valueOrThrow()
 
@@ -190,15 +193,12 @@ class ScriptInstance<M: Any>(
         }
 
         val diagnostics = ArrayList<ScriptDiagnostic>()
-        val env = script.compilationConfiguration[ScriptCompilationConfiguration.environment]
-        if (env != null) {
-            if (environment.type != env.type) {
-                return makeFailureResult(
-                    "Script marked for ${env.type.name} environment, but running on ${environment.type}"
-                )
-            }
-            diagnostics.addAll(EnvironmentUtils.getDiagnosticsForTarget(env.version))
+        if (!metadata.type.compatible(environment.type)) {
+            return makeFailureResult(
+                "Script marked for ${metadata.type.name} environment, but running on ${environment.type}"
+            )
         }
+        diagnostics.addAll(EnvironmentUtils.getDiagnosticsForTarget(metadata.minecraftVersion))
         return diagnostics + findEntrypoint(environment, klass).onSuccess { entrypoint ->
             this.entrypoint = entrypoint
             EntrypointWithMetadata(entrypoint, metadata).asSuccess()

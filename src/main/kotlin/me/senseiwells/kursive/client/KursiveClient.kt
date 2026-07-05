@@ -5,11 +5,12 @@ import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
 import me.senseiwells.kursive.client.utils.ClientCommandSource
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
-import me.senseiwells.kursive.common.script.definition.resolver.FileScriptDefinitionSource
+import me.senseiwells.kursive.common.script.definition.resolver.PolledFileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import net.casual.arcade.commands.registerLiteral
+import net.casual.arcade.utils.coroutine.launch
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
@@ -21,7 +22,7 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 
 object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, ClientCommandSource> {
-    override val scripts = ScriptInstances<Minecraft>(FileScriptDefinitionSource(this.scriptsDirectory()))
+    override val scripts = ScriptInstances<Minecraft>(PolledFileScriptDefinitionSource(this.scriptsDirectory()))
 
     override fun onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
@@ -35,6 +36,8 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         ClientLifecycleEvents.CLIENT_STOPPING.register(::onClientStop)
 
         ClientRemoteScriptsManager.registerEvents()
+
+        this.scripts.initialize(true)
     }
 
     override fun environment(minecraft: Minecraft, args: List<String>): ExecutionEnvironment<Minecraft, *> {
@@ -73,8 +76,10 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         return this.remoteScriptsDirectory().resolve(name).exists()
     }
 
-    private fun onClientStart(@Suppress("Unused") minecraft: Minecraft) {
-        this.scripts.initialize()
+    private fun onClientStart(minecraft: Minecraft) {
+        minecraft.launch {
+            scripts.start(environment(minecraft, listOf()))
+        }
     }
 
     private fun onClientTick(@Suppress("Unused") minecraft: Minecraft) {

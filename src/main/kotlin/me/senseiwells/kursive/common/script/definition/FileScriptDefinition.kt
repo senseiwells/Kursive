@@ -12,8 +12,8 @@ import kotlin.script.experimental.host.toScriptSource
 
 class FileScriptDefinition<M: Any> private constructor(
     val absolute: Path,
-    val path: String,
-    val compiled: Path,
+    private val path: String,
+    private val compiled: Path
 ): ScriptDefinition<M> {
     override val name: String = this.path
 
@@ -48,7 +48,8 @@ class FileScriptDefinition<M: Any> private constructor(
     companion object {
         fun <M: Any> of(path: Path, origin: Path, compiled: Path): FileScriptDefinition<M> {
             val relativized = origin.relativize(path)
-            return FileScriptDefinition(path, relativized.pathString.removeSuffix(ScriptFileUtils.SUFFIX), compiled)
+            val name = relativized.pathString.removeSuffix(ScriptFileUtils.SUFFIX)
+            return FileScriptDefinition(path, name, compiled)
         }
     }
 }
