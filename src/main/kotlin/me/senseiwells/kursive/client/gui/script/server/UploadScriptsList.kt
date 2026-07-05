@@ -59,11 +59,11 @@ class UploadScriptsList(
         }
 
         override fun children(): List<GuiEventListener> {
-            return listOfNotNull(this.nameWidget, this.uploadButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.uploadButton)
         }
 
         override fun narratables(): List<NarratableEntry> {
-            return listOfNotNull(this.nameWidget, this.uploadButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.uploadButton)
         }
 
         private fun createOpenButton(): Button? {

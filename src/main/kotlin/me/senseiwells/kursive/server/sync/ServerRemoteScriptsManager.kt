@@ -34,6 +34,7 @@ object ServerRemoteScriptsManager {
 
         ServerPlayNetworking.registerGlobalReceiver(CompileRemoteScriptPayload.TYPE, ::handleCompileRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(CreateRemoteScriptPayload.TYPE, ::handleCreateRemoteScript)
+        ServerPlayNetworking.registerGlobalReceiver(DeleteRemoteScriptPayload.TYPE, ::handleDeleteRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleDownloadRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
@@ -84,6 +85,12 @@ object ServerRemoteScriptsManager {
             ScriptTemplates.write(
                 path, MinecraftServer::class.java, ServerScriptContext::class.java, metadata = ScriptMetadata.named(payload.name, ScriptType.Server)
             )
+        }
+    }
+
+    private fun handleDeleteRemoteScript(payload: DeleteRemoteScriptPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            this.tryRunScriptAction(payload.id, context) { script -> script.delete() }
         }
     }
 

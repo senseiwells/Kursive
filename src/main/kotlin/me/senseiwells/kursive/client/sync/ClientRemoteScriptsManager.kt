@@ -58,6 +58,8 @@ object ClientRemoteScriptsManager {
     }
 
     private fun handleListRemoteScripts(payload: ListRemoteScriptsPayload, context: ClientPlayNetworking.Context) {
+        this.handles.clear()
+
         val sender = context.responseSender()
         for ((id, script) in payload.scripts) {
             this.handles[id.value] = RemoteScriptHandle(id, script, sender::sendPacket)

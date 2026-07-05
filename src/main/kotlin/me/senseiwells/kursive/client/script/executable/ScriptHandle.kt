@@ -23,6 +23,8 @@ interface ScriptHandle {
 
     fun stop()
 
+    fun delete()
+
     fun toggle() {
         if (this.isRunning()) {
             this.stop()

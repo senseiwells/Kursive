@@ -1,12 +1,9 @@
 package me.senseiwells.kursive.common.script.instance
 
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import me.senseiwells.kursive.api.ScriptContext
 import me.senseiwells.kursive.common.Kursive
@@ -116,7 +113,7 @@ class ScriptInstance<M: Any>(
 
     suspend fun delete() {
         this.mutex.withLock {
-            this.job?.join()
+            this.job?.cancelAndJoin()
             this.definition.delete()
             this.closeLoadedScript()
             this.getCompileJarPath().deleteIfExists()

@@ -28,7 +28,7 @@ class ClientScriptsScreen(
     }
 
     override fun createScriptsList(): ScriptsList {
-        return ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight)
+        return ClientScriptsList(this.minecraft, this.width, this.layout.contentHeight, this.layout.headerHeight, this)
     }
 
     override fun getScriptsDirectory(): Path {

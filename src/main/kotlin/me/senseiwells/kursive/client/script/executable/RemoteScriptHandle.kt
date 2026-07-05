@@ -2,6 +2,7 @@ package me.senseiwells.kursive.client.script.executable
 
 import me.senseiwells.kursive.common.network.data.RemoteScriptData
 import me.senseiwells.kursive.common.network.payload.serverbound.CompileRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.DeleteRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.StartRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.StopRemoteScriptPayload
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
@@ -66,6 +67,10 @@ class RemoteScriptHandle(
 
     override fun stop() {
         this.sender.send(StopRemoteScriptPayload(this.id))
+    }
+
+    override fun delete() {
+        this.sender.send(DeleteRemoteScriptPayload(this.id))
     }
 
     fun interface PayloadSender {

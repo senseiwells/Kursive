@@ -1,7 +1,7 @@
 package me.senseiwells.kursive.client.gui.script
 
-import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
 import me.senseiwells.kursive.client.gui.script.server.SavedServerScriptsScreen
+import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
 import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.OpenDirectoryButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
@@ -47,6 +47,7 @@ abstract class ScriptsScreen(
         }
 
         this.list = this.layout.addToContents(this.createScriptsList())
+        this.list.refresh()
 
         this.layout.addToFooter(DoneButton(this)) { settings ->
             settings.alignHorizontallyRight().paddingRight(10)
@@ -58,6 +59,12 @@ abstract class ScriptsScreen(
 
     override fun tick() {
         this.list.tick()
+    }
+
+    override fun added() {
+        if (this::list.isInitialized) {
+            this.list.refresh()
+        }
     }
 
     override fun repositionElements() {
@@ -79,7 +86,7 @@ abstract class ScriptsScreen(
 
     private fun createNewScriptButton(): Button {
         return SpriteIconButton.builder(Component.literal("Create New Script"), {
-            this.minecraft.gui.setScreen(NewScriptScreen(this))
+            this.minecraft.gui.setScreen(ScriptCreationScreen(this))
         }, true).sprite(kursive("icon/create"), 16, 16).size(20, 20).withTootip().build()
     }
 

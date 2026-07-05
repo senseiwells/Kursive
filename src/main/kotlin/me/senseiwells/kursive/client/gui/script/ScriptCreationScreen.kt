@@ -3,7 +3,7 @@ package me.senseiwells.kursive.client.gui.script
 import net.minecraft.client.gui.components.Button
 import net.minecraft.network.chat.Component
 
-class NewScriptScreen(
+class ScriptCreationScreen(
     override val parent: ScriptsScreen
 ): ScriptNamingScreen(Component.literal("Create New Script")) {
     override fun description(): Component {

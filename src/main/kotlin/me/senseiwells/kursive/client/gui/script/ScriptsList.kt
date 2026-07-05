@@ -1,9 +1,6 @@
 package me.senseiwells.kursive.client.gui.script
 
-import me.senseiwells.kursive.client.gui.script.widget.ScriptCompileButton
-import me.senseiwells.kursive.client.gui.script.widget.ScriptDiagnosticIcon
-import me.senseiwells.kursive.client.gui.script.widget.ScriptNameWidget
-import me.senseiwells.kursive.client.gui.script.widget.ScriptToggleButton
+import me.senseiwells.kursive.client.gui.script.widget.*
 import me.senseiwells.kursive.client.gui.widget.OpenFileButton
 import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
@@ -16,13 +13,15 @@ import net.minecraft.client.gui.components.ContainerObjectSelectionList
 import net.minecraft.client.gui.components.SpriteIconButton
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 
 abstract class ScriptsList(
     minecraft: Minecraft,
     width: Int,
     height: Int,
-    y: Int
+    y: Int,
+    protected val parent: Screen
 ): ContainerObjectSelectionList<ScriptsList.Entry>(minecraft, width, height, y, 22) {
     abstract fun refresh()
 
@@ -33,7 +32,7 @@ abstract class ScriptsList(
     }
 
     override fun getRowWidth(): Int {
-        return 280
+        return 300
     }
 
     protected abstract fun dirty(): Boolean
@@ -47,13 +46,14 @@ abstract class ScriptsList(
     abstract class Entry: ContainerObjectSelectionList.Entry<Entry>()
 
     class ScriptEntry(
-        private val parent: ScriptsList,
+        private val list: ScriptsList,
         private val handle: ScriptHandle
     ): Entry() {
         private val diagnosticIcon = ScriptDiagnosticIcon(this.handle)
-        private val nameWidget = ScriptNameWidget(this.parent.minecraft.font, this.handle)
+        private val nameWidget = ScriptNameWidget(this.list.minecraft.font, this.handle)
         private val compileButton = ScriptCompileButton(this.handle)
         private val toggleButton = ScriptToggleButton(this.handle)
+        private val deleteButton = ScriptDeleteButton(this.list.parent, this.handle)
         private val openButton = this.createOpenButton()
         private val downloadButton = this.createDownloadButton()
 
@@ -64,7 +64,7 @@ abstract class ScriptsList(
             this.nameWidget.setPosition(this.contentX, this.contentYMiddle - 9 / 2)
             this.nameWidget.extractRenderState(graphics, mouseX, mouseY, a)
 
-            var buttonX = this.parent.scrollBarX() - this.toggleButton.width - 10
+            var buttonX = this.list.scrollBarX() - this.toggleButton.width - 10
             val buttonY = this.contentY - 2
 
             this.toggleButton.setPosition(buttonX, buttonY)
@@ -80,6 +80,10 @@ abstract class ScriptsList(
                 this.downloadButton.extractRenderState(graphics, mouseX, mouseY, a)
             }
 
+            buttonX -= this.deleteButton.width + 5
+            this.deleteButton.setPosition(buttonX, buttonY)
+            this.deleteButton.extractRenderState(graphics, mouseX, mouseY, a)
+
             if (this.openButton != null) {
                 buttonX -= this.openButton.width + 5
                 this.openButton.setPosition(buttonX, buttonY)
@@ -88,11 +92,11 @@ abstract class ScriptsList(
         }
 
         override fun children(): List<GuiEventListener> {
-            return listOfNotNull(this.nameWidget, this.openButton, this.downloadButton, this.compileButton, this.toggleButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.deleteButton, this.downloadButton, this.compileButton, this.toggleButton)
         }
 
         override fun narratables(): List<NarratableEntry> {
-            return listOfNotNull(this.nameWidget, this.openButton, this.downloadButton, this.compileButton, this.toggleButton)
+            return listOfNotNull(this.nameWidget, this.openButton, this.deleteButton, this.downloadButton, this.compileButton, this.toggleButton)
         }
 
         private fun createOpenButton(): Button? {
@@ -106,7 +110,7 @@ abstract class ScriptsList(
         }
 
         private fun createDownloadButton(): Button? {
-            val downloader = this.parent.downloader()
+            val downloader = this.list.downloader()
             if (downloader != null) {
                 return SpriteIconButton.builder(Component.literal("Download Script"), {
                     downloader.request(this.handle)

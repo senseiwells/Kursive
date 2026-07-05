@@ -9,12 +9,9 @@ class ClientScriptsList(
     minecraft: Minecraft,
     width: Int,
     height: Int,
-    y: Int
-): ScriptsList(minecraft, width, height, y) {
-    init {
-        this.refresh()
-    }
-
+    y: Int,
+    parent: ClientScriptsScreen
+): ScriptsList(minecraft, width, height, y, parent) {
     override fun refresh() {
         this.clearEntries()
         val environment = KursiveClient.environment(this.minecraft, listOf())

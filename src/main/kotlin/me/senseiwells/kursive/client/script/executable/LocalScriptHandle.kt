@@ -61,5 +61,11 @@ class LocalScriptHandle<M: Any>(
         }
     }
 
+    override fun delete() {
+        this.environment.launch {
+            instance.delete()
+        }
+    }
+
     private data class CachedMetadata(val iteration: Int, val deferred: Deferred<ScriptMetadata?>)
 }

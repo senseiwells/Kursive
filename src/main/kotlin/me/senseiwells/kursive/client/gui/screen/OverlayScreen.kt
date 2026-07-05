@@ -19,6 +19,10 @@ abstract class OverlayScreen(title: Component): Screen(title) {
         this.minecraft.gui.setScreen(this.parent)
     }
 
+    override fun isPauseScreen(): Boolean {
+        return this.parent.isPauseScreen
+    }
+
     override fun resize(width: Int, height: Int) {
         this.parent.resize(width, height)
         super.resize(width, height)

@@ -20,12 +20,8 @@ class ServerScriptsList(
     height: Int,
     y: Int,
     screen: ServerScriptsScreen
-): ScriptsList(minecraft, width, height, y) {
+): ScriptsList(minecraft, width, height, y, screen) {
     private val downloader = ServerDownloadHandler(minecraft, screen)
-
-    init {
-        this.refresh()
-    }
 
     override fun refresh() {
         this.clearEntries()
