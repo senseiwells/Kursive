@@ -43,10 +43,7 @@ class LocalScriptHandle<M: Any>(
     }
 
     override fun start() {
-        this.environment.launch {
-            val result = instance.start(environment)
-            Kursive.logDiagnostics(result)
-        }
+        Kursive.startScript(this.environment, this.instance)
     }
 
     override fun compile() {

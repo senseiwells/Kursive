@@ -1,5 +1,7 @@
 package me.senseiwells.kursive.client
 
+import me.senseiwells.kursive.client.config.KursiveClientConfig
+import me.senseiwells.kursive.client.config.KursiveKeybinds
 import me.senseiwells.kursive.client.script.ClientExecutionEnvironment
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
 import me.senseiwells.kursive.client.utils.ClientCommandSource
@@ -36,6 +38,9 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
         ClientLifecycleEvents.CLIENT_STOPPING.register(::onClientStop)
 
         ClientRemoteScriptsManager.registerEvents()
+
+        KursiveClientConfig.load()
+        KursiveKeybinds.load()
 
         this.scripts.initialize(true)
     }
@@ -78,7 +83,7 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
 
     private fun onClientStart(minecraft: Minecraft) {
         minecraft.launch {
-            scripts.start(environment(minecraft, listOf()))
+            scripts.start(environment(minecraft))
         }
     }
 

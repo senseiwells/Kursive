@@ -14,7 +14,7 @@ class ClientScriptsList(
 ): ScriptsList(minecraft, width, height, y, parent) {
     override fun refresh() {
         this.clearEntries()
-        val environment = KursiveClient.environment(this.minecraft, listOf())
+        val environment = KursiveClient.environment(this.minecraft)
         for (script in KursiveClient.scripts.sortedBy { it.definition.name }) {
             this.addEntry(ScriptEntry(this, LocalScriptHandle(script, environment)))
         }

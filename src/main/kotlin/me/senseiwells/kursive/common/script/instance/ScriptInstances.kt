@@ -81,10 +81,7 @@ class ScriptInstances<M: Any>(
         for (instance in this) {
             val metadata = instance.tryGetMetadata() ?: continue
             if (metadata.auto) {
-                environment.launch {
-                    val result = instance.start(environment)
-                    Kursive.logDiagnostics(result)
-                }
+                Kursive.startScript(environment, instance)
             }
         }
     }

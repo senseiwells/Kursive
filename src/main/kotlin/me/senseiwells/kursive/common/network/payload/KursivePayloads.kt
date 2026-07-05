@@ -19,6 +19,7 @@ internal object KursivePayloads {
         server.register(DeleteRemoteScriptPayload.TYPE, DeleteRemoteScriptPayload.STREAM_CODEC)
         server.register(DownloadRemoteScriptPayload.TYPE, DownloadRemoteScriptPayload.STREAM_CODEC)
         server.register(RequestRemoteScriptsPayload.TYPE, RequestRemoteScriptsPayload.STREAM_CODEC)
+        server.register(RestartRemoteScriptsPayload.TYPE, RestartRemoteScriptsPayload.STREAM_CODEC)
         server.register(StartRemoteScriptPayload.TYPE, StartRemoteScriptPayload.STREAM_CODEC)
         server.register(StopRemoteScriptPayload.TYPE, StopRemoteScriptPayload.STREAM_CODEC)
 

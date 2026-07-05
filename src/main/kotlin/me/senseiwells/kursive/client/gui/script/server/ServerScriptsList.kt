@@ -26,10 +26,10 @@ class ServerScriptsList(
     override fun refresh() {
         this.clearEntries()
 
-        if (KursiveClientConfig.TREAT_INTEGRATED_AS_LOCAL) {
+        if (KursiveClientConfig.instance.treatIntegratedAsLocal) {
             val server = this.minecraft.singleplayerServer
             if (server != null) {
-                val environment = KursiveServer.environment(server, listOf())
+                val environment = KursiveServer.environment(server)
                 for (script in KursiveServer.scripts.sortedBy { it.definition.name }) {
                     val handle = LocalScriptHandle(script, environment)
                     this.addEntry(ScriptEntry(this, handle))

@@ -72,7 +72,7 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
 
         this.scripts.initialize(true)
         server.launch {
-            scripts.start(environment(server, listOf()))
+            scripts.start(environment(server))
         }
     }
 

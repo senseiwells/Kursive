@@ -1,5 +1,6 @@
 package me.senseiwells.kursive.client.gui.menu
 
+import me.senseiwells.kursive.client.config.KursiveClientConfig
 import me.senseiwells.kursive.client.gui.menu.widget.MenuCardWidget
 import me.senseiwells.kursive.client.gui.script.client.ClientScriptsScreen
 import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
@@ -16,7 +17,7 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 
 class KursiveMenuScreen(
-    private val parent: Screen?
+    private val parent: Screen? = null
 ): Screen(Component.literal("Kursive Menu")) {
     private val layout = HeaderAndFooterLayout(this)
 
@@ -70,7 +71,15 @@ class KursiveMenuScreen(
             .action { this.minecraft.gui.setScreen(ServerScriptsScreen(this)) }
             .build()
         layout.addChild(this.server, 1, 0) { settings ->
-            settings.paddingTop(10)
+            settings.paddingTop(8)
+        }
+
+        val config = MenuCardWidget.builder(Component.literal("Kursive Config").bold(), kursive("icon/settings"))
+            .description(Component.literal("Configure kursive").silver())
+            .action { this.minecraft.gui.setScreen(KursiveClientConfig.screen(this)) }
+            .build()
+        layout.addChild(config, 2, 0) { settings ->
+            settings.paddingTop(8)
         }
 
         return layout

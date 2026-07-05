@@ -8,6 +8,7 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import me.senseiwells.kursive.common.network.payload.KursivePayloads
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
+import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import net.casual.arcade.commands.argument
 import net.casual.arcade.commands.literal
@@ -21,7 +22,6 @@ import net.minecraft.network.chat.Component
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.jvm.util.isError
@@ -35,8 +35,24 @@ object Kursive: ModInitializer {
         KursivePayloads.register()
     }
 
-    fun configDirectory(): Path {
-        return FabricLoader.getInstance().configDir.resolve(MOD_ID).createDirectories()
+    fun config(): Path {
+        return FabricLoader.getInstance().configDir.resolve("${MOD_ID}.json")
+    }
+
+    fun <M: Any> startScript(environment: ExecutionEnvironment<M, *>, instance: ScriptInstance<M>) {
+        environment.launch {
+            val result = instance.start(environment)
+            logDiagnostics(result)
+        }
+    }
+
+    fun <M: Any> restartScripts(environment: ExecutionEnvironment<M, *>, instances: ScriptInstances<M>) {
+        for (script in instances) {
+            if (script.isRunning()) {
+                script.stop()
+                this.startScript(environment, script)
+            }
+        }
     }
 
     fun logDiagnostics(result: ResultWithDiagnostics<*>) {
@@ -154,6 +170,6 @@ object Kursive: ModInitializer {
 
         fun failure(source: S, component: Component)
 
-        fun environment(minecraft: M, args: List<String>): ExecutionEnvironment<M, *>
+        fun environment(minecraft: M, args: List<String> = listOf()): ExecutionEnvironment<M, *>
     }
 }

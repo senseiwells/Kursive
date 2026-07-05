@@ -4,5 +4,17 @@
   "kursive.command.scriptAlreadyStopped": "Script was already stopped",
   "kursive.command.failedToRunScript": "Failed to run script, check logs for diagnostics",
   "kursive.command.successfullyStartedScript": "Successfully started script %s",
-  "kursive.command.successfullyStoppedScript": "Successfully stopped script %s"
+  "kursive.command.successfullyStoppedScript": "Successfully stopped script %s",
+
+  "yacl3.config.kursive:config.category.keybinds": "Keybinds",
+  "yacl3.config.kursive:config.menuKeys": "Kursive Menu Keybind",
+  "yacl3.config.kursive:config.menuKeys.desc": "Keybind to open the Kursive Menu while in-game.",
+  "yacl3.config.kursive:config.restartClientScriptsKeys": "Restart Client Scripts Keybind",
+  "yacl3.config.kursive:config.restartClientScriptsKeys.desc": "Keybind to restart running client-side scripts while in-game.",
+  "yacl3.config.kursive:config.restartServerScriptsKeys": "Restart Server Scripts  Keybind",
+  "yacl3.config.kursive:config.restartServerScriptsKeys.desc": "Keybind to restart running server-side scripts while in-game.",
+
+  "yacl3.config.kursive:config.category.debug": "Debug",
+  "yacl3.config.kursive:config.treatIntegratedAsLocal": "Treat Singleplayer Scripts As Local",
+  "yacl3.config.kursive:config.treatIntegratedAsLocal.desc": "Allows the server script screen to treat singleplayer scripts as if they were local. Disable this to test remote server behavior in singleplayer."
 }

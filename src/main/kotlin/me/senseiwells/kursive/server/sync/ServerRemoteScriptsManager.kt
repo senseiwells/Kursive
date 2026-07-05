@@ -30,12 +30,12 @@ object ServerRemoteScriptsManager {
     internal fun registerEvents() {
         GlobalEventHandler.Server.register<ServerTickEvent>(phase = ServerTickEvent.PHASE_POST, listener = ::onServerTick)
 
-        ServerPlayNetworking.registerGlobalReceiver(RequestRemoteScriptsPayload.TYPE, ::handleRequestRemoteScripts)
-
         ServerPlayNetworking.registerGlobalReceiver(CompileRemoteScriptPayload.TYPE, ::handleCompileRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(CreateRemoteScriptPayload.TYPE, ::handleCreateRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(DeleteRemoteScriptPayload.TYPE, ::handleDeleteRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleDownloadRemoteScript)
+        ServerPlayNetworking.registerGlobalReceiver(RequestRemoteScriptsPayload.TYPE, ::handleRequestRemoteScripts)
+        ServerPlayNetworking.registerGlobalReceiver(RestartRemoteScriptsPayload.TYPE, ::handleRestartRemoteScripts)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
 
@@ -62,14 +62,6 @@ object ServerRemoteScriptsManager {
     private fun onServerTick(event: ServerTickEvent) {
         if (KursiveServer.scripts.dirty) {
             this.synchronize(event.server, ListRemoteScriptsPayload.from(KursiveServer.scripts))
-        }
-    }
-
-    @Suppress("Unused")
-    private fun handleRequestRemoteScripts(payload: RequestRemoteScriptsPayload, context: ServerPlayNetworking.Context) {
-        if (this.isPermitted(context.player())) {
-            val sender = context.responseSender()
-            sender.sendPacket(ListRemoteScriptsPayload.from(KursiveServer.scripts))
         }
     }
 
@@ -101,10 +93,26 @@ object ServerRemoteScriptsManager {
         }
     }
 
+    @Suppress("Unused")
+    private fun handleRequestRemoteScripts(payload: RequestRemoteScriptsPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            val sender = context.responseSender()
+            sender.sendPacket(ListRemoteScriptsPayload.from(KursiveServer.scripts))
+        }
+    }
+
+    @Suppress("Unused")
+    private fun handleRestartRemoteScripts(payload: RestartRemoteScriptsPayload, context: ServerPlayNetworking.Context) {
+        if (this.isPermitted(context.player())) {
+            val environment = KursiveServer.environment(context.server())
+            Kursive.restartScripts(environment, KursiveServer.scripts)
+        }
+    }
+
     private fun handleStartRemoteScript(payload: StartRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
             this.tryRunScriptAction(payload.id, context) { script ->
-                script.start(KursiveServer.environment(context.server(), listOf()))
+                script.start(KursiveServer.environment(context.server()))
             }
         }
     }
