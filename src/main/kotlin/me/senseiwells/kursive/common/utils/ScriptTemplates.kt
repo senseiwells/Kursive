@@ -44,11 +44,13 @@ object ScriptTemplates {
             imports += KursiveScript::class.java.canonicalName
         }
 
-        val minecraftName = CamelCase.decode(minecraftType.simpleName).last()
+        val minecraftName = CamelCase.decode(minecraftType.simpleName).last().lowercase()
 
         val builder = StringBuilder()
         if (metadata != null) {
-            builder.append("""@file:KursiveScript(id = "${metadata.id}", version = "${metadata.version}")""").append('\n')
+            metadata.minecraftVersion.toString()
+            builder.append("""@file:KursiveScript(id = "${metadata.id}", version = "${metadata.version}", auto = ${metadata.auto}, type = "${metadata.type.name.lowercase()}", minecraft = "${metadata.minecraftVersion}")""")
+            builder.append('\n')
         }
         builder.append("""@file:DependsOn("me.senseiwells:kmc:${KursiveApi.version}")""").append('\n')
         builder.append('\n')
