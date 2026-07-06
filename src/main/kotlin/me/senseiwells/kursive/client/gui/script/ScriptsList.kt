@@ -1,11 +1,14 @@
 package me.senseiwells.kursive.client.gui.script
 
+import me.senseiwells.kursive.client.config.KursiveClientConfig
 import me.senseiwells.kursive.client.gui.script.widget.*
 import me.senseiwells.kursive.client.gui.widget.OpenFileButton
 import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
+import me.senseiwells.kursive.client.utils.setTooltip
 import me.senseiwells.kursive.common.script.definition.FileScriptDefinition
 import me.senseiwells.kursive.common.utils.kursive
+import net.casual.arcade.utils.component.red
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
@@ -112,9 +115,16 @@ abstract class ScriptsList(
         private fun createDownloadButton(): Button? {
             val downloader = this.list.downloader()
             if (downloader != null) {
-                return SpriteIconButton.builder(Component.literal("Download Script"), {
+                val button = SpriteIconButton.builder(Component.literal("Download Script"), {
                     downloader.request(this.handle)
                 }, true).width(20).sprite(kursive("icon/download"), 16, 16).withTootip().build()
+
+                if (!KursiveClientConfig.instance.allowDownloadingServerScripts) {
+                    button.active = false
+                    button.setTooltip(Component.literal("Downloading server scripts must be enabled in your config").red())
+                }
+
+                return button
             }
             return null
         }

@@ -7,11 +7,8 @@ import me.senseiwells.kursive.client.gui.script.ScriptsList
 import me.senseiwells.kursive.client.script.executable.LocalScriptHandle
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
-import me.senseiwells.kursive.common.network.payload.serverbound.DownloadRemoteScriptPayload
-import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.server.KursiveServer
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.Minecraft
 
 class ServerScriptsList(
@@ -57,18 +54,14 @@ class ServerScriptsList(
     ): DownloadHandler {
         override fun request(handle: ScriptHandle) {
             if (!KursiveClient.doesRemoteScriptExist(ScriptFileUtils.suffixate(handle.name()))) {
-                this.request(handle.id())
+                ClientRemoteScriptsManager.requestDownloadFor(handle.id())
                 return
             }
 
             val screen = ScriptOverwriteScreen(this.screen, handle.name(), KursiveClient::doesRemoteScriptExist) { name ->
-                this.request(handle.id(), name)
+                ClientRemoteScriptsManager.requestDownloadFor(handle.id(), name)
             }
             this.minecraft.gui.setScreen(screen)
-        }
-
-        private fun request(id: ScriptInstance.Id, name: String? = null) {
-            ClientPlayNetworking.send(DownloadRemoteScriptPayload(id, name))
         }
     }
 }

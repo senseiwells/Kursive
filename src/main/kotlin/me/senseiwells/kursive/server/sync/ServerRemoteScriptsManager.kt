@@ -3,15 +3,16 @@ package me.senseiwells.kursive.server.sync
 import me.senseiwells.kursive.api.ServerScriptContext
 import me.senseiwells.kursive.api.utils.ScriptType
 import me.senseiwells.kursive.common.Kursive
+import me.senseiwells.kursive.common.network.payload.clientbound.DownloadRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
-import me.senseiwells.kursive.common.network.payload.common.RemoteScriptContentsPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.*
 import me.senseiwells.kursive.common.script.configuration.ScriptMetadata
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.common.utils.ScriptTemplates
 import me.senseiwells.kursive.common.utils.kursive
+import me.senseiwells.kursive.common.utils.resolveConfined
 import me.senseiwells.kursive.server.KursiveServer
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.ListenerRegistry.Companion.register
@@ -33,13 +34,12 @@ object ServerRemoteScriptsManager {
         ServerPlayNetworking.registerGlobalReceiver(CompileRemoteScriptPayload.TYPE, ::handleCompileRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(CreateRemoteScriptPayload.TYPE, ::handleCreateRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(DeleteRemoteScriptPayload.TYPE, ::handleDeleteRemoteScript)
-        ServerPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleDownloadRemoteScript)
+        ServerPlayNetworking.registerGlobalReceiver(RequestDownloadRemoteScriptPayload.TYPE, ::handleRequestDownloadRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(RequestRemoteScriptsPayload.TYPE, ::handleRequestRemoteScripts)
         ServerPlayNetworking.registerGlobalReceiver(RestartRemoteScriptsPayload.TYPE, ::handleRestartRemoteScripts)
         ServerPlayNetworking.registerGlobalReceiver(StartRemoteScriptPayload.TYPE, ::handleStartRemoteScript)
         ServerPlayNetworking.registerGlobalReceiver(StopRemoteScriptPayload.TYPE, ::handleStopRemoteScript)
-
-        ServerPlayNetworking.registerGlobalReceiver(RemoteScriptContentsPayload.TYPE, ::handleRemoteScriptContents)
+        ServerPlayNetworking.registerGlobalReceiver(UploadRemoteScriptPayload.TYPE, ::handleUploadRemoteScript)
     }
 
     @Suppress("UnstableApiUsage")
@@ -73,7 +73,8 @@ object ServerRemoteScriptsManager {
 
     private fun handleCreateRemoteScript(payload: CreateRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            val path = KursiveServer.scriptsDirectory(context.server()).resolve(ScriptFileUtils.suffixate(payload.name))
+            val directory = KursiveServer.scriptsDirectory(context.server())
+            val path = directory.resolveConfined(ScriptFileUtils.suffixate(payload.name))
             ScriptTemplates.write(
                 path, MinecraftServer::class.java, ServerScriptContext::class.java, metadata = ScriptMetadata.named(payload.name, ScriptType.Server)
             )
@@ -86,10 +87,10 @@ object ServerRemoteScriptsManager {
         }
     }
 
-    private fun handleDownloadRemoteScript(payload: DownloadRemoteScriptPayload, context: ServerPlayNetworking.Context) {
+    private fun handleRequestDownloadRemoteScript(payload: RequestDownloadRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
             val script = KursiveServer.scripts.find(payload.id) ?: return
-            context.responseSender().sendPacket(RemoteScriptContentsPayload.from(script.definition, payload.name))
+            context.responseSender().sendPacket(DownloadRemoteScriptPayload.from(script, payload.name))
         }
     }
 
@@ -123,10 +124,11 @@ object ServerRemoteScriptsManager {
         }
     }
 
-    private fun handleRemoteScriptContents(payload: RemoteScriptContentsPayload, context: ServerPlayNetworking.Context) {
+    private fun handleUploadRemoteScript(payload: UploadRemoteScriptPayload, context: ServerPlayNetworking.Context) {
         if (this.isPermitted(context.player())) {
-            val path = KursiveServer.scriptsDirectory(context.server()).resolve(ScriptFileUtils.suffixate(payload.name))
-            path.writeBytes(payload.contents)
+            val directory = KursiveServer.scriptsDirectory(context.server())
+            val path = directory.resolveConfined(ScriptFileUtils.suffixate(payload.contents.name))
+            path.writeBytes(payload.contents.bytes)
         }
     }
 

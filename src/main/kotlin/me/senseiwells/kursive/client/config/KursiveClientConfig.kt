@@ -12,6 +12,10 @@ import net.minecraft.client.gui.screens.Screen
 import dev.isxander.yacl3.config.v2.api.autogen.Boolean as Bool
 
 class KursiveClientConfig {
+    @Bool(colored = true)
+    @AutoGen(category = GENERAL_CATEGORY)
+    @SerialEntry var allowDownloadingServerScripts = false
+
     @Keybinding(id = KursiveKeybinds.MENU_ID)
     @AutoGen(category = KEYBIND_CATEGORY)
     @SerialEntry var menuKeys: InputKeys = InputKeys.EMPTY
@@ -29,6 +33,7 @@ class KursiveClientConfig {
     @SerialEntry var treatIntegratedAsLocal: Boolean = true
 
     companion object {
+        private const val GENERAL_CATEGORY = "general"
         private const val DEBUG_CATEGORY = "debug"
         private const val KEYBIND_CATEGORY = "keybinds"
 

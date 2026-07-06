@@ -6,6 +6,10 @@
   "kursive.command.successfullyStartedScript": "Successfully started script %s",
   "kursive.command.successfullyStoppedScript": "Successfully stopped script %s",
 
+  "yacl3.config.kursive:config.category.general": "General",
+  "yacl3.config.kursive:config.allowDownloadingServerScripts": "Allow Downloading Server Scripts",
+  "yacl3.config.kursive:config.allowDownloadingServerScripts.desc": "Allows you to request downloading scripts from servers.\n You should always check scripts you download from a server before running them. Enable at your own risk.",
+
   "yacl3.config.kursive:config.category.keybinds": "Keybinds",
   "yacl3.config.kursive:config.menuKeys": "Kursive Menu Keybind",
   "yacl3.config.kursive:config.menuKeys.desc": "Keybind to open the Kursive Menu while in-game.",

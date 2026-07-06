@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val apiVersion = "0.2.0-alpha.9"
+val apiVersion = "0.3.0-alpha.1"
 val releaseVersion = "${apiVersion}+${libs.versions.minecraft.get()}"
 version = releaseVersion
 
