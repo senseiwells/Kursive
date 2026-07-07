@@ -64,13 +64,15 @@ tasks.register("publishKmc") {
 }
 
 afterEvaluate {
-    updateDocumentedDependencies("../README.md")
+    updateDocumentedDependencies("../docs/developing/creating-a-script.md")
 }
 
 private fun Project.updateDocumentedDependencies(path: String) {
     val file = file(path)
     if (file.exists()) {
-        val regex = Regex("""@file:DependsOn\("me\.senseiwells:kmc:.*"\)""")
-        file.writeText(file.readText().replace(regex, "@file:DependsOn(\"me.senseiwells:kmc:$releaseVersion\")"))
+        val document = file.readText()
+            .replace(Regex("""@file:DependsOn\("me\.senseiwells:kmc:.*"\)"""), "@file:DependsOn(\"me.senseiwells:kmc:$releaseVersion\")")
+            .replace(Regex("""me/senseiwells/kmc/.*`"""), "me/senseiwells/kmc/$releaseVersion`")
+        file.writeText(document)
     }
 }

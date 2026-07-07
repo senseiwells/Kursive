@@ -27,6 +27,8 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
     override val scripts = ScriptInstances<Minecraft>(PolledFileScriptDefinitionSource(this.scriptsDirectory()))
 
     override fun onInitializeClient() {
+        this.checkUserHasYACLInstalled()
+
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.registerLiteral("kursive-client") {
                 Kursive.registerCommonCommands(this, KursiveClient)
@@ -93,5 +95,13 @@ object KursiveClient: ClientModInitializer, CommonCommandHandler<Minecraft, Clie
 
     private fun onClientStop(@Suppress("Unused") minecraft: Minecraft) {
         this.scripts.close()
+    }
+
+    private fun checkUserHasYACLInstalled() {
+        if (!FabricLoader.getInstance().isModLoaded("yet_another_config_lib_v3")) {
+            val message = "You need to install YACL in order to use Kursive"
+            Kursive.logger.error(message)
+            throw IllegalStateException(message)
+        }
     }
 }

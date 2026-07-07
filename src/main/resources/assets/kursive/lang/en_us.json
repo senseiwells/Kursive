@@ -14,6 +14,11 @@
   "kursive.permission.remote.create.message": "You do not have permission to create server scripts",
   "kursive.permission.remote.delete.message": "You do not have permission to delete server scripts",
 
+  "key.category.kursive.general": "Kursive",
+  "key.kursive.open_menu": "Open Kursive Menu",
+  "key.kursive.restart_client_scripts": "Restart Client Scripts",
+  "key.kursive.restart_server_scripts": "Restart Server Scripts",
+
   "yacl3.config.kursive:config.category.general": "General",
   "yacl3.config.kursive:config.allowDownloadingServerScripts": "Allow Downloading Server Scripts",
   "yacl3.config.kursive:config.allowDownloadingServerScripts.desc": "Allows you to request downloading scripts from servers.\n\n You should always check scripts you download from a server before running them. Enable at your own risk.",
