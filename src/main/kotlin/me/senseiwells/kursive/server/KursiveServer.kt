@@ -2,10 +2,12 @@ package me.senseiwells.kursive.server
 
 import me.senseiwells.kursive.common.Kursive
 import me.senseiwells.kursive.common.Kursive.CommonCommandHandler
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.script.definition.resolver.PolledFileScriptDefinitionSource
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
+import me.senseiwells.kursive.common.utils.checkPermission
 import me.senseiwells.kursive.server.config.KursiveServerConfig
 import me.senseiwells.kursive.server.script.ServerExecutionEnvironment
 import me.senseiwells.kursive.server.sync.ServerRemoteScriptsManager
@@ -32,6 +34,7 @@ object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, Comm
     override fun onInitialize() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.registerLiteral("kursive-server") {
+                requires { source -> source.checkPermission(KursivePermissions.RUN_REMOTE_SCRIPTS) }
                 Kursive.registerCommonCommands(this, KursiveServer)
             }
         }

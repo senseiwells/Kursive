@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "icon": "assets/kursive-api/icon.png",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
     "main": [
       {
