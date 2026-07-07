@@ -5,11 +5,15 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import me.senseiwells.kursive.client.KursiveClient
 import me.senseiwells.kursive.client.config.KursiveClientConfig
 import me.senseiwells.kursive.client.script.executable.RemoteScriptHandle
+import me.senseiwells.kursive.client.script.executable.ScriptHandle
 import me.senseiwells.kursive.common.network.payload.clientbound.DownloadRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.clientbound.KursivePermissionsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.RequestDownloadRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.RequestRemoteScriptsPayload
+import me.senseiwells.kursive.common.permissions.KursivePermission
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.common.utils.resolveConfined
@@ -18,7 +22,6 @@ import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.client.ClientTickEvent
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
-import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientPacketListener
 import kotlin.io.path.writeBytes
@@ -26,6 +29,8 @@ import kotlin.io.path.writeBytes
 object ClientRemoteScriptsManager {
     private val handles = Int2ObjectOpenHashMap<RemoteScriptHandle>()
     private val downloads = IntOpenHashSet()
+
+    private var permissions: Set<KursivePermission> = setOf()
 
     val scripts: Collection<RemoteScriptHandle>
         get() = this.handles.values
@@ -43,19 +48,22 @@ object ClientRemoteScriptsManager {
         }
     }
 
+    fun hasPermission(permission: KursivePermission): Boolean {
+        return this.permissions.contains(permission)
+    }
+
+    fun hasPermission(handle: ScriptHandle, permission: KursivePermission): Boolean {
+        return handle !is RemoteScriptHandle || this.hasPermission(permission)
+    }
+
     internal fun registerEvents() {
-        ClientPlayConnectionEvents.JOIN.register(::onPlayerJoin)
         ClientPlayConnectionEvents.DISCONNECT.register(::onPlayerLeave)
         GlobalEventHandler.Client.register<ClientTickEvent>(phase = ClientTickEvent.PHASE_POST, listener = ::onClientTick)
 
+        ClientPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleRemoteScriptContents)
+        ClientPlayNetworking.registerGlobalReceiver(KursivePermissionsPayload.TYPE, ::handleKursivePermissions)
         ClientPlayNetworking.registerGlobalReceiver(ListRemoteScriptsPayload.TYPE, ::handleListRemoteScripts)
         ClientPlayNetworking.registerGlobalReceiver(UpdateRemoteScriptPayload.TYPE, ::handleUpdateRemoteScript)
-        ClientPlayNetworking.registerGlobalReceiver(DownloadRemoteScriptPayload.TYPE, ::handleRemoteScriptContents)
-    }
-
-    @Suppress("Unused")
-    private fun onPlayerJoin(listener: ClientPacketListener, sender: PacketSender, client: Minecraft) {
-        sender.sendPacket(RequestRemoteScriptsPayload)
     }
 
     @Suppress("Unused")
@@ -67,6 +75,26 @@ object ClientRemoteScriptsManager {
     @Suppress("Unused")
     private fun onClientTick(event: ClientTickEvent) {
         this.dirty = false
+    }
+
+    @Suppress("Unused")
+    private fun handleRemoteScriptContents(payload: DownloadRemoteScriptPayload, context: ClientPlayNetworking.Context) {
+        if (KursiveClientConfig.instance.allowDownloadingServerScripts && this.downloads.remove(payload.id.value)) {
+            val directory = KursiveClient.remoteScriptsDirectory()
+            val path = directory.resolveConfined(ScriptFileUtils.suffixate(payload.contents.name))
+            path.writeBytes(payload.contents.bytes)
+        }
+    }
+
+    @Suppress("Unused")
+    private fun handleKursivePermissions(payload: KursivePermissionsPayload, context: ClientPlayNetworking.Context) {
+        this.permissions = payload.permissions
+
+        if (ClientPlayNetworking.canSend(RequestRemoteScriptsPayload.TYPE)) {
+            if (this.hasPermission(KursivePermissions.ACCESS_REMOTE_SCRIPTS)) {
+                context.responseSender().sendPacket(RequestRemoteScriptsPayload)
+            }
+        }
     }
 
     private fun handleListRemoteScripts(payload: ListRemoteScriptsPayload, context: ClientPlayNetworking.Context) {
@@ -83,14 +111,5 @@ object ClientRemoteScriptsManager {
     private fun handleUpdateRemoteScript(payload: UpdateRemoteScriptPayload, context: ClientPlayNetworking.Context) {
         val handle = this.handles.get(payload.id.value) ?: return
         handle.update(payload.script)
-    }
-
-    @Suppress("Unused")
-    private fun handleRemoteScriptContents(payload: DownloadRemoteScriptPayload, context: ClientPlayNetworking.Context) {
-        if (KursiveClientConfig.instance.allowDownloadingServerScripts && this.downloads.remove(payload.id.value)) {
-            val directory = KursiveClient.remoteScriptsDirectory()
-            val path = directory.resolveConfined(ScriptFileUtils.suffixate(payload.contents.name))
-            path.writeBytes(payload.contents.bytes)
-        }
     }
 }

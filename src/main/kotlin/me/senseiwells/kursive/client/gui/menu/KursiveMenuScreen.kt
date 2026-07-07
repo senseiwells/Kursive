@@ -6,8 +6,10 @@ import me.senseiwells.kursive.client.gui.script.client.ClientScriptsScreen
 import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
 import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
-import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
+import me.senseiwells.kursive.client.utils.setActiveAndTooltip
 import me.senseiwells.kursive.common.network.payload.serverbound.RequestRemoteScriptsPayload
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.utils.kursive
 import net.casual.arcade.utils.component.*
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -37,15 +39,15 @@ class KursiveMenuScreen(
     }
 
     override fun tick() {
-        if (ClientPlayNetworking.canSend(RequestRemoteScriptsPayload.TYPE)) {
-            this.server.active = true
-            this.server.setTooltip(null)
-        } else {
-            this.server.active = false
-            this.server.setTooltip(Component {
+        if (!ClientPlayNetworking.canSend(RequestRemoteScriptsPayload.TYPE)) {
+            this.server.setActiveAndTooltip(false, Component {
                 empty() + literal("Unavailable").red() + nl +
                     literal("You must be connected to a server running Kursive to run server scripts")
             })
+        } else if (!ClientRemoteScriptsManager.hasPermission(KursivePermissions.ACCESS_REMOTE_SCRIPTS)) {
+            this.server.setActiveAndTooltip(false, KursivePermissions.ACCESS_REMOTE_SCRIPTS.message())
+        } else {
+            this.server.setActiveAndTooltip(true, null)
         }
     }
 

@@ -8,7 +8,10 @@ keybinds      = "0.5.0+26.2"
 yacl          = "3.9.4+26.2-fabric"
 
 # Scripting
-arcade        = "0.10.0-beta.10+26.2"
+arcade        = "0.10.0-beta.16+26.2"
+
+# Runtime
+dev-auth      = "1.2.2"
 
 # Plugins
 fabric-loom   = "1.17-SNAPSHOT"
@@ -29,6 +32,9 @@ arcade-event-registry = { module = "net.casualchampionships:arcade-event-registr
 arcade-events-client  = { module = "net.casualchampionships:arcade-events-client" , version.ref = "arcade" }
 arcade-events-server  = { module = "net.casualchampionships:arcade-events-server" , version.ref = "arcade" }
 arcade-utils          = { module = "net.casualchampionships:arcade-utils"         , version.ref = "arcade" }
+
+# Runtime
+dev-auth = { module = "me.djtheredstoner:DevAuth-fabric"        , version.ref = "dev-auth" }
 
 [bundles]
 arcade = ["arcade-commands", "arcade-event-registry", "arcade-events-server", "arcade-events-client", "arcade-utils"]

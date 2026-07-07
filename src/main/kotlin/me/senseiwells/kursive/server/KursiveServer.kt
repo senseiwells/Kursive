@@ -6,6 +6,7 @@ import me.senseiwells.kursive.common.script.definition.resolver.PolledFileScript
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import me.senseiwells.kursive.common.script.instance.ScriptInstances
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
+import me.senseiwells.kursive.server.config.KursiveServerConfig
 import me.senseiwells.kursive.server.script.ServerExecutionEnvironment
 import me.senseiwells.kursive.server.sync.ServerRemoteScriptsManager
 import net.casual.arcade.commands.registerLiteral
@@ -25,6 +26,8 @@ import java.nio.file.Path
 
 object KursiveServer: ModInitializer, CommonCommandHandler<MinecraftServer, CommandSourceStack> {
     override lateinit var scripts: ScriptInstances<MinecraftServer>
+
+    val config = KursiveServerConfig.read()
 
     override fun onInitialize() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->

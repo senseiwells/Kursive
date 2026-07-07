@@ -2,6 +2,7 @@ package me.senseiwells.kursive.client.gui.script
 
 import me.senseiwells.kursive.client.gui.script.server.SavedServerScriptsScreen
 import me.senseiwells.kursive.client.gui.script.server.ServerScriptsScreen
+import me.senseiwells.kursive.client.gui.script.widget.ScriptCreationButton
 import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.OpenDirectoryButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
@@ -85,9 +86,7 @@ abstract class ScriptsScreen(
     protected abstract fun getScriptsDirectory(): Path?
 
     private fun createNewScriptButton(): Button {
-        return SpriteIconButton.builder(Component.literal("Create New Script"), {
-            this.minecraft.gui.setScreen(ScriptCreationScreen(this))
-        }, true).sprite(kursive("icon/create"), 16, 16).size(20, 20).withTootip().build()
+        return ScriptCreationButton(this.minecraft, this)
     }
 
     private fun createOpenScriptsDirectoryButton(): Button? {

@@ -1,11 +1,16 @@
 package me.senseiwells.kursive.client.gui.script.widget
 
+import me.senseiwells.kursive.client.config.KursiveClientConfig
 import me.senseiwells.kursive.client.gui.script.server.SavedServerScriptsScreen
-import me.senseiwells.kursive.client.utils.setTooltip
-import me.senseiwells.kursive.common.network.payload.common.RemoteScriptContentsPayload
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
+import me.senseiwells.kursive.client.utils.setActiveAndTooltip
+import me.senseiwells.kursive.common.network.payload.serverbound.UploadRemoteScriptPayload
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.utils.kursive
+import net.casual.arcade.utils.component.red
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.SpriteIconButton
 import net.minecraft.client.gui.components.WidgetSprites
@@ -18,12 +23,12 @@ class ScriptUploadButton(
     private val definition: ScriptDefinition<MinecraftServer>,
 ): SpriteIconButton.CenteredIcon(20, 20, NAME, 16, 16, 0, 0, WidgetSprites(UPLOAD), { }, NAME, { NAME }, false) {
     override fun extractContents(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        if (ClientPlayNetworking.canSend(RemoteScriptContentsPayload.TYPE)) {
-            this.active = true
-            this.setTooltip(this.message)
+        if (!ClientPlayNetworking.canSend(UploadRemoteScriptPayload.TYPE)) {
+            this.setActiveAndTooltip(false, Component.literal("Cannot upload script").red())
+        } else if (!this.hasPermissionToUpload()) {
+            this.setActiveAndTooltip(false, KursivePermissions.UPLOAD_REMOTE_SCRIPTS.message())
         } else {
-            this.active = false
-            this.setTooltip(Component.literal("Cannot upload script"))
+            this.setActiveAndTooltip(true, this.message)
         }
 
         super.extractContents(graphics, mouseX, mouseY, a)
@@ -31,6 +36,17 @@ class ScriptUploadButton(
 
     override fun onPress(input: InputWithModifiers) {
         this.screen.upload(this.definition)
+    }
+
+    private fun hasPermissionToUpload(): Boolean {
+        if (KursiveClientConfig.instance.treatIntegratedAsLocal) {
+            val minecraft = Minecraft.getInstance()
+            if (minecraft.hasSingleplayerServer()) {
+                return true
+            }
+        }
+
+        return ClientRemoteScriptsManager.hasPermission(KursivePermissions.UPLOAD_REMOTE_SCRIPTS)
     }
 
     companion object {

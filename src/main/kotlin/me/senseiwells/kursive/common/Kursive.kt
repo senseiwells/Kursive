@@ -35,7 +35,7 @@ object Kursive: ModInitializer {
         KursivePayloads.register()
     }
 
-    fun config(): Path {
+    fun configPath(): Path {
         return FabricLoader.getInstance().configDir.resolve("${MOD_ID}.json")
     }
 

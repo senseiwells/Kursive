@@ -31,6 +31,7 @@ allprojects {
         maven("https://maven.terraformersmc.com/")
         maven("https://maven.isxander.dev/releases")
         maven("https://jitpack.io")
+        maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
         mavenLocal()
     }
 
@@ -78,6 +79,8 @@ dependencies {
 
     include(implementation(libs.keybinds.get())!!)
     include(implementation(project(":kursive-api"))!!)
+
+    localRuntime(libs.dev.auth)
 
     val kotlinVersion = libs.versions.fabric.kotlin.get()
         .split("+kotlin.")[1]

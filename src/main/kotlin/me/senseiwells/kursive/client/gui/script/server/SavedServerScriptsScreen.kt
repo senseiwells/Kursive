@@ -6,7 +6,7 @@ import me.senseiwells.kursive.client.gui.widget.DoneButton
 import me.senseiwells.kursive.client.gui.widget.OpenDirectoryButton
 import me.senseiwells.kursive.client.gui.widget.ScaledStringWidget
 import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
-import me.senseiwells.kursive.common.network.payload.common.RemoteScriptContentsPayload
+import me.senseiwells.kursive.common.network.payload.serverbound.UploadRemoteScriptPayload
 import me.senseiwells.kursive.common.script.definition.ScriptDefinition
 import me.senseiwells.kursive.common.script.definition.resolver.PolledFileScriptDefinitionSource
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -26,12 +26,12 @@ class SavedServerScriptsScreen(
 
     fun upload(definition: ScriptDefinition<MinecraftServer>) {
         if (!ClientRemoteScriptsManager.doesScriptExist(definition.name)) {
-            ClientPlayNetworking.send(RemoteScriptContentsPayload.from(definition))
+            ClientPlayNetworking.send(UploadRemoteScriptPayload.from(definition))
             return
         }
 
         val screen = ScriptOverwriteScreen(this, definition.name, ClientRemoteScriptsManager::doesScriptExist) { name ->
-            ClientPlayNetworking.send(RemoteScriptContentsPayload.from(definition, name))
+            ClientPlayNetworking.send(UploadRemoteScriptPayload.from(definition, name))
         }
         this.minecraft.gui.setScreen(screen)
     }

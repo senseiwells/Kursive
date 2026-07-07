@@ -1,7 +1,9 @@
 package me.senseiwells.kursive.client.gui.script.widget
 
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
-import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
+import me.senseiwells.kursive.client.utils.setActiveAndTooltip
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.utils.kursive
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.SpriteIconButton
@@ -15,7 +17,13 @@ class ScriptToggleButton(
 ): SpriteIconButton.CenteredIcon(20, 20, NAME, 14, 14, 0, 0, WidgetSprites(START), { }, NAME, { NAME }, false) {
     override fun extractContents(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         this.message = if (this.script.isRunning()) Component.literal("Stop Script") else Component.literal("Start Script")
-        this.setTooltip(this.message)
+
+        if (!ClientRemoteScriptsManager.hasPermission(this.script, KursivePermissions.RUN_REMOTE_SCRIPTS)) {
+            this.setActiveAndTooltip(false, KursivePermissions.RUN_REMOTE_SCRIPTS.message())
+        } else {
+            this.setActiveAndTooltip(true, this.message)
+        }
+
         super.extractContents(graphics, mouseX, mouseY, a)
     }
 

@@ -1,6 +1,7 @@
 package me.senseiwells.kursive.common.network.payload
 
 import me.senseiwells.kursive.common.network.payload.clientbound.DownloadRemoteScriptPayload
+import me.senseiwells.kursive.common.network.payload.clientbound.KursivePermissionsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.ListRemoteScriptsPayload
 import me.senseiwells.kursive.common.network.payload.clientbound.UpdateRemoteScriptPayload
 import me.senseiwells.kursive.common.network.payload.serverbound.*
@@ -12,6 +13,7 @@ internal object KursivePayloads {
         val server = PayloadTypeRegistry.serverboundPlay()
 
         client.register(ListRemoteScriptsPayload.TYPE, ListRemoteScriptsPayload.STREAM_CODEC)
+        client.register(KursivePermissionsPayload.TYPE, KursivePermissionsPayload.STREAM_CODEC)
         client.register(UpdateRemoteScriptPayload.TYPE, UpdateRemoteScriptPayload.STREAM_CODEC)
         client.registerLarge(DownloadRemoteScriptPayload.TYPE, DownloadRemoteScriptPayload.STREAM_CODEC, DownloadRemoteScriptPayload.MAX_SIZE_BYTES)
 

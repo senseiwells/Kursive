@@ -2,8 +2,11 @@ package me.senseiwells.kursive.client.gui.script.widget
 
 import me.senseiwells.kursive.client.gui.script.ScriptDeletionScreen
 import me.senseiwells.kursive.client.script.executable.ScriptHandle
-import me.senseiwells.kursive.client.utils.setTooltip
+import me.senseiwells.kursive.client.sync.ClientRemoteScriptsManager
+import me.senseiwells.kursive.client.utils.setActiveAndTooltip
+import me.senseiwells.kursive.common.permissions.KursivePermissions
 import me.senseiwells.kursive.common.utils.kursive
+import net.casual.arcade.utils.component.red
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.SpriteIconButton
@@ -18,11 +21,11 @@ class ScriptDeleteButton(
 ): SpriteIconButton.CenteredIcon(20, 20, NAME, 16, 16, 0, 0, WidgetSprites(DELETE), { }, NAME, { NAME }, false) {
     override fun extractContents(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
         if (this.script.isRunning()) {
-            this.active = false
-            this.setTooltip(Component.literal("Cannot delete while running"))
+            this.setActiveAndTooltip(false, Component.literal("Cannot delete while running").red())
+        } else if (!ClientRemoteScriptsManager.hasPermission(this.script, KursivePermissions.DELETE_REMOTE_SCRIPTS)) {
+            this.setActiveAndTooltip(false, KursivePermissions.DELETE_REMOTE_SCRIPTS.message())
         } else {
-            this.active = true
-            this.setTooltip(this.message)
+            this.setActiveAndTooltip(true, this.message)
         }
 
         super.extractContents(graphics, mouseX, mouseY, a)

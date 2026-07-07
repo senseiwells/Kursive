@@ -6,16 +6,24 @@
   "kursive.command.successfullyStartedScript": "Successfully started script %s",
   "kursive.command.successfullyStoppedScript": "Successfully stopped script %s",
 
+  "kursive.permission.remote.access.message": "You do not have permission to access to server scripts",
+  "kursive.permission.remote.run.message": "You do not have permission to run server scripts",
+  "kursive.permission.remote.compile.message": "You do not have permission to compile server scripts",
+  "kursive.permission.remote.download.message": "You do not have permission to download server scripts",
+  "kursive.permission.remote.upload.message": "You do not have permission to upload server scripts",
+  "kursive.permission.remote.create.message": "You do not have permission to create server scripts",
+  "kursive.permission.remote.delete.message": "You do not have permission to delete server scripts",
+
   "yacl3.config.kursive:config.category.general": "General",
   "yacl3.config.kursive:config.allowDownloadingServerScripts": "Allow Downloading Server Scripts",
-  "yacl3.config.kursive:config.allowDownloadingServerScripts.desc": "Allows you to request downloading scripts from servers.\n You should always check scripts you download from a server before running them. Enable at your own risk.",
+  "yacl3.config.kursive:config.allowDownloadingServerScripts.desc": "Allows you to request downloading scripts from servers.\n\n You should always check scripts you download from a server before running them. Enable at your own risk.",
 
   "yacl3.config.kursive:config.category.keybinds": "Keybinds",
   "yacl3.config.kursive:config.menuKeys": "Kursive Menu Keybind",
   "yacl3.config.kursive:config.menuKeys.desc": "Keybind to open the Kursive Menu while in-game.",
   "yacl3.config.kursive:config.restartClientScriptsKeys": "Restart Client Scripts Keybind",
   "yacl3.config.kursive:config.restartClientScriptsKeys.desc": "Keybind to restart running client-side scripts while in-game.",
-  "yacl3.config.kursive:config.restartServerScriptsKeys": "Restart Server Scripts  Keybind",
+  "yacl3.config.kursive:config.restartServerScriptsKeys": "Restart Server Scripts Keybind",
   "yacl3.config.kursive:config.restartServerScriptsKeys.desc": "Keybind to restart running server-side scripts while in-game.",
 
   "yacl3.config.kursive:config.category.debug": "Debug",
