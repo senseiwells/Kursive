@@ -18,9 +18,9 @@ import me.senseiwells.kursive.common.utils.checkPermission
 import me.senseiwells.kursive.common.utils.resolveConfined
 import me.senseiwells.kursive.server.KursiveServer
 import net.casual.arcade.events.GlobalEventHandler
-import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.server.ServerTickEvent
 import net.casual.arcade.events.server.player.PlayerSendPermissionLevelEvent
+import net.casual.arcade.events.utils.register
 import net.casual.arcade.utils.coroutine.launch
 import net.casual.arcade.utils.player.username
 import net.casual.arcade.utils.server.players

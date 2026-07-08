@@ -18,8 +18,8 @@ import me.senseiwells.kursive.common.script.instance.ScriptInstance
 import me.senseiwells.kursive.common.utils.ScriptFileUtils
 import me.senseiwells.kursive.common.utils.resolveConfined
 import net.casual.arcade.events.GlobalEventHandler
-import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.client.ClientTickEvent
+import net.casual.arcade.events.utils.register
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.Minecraft

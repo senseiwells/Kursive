@@ -12,9 +12,10 @@ import me.senseiwells.kursive.server.KursiveServer
 import net.casual.arcade.commands.manager.GlobalCommandManager
 import net.casual.arcade.commands.manager.ServerCommandManager
 import net.casual.arcade.events.GlobalEventHandler
-import net.casual.arcade.events.ListenerRegistry.Companion.register
 import net.casual.arcade.events.SimpleListenerRegistry
+import net.casual.arcade.events.common.ServerSideEvent
 import net.casual.arcade.events.server.ServerSaveEvent
+import net.casual.arcade.events.utils.register
 import net.casual.arcade.utils.coroutine.async
 import net.casual.arcade.utils.coroutine.launch
 import net.minecraft.server.MinecraftServer
@@ -44,7 +45,7 @@ class ServerExecutionEnvironment(
     }
 
     override fun createContext(metadata: ScriptMetadata): ServerScriptContext {
-        val events = SimpleListenerRegistry()
+        val events = SimpleListenerRegistry<ServerSideEvent>()
         val commands = ServerCommandManager(this.minecraft)
         val stores = FileBasedDataStores(
             KursiveServer.directory(this.minecraft).resolve("data"), metadata.id, this.minecraft::registryAccess

@@ -12,6 +12,7 @@ import me.senseiwells.kursive.common.script.data.FileBasedDataStores
 import me.senseiwells.kursive.common.script.execution.ExecutionEnvironment
 import net.casual.arcade.events.GlobalEventHandler
 import net.casual.arcade.events.SimpleListenerRegistry
+import net.casual.arcade.events.common.ClientSideEvent
 import net.casual.arcade.utils.coroutine.async
 import net.casual.arcade.utils.coroutine.launch
 import net.minecraft.client.Minecraft
@@ -41,7 +42,7 @@ class ClientExecutionEnvironment(
     }
 
     override fun createContext(metadata: ScriptMetadata): ClientScriptContext {
-        val events = SimpleListenerRegistry()
+        val events = SimpleListenerRegistry<ClientSideEvent>()
         val stores = FileBasedDataStores(KursiveClient.directory().resolve("data"), metadata.id) {
             this.minecraft.level?.registryAccess()
         }
