@@ -22,6 +22,8 @@ Minecraft's code.
 
 ![Examples of client & server scripts in action](docs/public/assets/readme/examples.png)
 
+<!-- #region installing -->
+
 ## Installing the Mod
 
 You can install the mod from [modrinth](https://modrinth.com/mod/kursive), alternatively
@@ -39,6 +41,8 @@ You can build the mod from source, you will need Java 25 for this:
    gradlew build
    ```
 3. The build mod jar will be in `build/libs`
+
+<!-- #endregion installing -->
 
 Once you have the mod jar drag it into your mod folder. 
 You will also need to install all of Kursive's dependencies:
