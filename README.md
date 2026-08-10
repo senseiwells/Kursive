@@ -20,6 +20,8 @@ use for a scripting mod. It can compile directly into bytecode to run on the JVM
 as well as not requiring wrapper APIs allowing scripts to interface directly with
 Minecraft's code.
 
+![Examples of client & server scripts in action](docs/public/assets/readme/examples.png)
+
 ## Installing the Mod
 
 You can install the mod from [modrinth](https://modrinth.com/mod/kursive), alternatively

@@ -14,7 +14,7 @@ plugins {
 
 val shade: Configuration by configurations.creating
 
-val modVersion = "0.3.0-alpha.1"
+val modVersion = "0.4.0-alpha.1"
 val releaseVersion = "${modVersion}+${libs.versions.minecraft.get()}"
 version = releaseVersion
 
