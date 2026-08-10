@@ -50,6 +50,7 @@ You will also need to install all of Kursive's dependencies:
 - [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin)
 - [YACL](https://modrinth.com/mod/yacl) (client-side only)
 
+<!-- #region ace-warning -->
 > [!WARNING]
 > This mod lets you run arbitrary code, you should never run scripts you do not trust.
 >
@@ -57,6 +58,7 @@ You will also need to install all of Kursive's dependencies:
 fully trust.
 > 
 > Use this mod at your own risk.
+<!-- #endregion ace-warning -->
 
 ## Documentation
 

@@ -8,7 +8,7 @@ To access the in-game gui you can either go through [Mod Menu](https://modrinth.
 or you can set a keybind for "Open Kursive Menu" in the controls screen. 
 From here you can access the client scripts list and the server scripts list.
 
-<!--@include: ../../README.md{47,53}-->
+<!--@include: ../../README.md#ace-warning -->
 
 ## Toggling Scripts
 
