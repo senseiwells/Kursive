@@ -3,7 +3,7 @@
   "id": "kursive",
   "version": "${version}",
   "name": "Kursive",
-  "description": "",
+  "description": "A Minecraft mod that allows you to run kotlin scripts on the client and the server on the fly!",
   "authors": [
     "Sensei"
   ],
