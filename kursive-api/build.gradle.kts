@@ -1,17 +1,18 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-val apiVersion = "0.4.0-alpha.1"
-val releaseVersion = "${apiVersion}+${libs.versions.minecraft.get()}"
-version = releaseVersion
+plugins {
+    id("kursive.common-conventions")
+    `maven-publish`
+}
+
+version = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
 
 dependencies {
-    implementation(libs.fabric.api)
-
     implementation(libs.bundles.arcade)
     implementation(libs.keybinds)
 }
 
-tasks.register<ShadowJar>("buildKmcJar") {
+val buildKmcJar = tasks.register<ShadowJar>("buildKmcJar") {
     group = "scripting"
     description = "Builds a fat jar containing Minecraft and runtime dependencies for use in Kotlin scripts"
     isZip64 = true
@@ -33,7 +34,7 @@ tasks.register<ShadowJar>("buildKmcJar") {
     exclude("fabric-installer.json")
     exclude("fabric-installer.launchwrapper.json")
 
-    from(sourceSets.main.get().output)
+    from(sourceSets.main.map { it.output })
     from(loom.namedMinecraftJars)
     from(project.configurations.modCompileClasspathMapped)
     configurations = listOf(
@@ -43,16 +44,43 @@ tasks.register<ShadowJar>("buildKmcJar") {
 
     archiveBaseName = "kmc"
     archiveClassifier = ""
-    archiveVersion = project.version.toString()
 }
 
 publishing {
     publications {
         create<MavenPublication>("kmc") {
-            groupId = "me.senseiwells"
+            groupId = project.group.toString()
             artifactId = "kmc"
 
-            artifact(tasks.named("buildKmcJar"))
+            artifact(buildKmcJar)
+        }
+    }
+}
+
+val updateDocumentedDependencies = tasks.register("updateDocumentedDependencies") {
+    group = "documentation"
+    description = "Updates the kmc version referenced in the documentation"
+
+    val files = listOf(
+        rootProject.file("docs/develop/index.md"),
+        rootProject.file("docs/develop/creating-scripts.md"),
+    )
+    val coordinate = "me.senseiwells:kmc:${project.version}"
+    val path = "me/senseiwells/kmc/${project.version}"
+
+    inputs.property("coordinate", coordinate)
+    outputs.files(files)
+
+    doLast {
+        for (file in files) {
+            if (!file.exists()) {
+                continue
+            }
+            file.writeText(
+                file.readText()
+                    .replace(Regex("""@file:DependsOn\("me\.senseiwells:kmc:[^"]*"\)"""), "@file:DependsOn(\"$coordinate\")")
+                    .replace(Regex("""me/senseiwells/kmc/[^`]*`"""), "$path`")
+            )
         }
     }
 }
@@ -60,19 +88,6 @@ publishing {
 tasks.register("publishKmc") {
     group = "scripting"
     description = "Publishes the scripting jar to Maven Local"
-    dependsOn("publishKmcPublicationToMavenLocal")
-}
-
-afterEvaluate {
-    updateDocumentedDependencies("../docs/developing/creating-a-script.md")
-}
-
-private fun Project.updateDocumentedDependencies(path: String) {
-    val file = file(path)
-    if (file.exists()) {
-        val document = file.readText()
-            .replace(Regex("""@file:DependsOn\("me\.senseiwells:kmc:.*"\)"""), "@file:DependsOn(\"me.senseiwells:kmc:$releaseVersion\")")
-            .replace(Regex("""me/senseiwells/kmc/.*`"""), "me/senseiwells/kmc/$releaseVersion`")
-        file.writeText(document)
-    }
+    dependsOn(updateDocumentedDependencies)
+    dependsOn(tasks.named("publishKmcPublicationToMavenLocal"))
 }

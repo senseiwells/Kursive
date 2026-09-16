@@ -1,6 +1,18 @@
-rootProject.name = "Kursive"
+pluginManagement {
+    includeBuild("build-logic")
 
-include(":kursive-api")
+    repositories {
+        maven("https://maven.fabricmc.net/") {
+            name = "Fabric"
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
 
 dependencyResolutionManagement {
     versionCatalogs {
@@ -10,12 +22,8 @@ dependencyResolutionManagement {
     }
 }
 
-pluginManagement {
-    repositories {
-        maven("https://maven.fabricmc.net/") {
-            name = "Fabric"
-        }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+rootProject.name = "Kursive"
+
+include(":kursive-api")

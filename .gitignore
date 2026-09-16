@@ -1,36 +1,15 @@
-# gradle
-
-.gradle/
-build/
-out/
-classes/
-
-# idea
-
 .idea/
-*.iml
-*.ipr
-*.iws
+.gradle/
+.kotlin/
+.DS_Store
 
-# vscode
-
-.settings/
-.vscode/
-bin/
-.classpath
-.project
-
-# fabric
-
+build/
 run/
 
-# kotlin
-
-.kotlin/
-
+# Scripts
 kursive-scripts/
 
-# docs
-docs/.vitepress/dist
-docs/.vitepress/cache
-docs/node_modules
+# Documentation
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
