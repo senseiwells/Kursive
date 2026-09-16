@@ -6,7 +6,7 @@ import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.PermissionLevel
 
-@Suppress("UnstableApiUsage", "SameParameterValue")
+@Suppress("SameParameterValue")
 object KursivePermissions {
     private val registered = Object2ObjectOpenHashMap<String, KursivePermission>()
 

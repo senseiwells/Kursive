@@ -4,7 +4,6 @@ import net.casual.arcade.utils.component.red
 import net.fabricmc.fabric.api.permission.v1.PermissionContextOwner
 import net.minecraft.network.chat.Component
 
-@Suppress("UnstableApiUsage")
 class KursivePermission(
     val id: String,
     val fallback: (PermissionContextOwner) -> Boolean

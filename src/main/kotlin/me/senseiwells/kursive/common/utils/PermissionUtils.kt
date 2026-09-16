@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.permission.v1.PermissionContextOwner
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.permissions.PermissionLevel
 
-@Suppress("UnstableApiUsage")
 fun PermissionContextOwner.checkPermission(permission: KursivePermission): Boolean {
     if (!KursiveServer.config.requirePermissions) {
         return true
