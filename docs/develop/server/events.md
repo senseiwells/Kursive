@@ -57,3 +57,10 @@ context.events.register<PlayerJoinEvent> { event ->
     }
 }
 ```
+
+## Missing Events
+
+While Arcade does have a quite a lot of available `ServerSideEvent`s, if there's
+an event that you'd like to be implemented either make an issue report on
+[the GitHub](https://github.com/senseiwells/Kursive)
+or send a message on [my discord](https://discord.gg/7R9SfktZxH).
