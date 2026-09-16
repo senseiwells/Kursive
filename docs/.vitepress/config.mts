@@ -56,7 +56,8 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'modrinth', link: 'https://modrinth.com/mod/kursive' },
-      { icon: 'github', link: 'https://github.com/senseiwells/Kursive' }
+      { icon: 'github', link: 'https://github.com/senseiwells/Kursive' },
+      { icon: 'discord', link: 'https://discord.gg/7R9SfktZxH' }
     ]
   }
 })
