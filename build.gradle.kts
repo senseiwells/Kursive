@@ -43,7 +43,7 @@ publishMods {
     file = tasks.jar.flatMap { it.archiveFile }
     changelog.set(
         """
-        
+        - Fix not having server scripting permissions in singleplayer
         """.trimIndent()
     )
     type = when {
@@ -77,7 +77,7 @@ fun createProjectDescription(): String {
         "**${type.lowercase().replaceFirstChar(Char::uppercase)}:**"
     }
     description = description.replace(Regex("""<!-- #(end)?region [\w-]+ -->\n?"""), "")
-    val raw = "https://raw.githubusercontent.com/senseiwells/Kursive/main/"
+    val raw = "https://raw.githubusercontent.com/senseiwells/Kursive/HEAD/"
     description = description.replace(Regex("""(src|href)="\./"""), "$1=\"$raw")
         .replace(Regex("""]\((?!https?://|#)\.?/?"""), "]($raw")
 
