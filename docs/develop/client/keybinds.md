@@ -54,9 +54,6 @@ keybind.addListener(object: KeybindListener {
 Instead of listening, you can query the keybind's state from a tick event:
 
 ```kts
-import net.casual.arcade.events.client.ClientTickEvent
-import net.casual.arcade.events.utils.register
-
 context.events.register<ClientTickEvent> {
     if (keybind.isHeld) {
         // Do something while held

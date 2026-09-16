@@ -77,6 +77,7 @@ fun createProjectDescription(): String {
         "**${type.lowercase().replaceFirstChar(Char::uppercase)}:**"
     }
     description = description.replace(Regex("""<!-- #(end)?region [\w-]+ -->\n?"""), "")
+    description = description.replace(Regex("""(?s)## Installing the Mod.*?(?=## Documentation)"""), "")
     val raw = "https://raw.githubusercontent.com/senseiwells/Kursive/HEAD/"
     description = description.replace(Regex("""(src|href)="\./"""), "$1=\"$raw")
         .replace(Regex("""]\((?!https?://|#)\.?/?"""), "]($raw")
