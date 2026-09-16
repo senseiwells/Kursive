@@ -23,7 +23,26 @@ export default defineConfig({
         text: 'Developing Scripts',
         link: '/develop/',
         items: [
-          { text: 'Creating Scripts', link: '/develop/creating-scripts' }
+          { text: 'Client vs Server', link: '/develop/client-vs-server' },
+          { text: 'Creating Scripts', link: '/develop/creating-scripts' },
+          {
+            text: 'Client Scripting',
+            link: '/develop/client/',
+            items: [
+              { text: 'Events', link: '/develop/client/events' },
+              { text: 'Keybinds', link: '/develop/client/keybinds' },
+              { text: 'Persistent Data', link: '/develop/common/persistent-data' },
+            ]
+          },
+          {
+            text: 'Server Scripting',
+            link: '/develop/server/',
+            items: [
+              { text: 'Events', link: '/develop/server/events' },
+              { text: 'Commands', link: '/develop/server/commands' },
+              { text: 'Persistent Data', link: '/develop/common/persistent-data' },
+            ]
+          }
         ]
       },
       {
