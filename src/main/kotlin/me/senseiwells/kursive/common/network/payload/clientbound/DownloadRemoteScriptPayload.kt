@@ -16,7 +16,7 @@ class DownloadRemoteScriptPayload(
     }
 
     companion object {
-        const val MAX_SIZE_BYTES = 1024 * 1024 * 1024
+        const val MAX_SIZE_BYTES = 10 * 1024 * 1024
         val TYPE = CustomPacketPayload.Type<DownloadRemoteScriptPayload>(kursive("download_remote_script"))
         val STREAM_CODEC = StreamCodec.composite(
             ScriptInstance.Id.STREAM_CODEC, DownloadRemoteScriptPayload::id,

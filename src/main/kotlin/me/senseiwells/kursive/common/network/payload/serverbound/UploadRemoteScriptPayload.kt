@@ -14,7 +14,7 @@ class UploadRemoteScriptPayload(
     }
 
     companion object {
-        const val MAX_SIZE_BYTES = 1024 * 1024 * 1024
+        const val MAX_SIZE_BYTES = 10 * 1024 * 1024
         val TYPE = CustomPacketPayload.Type<UploadRemoteScriptPayload>(kursive("upload_remote_script"))
         val STREAM_CODEC = RemoteScriptContents.STREAM_CODEC.map(::UploadRemoteScriptPayload, UploadRemoteScriptPayload::contents)
 
