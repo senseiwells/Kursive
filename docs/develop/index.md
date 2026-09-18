@@ -3,6 +3,12 @@
 This section will cover how to set up the environment to start
 developing scripts locally.
 
+> [!NOTE]
+> Kursive uses [Kotlin](https://kotlinlang.org/) as it's scripting language. 
+> This documentation will assume you know at least the basics of Kotlin and how 
+> to program in general. You will want to [learn Kotlin](https://kotlinlang.org/docs/kotlin-tour-hello-world.html)
+> before getting started with Kursive.
+
 ## Environment
 
 While scripts can be opened in any text editor, it's highly recommended that you
