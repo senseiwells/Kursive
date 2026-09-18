@@ -27,7 +27,7 @@ for example: `test.main.kts`.
 
 A basic entrypoint script for a server-side script is as follows:
 ```kts
-@file:DependsOn("me.senseiwells:kmc:0.4.0-alpha.2+26.2")
+@file:DependsOn("me.senseiwells:kmc:0.4.0-alpha.2+26.3")
 
 import kotlinx.coroutines.awaitCancellation
 import me.senseiwells.kursive.api.ServerScriptContext
@@ -40,7 +40,7 @@ suspend fun main(server: MinecraftServer, context: ServerScriptContext) {
 
 And for the client-side:
 ```kts
-@file:DependsOn("me.senseiwells:kmc:0.4.0-alpha.2+26.2")
+@file:DependsOn("me.senseiwells:kmc:0.4.0-alpha.2+26.3")
 
 import kotlinx.coroutines.awaitCancellation
 import me.senseiwells.kursive.api.ClientScriptContext
