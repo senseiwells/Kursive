@@ -3,6 +3,7 @@ import me.modmuss50.mpp.ReleaseType
 plugins {
     id("kursive.common-conventions")
     alias(libs.plugins.mod.publish)
+    alias(libs.plugins.joystick)
     alias(libs.plugins.shadow) apply false
 }
 
@@ -14,10 +15,8 @@ dependencies {
     implementation(libs.mod.menu)
     implementation(libs.yacl)
 
-    implementation(libs.bundles.arcade)
-    include(libs.bundles.arcade)
-
     include(implementation(libs.keybinds.get())!!)
+    include(implementation(libs.simple.config.get())!!)
     include(implementation(projects.kursiveApi)!!)
 
     implementation(libs.bundles.kotlin.scripting)
@@ -25,6 +24,11 @@ dependencies {
     include(libs.bundles.kotlin.scripting.runtime)
 
     localRuntime(libs.dev.auth)
+}
+
+arcade {
+    version = libs.versions.arcade
+    modules("commands", "event-registry", "events-server", "events-client", "utils")
 }
 
 loom {

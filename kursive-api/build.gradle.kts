@@ -2,14 +2,20 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("kursive.common-conventions")
+    alias(libs.plugins.joystick)
     `maven-publish`
 }
 
 version = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
 
 dependencies {
-    implementation(libs.bundles.arcade)
     implementation(libs.keybinds)
+}
+
+arcade {
+    version = libs.versions.arcade
+    modules("commands", "event-registry", "events-server", "events-client", "utils")
+    include = false
 }
 
 val buildKmcJar = tasks.register<ShadowJar>("buildKmcJar") {

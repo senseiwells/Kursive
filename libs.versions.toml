@@ -8,9 +8,10 @@ fabric-kotlin = "1.14.1+kotlin.2.4.20"
 mod-menu      = "21.0.0-beta.1"
 keybinds      = "0.6.2+26.3"
 yacl          = "3.9.6+26.3-fabric"
+simple-config = "1.0.1"
 
 # Scripting
-arcade        = "0.14.0-beta.3+26.3"
+arcade        = "0.14.0-beta.7+26.3"
 
 # Runtime
 dev-auth      = "1.2.2"
@@ -19,40 +20,34 @@ dev-auth      = "1.2.2"
 fabric-loom   = "1.17-SNAPSHOT"
 mod-publish   = "2.2.0"
 shadow        = "9.4.2"
+joystick      = "1.0.3"
 
 [libraries]
-minecraft     = { module = "com.mojang:minecraft"                    , version.ref = "minecraft" }
-fabric-loader = { module = "net.fabricmc:fabric-loader"              , version.ref = "fabric-loader" }
-fabric-api    = { module = "net.fabricmc.fabric-api:fabric-api"      , version.ref = "fabric-api" }
-fabric-kotlin = { module = "net.fabricmc:fabric-language-kotlin"     , version.ref = "fabric-kotlin" }
-mod-menu      = { module = "com.terraformersmc:modmenu"              , version.ref = "mod-menu" }
-keybinds      = { module = "me.senseiwells:simple-keybinding-library", version.ref = "keybinds" }
-yacl          = { module = "dev.isxander:yet-another-config-lib"     , version.ref = "yacl" }
-
-arcade-commands       = { module = "net.casualchampionships:arcade-commands"      , version.ref = "arcade" }
-arcade-event-registry = { module = "net.casualchampionships:arcade-event-registry", version.ref = "arcade" }
-arcade-events-client  = { module = "net.casualchampionships:arcade-events-client" , version.ref = "arcade" }
-arcade-events-server  = { module = "net.casualchampionships:arcade-events-server" , version.ref = "arcade" }
-arcade-utils          = { module = "net.casualchampionships:arcade-utils"         , version.ref = "arcade" }
+minecraft                            = { module = "com.mojang:minecraft"                                          , version.ref = "minecraft" }
+fabric-loader                        = { module = "net.fabricmc:fabric-loader"                                    , version.ref = "fabric-loader" }
+fabric-api                           = { module = "net.fabricmc.fabric-api:fabric-api"                            , version.ref = "fabric-api" }
+fabric-kotlin                        = { module = "net.fabricmc:fabric-language-kotlin"                           , version.ref = "fabric-kotlin" }
+mod-menu                             = { module = "com.terraformersmc:modmenu"                                    , version.ref = "mod-menu" }
+keybinds                             = { module = "me.senseiwells:simple-keybinding-library"                      , version.ref = "keybinds" }
+yacl                                 = { module = "dev.isxander:yet-another-config-lib"                           , version.ref = "yacl" }
+simple-config                        = { module = "me.senseiwells:simple-config-library"                          , version.ref = "simple-config" }
 
 # Scripting
-kotlin-scripting-common              = { module = "org.jetbrains.kotlin:kotlin-scripting-common"                 , version.ref = "kotlin" }
-kotlin-scripting-jvm                 = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm"                    , version.ref = "kotlin" }
-kotlin-scripting-jvm-host            = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host"               , version.ref = "kotlin" }
-kotlin-scripting-dependencies        = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies"           , version.ref = "kotlin" }
-kotlin-compiler-embeddable           = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable"              , version.ref = "kotlin" }
-kotlin-script-runtime                = { module = "org.jetbrains.kotlin:kotlin-script-runtime"                   , version.ref = "kotlin" }
-kotlin-build-tools-api               = { module = "org.jetbrains.kotlin:kotlin-build-tools-api"                  , version.ref = "kotlin" }
-kotlin-daemon-embeddable             = { module = "org.jetbrains.kotlin:kotlin-daemon-embeddable"                , version.ref = "kotlin" }
-kotlin-scripting-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable"    , version.ref = "kotlin" }
+kotlin-scripting-common              = { module = "org.jetbrains.kotlin:kotlin-scripting-common"                  , version.ref = "kotlin" }
+kotlin-scripting-jvm                 = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm"                     , version.ref = "kotlin" }
+kotlin-scripting-jvm-host            = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host"                , version.ref = "kotlin" }
+kotlin-scripting-dependencies        = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies"            , version.ref = "kotlin" }
+kotlin-compiler-embeddable           = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable"               , version.ref = "kotlin" }
+kotlin-script-runtime                = { module = "org.jetbrains.kotlin:kotlin-script-runtime"                    , version.ref = "kotlin" }
+kotlin-build-tools-api               = { module = "org.jetbrains.kotlin:kotlin-build-tools-api"                   , version.ref = "kotlin" }
+kotlin-daemon-embeddable             = { module = "org.jetbrains.kotlin:kotlin-daemon-embeddable"                 , version.ref = "kotlin" }
+kotlin-scripting-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable"     , version.ref = "kotlin" }
 kotlin-scripting-compiler-impl       = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable", version.ref = "kotlin" }
 
 # Runtime
-dev-auth = { module = "me.djtheredstoner:DevAuth-fabric", version.ref = "dev-auth" }
+dev-auth                             = { module = "me.djtheredstoner:DevAuth-fabric"                              , version.ref = "dev-auth" }
 
 [bundles]
-arcade = ["arcade-commands", "arcade-event-registry", "arcade-events-server", "arcade-events-client", "arcade-utils"]
-
 kotlin-scripting = [
     "kotlin-scripting-common",
     "kotlin-scripting-jvm",
@@ -75,3 +70,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 fabric-loom          = { id = "net.fabricmc.fabric-loom"                 , version.ref = "fabric-loom" }
 mod-publish          = { id = "me.modmuss50.mod-publish-plugin"          , version.ref = "mod-publish" }
 shadow               = { id = "com.gradleup.shadow"                      , version.ref = "shadow" }
+joystick             = { id = "net.casualchampionships.joystick"         , version.ref = "joystick" }
